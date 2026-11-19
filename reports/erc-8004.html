@@ -1,0 +1,838 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ERC-8004: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>ERC-8004<small>Trustless Agents</small></h1><ul class="facts"><li><b>Specification:</b> ERC-8004 (ERCS/erc-8004.md at commit 503591a, status Draft)</li><li><b>Date:</b> 2026-01-25</li><li><b>Maintainer:</b> ERC authors (M. De Rossi, MetaMask; D. Crapis, Ethereum Foundation; J. Ellis, Google; E. Reppel, Coinbase) through the Ethereum ERC process</li><li><b>Analysed:</b> 2026-11-18</li><li><b>Version note:</b> Commit 503591a is the last change to the file; it is unchanged at the ERCs repository head (7214b22, 2026-11-17). The ERC moved to Review in October 2025 and an editor returned it to Draft on 2026-01-13.</li></ul><div class=chips><span class="chip"><b>Category:</b> Discovery registry</span><span class="chip"><b>Also:</b> Attestation provenance</span><span class="chip"><b>Mechanism:</b> Other</span><span class="chip"><b>Venue:</b> Other</span><span class="chip"><b>Maturity:</b> Draft</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>ERC-8004, &quot;Trustless Agents&quot;, is an Ethereum standard proposal for finding AI agents and judging whether to trust them when there is no existing relationship. It defines three public registries as smart contracts on a blockchain: an Identity Registry that gives each agent an on-chain identifier pointing to a registration file, a Reputation Registry where clients post feedback about agents, and a Validation Registry where independent validators record checks of an agent&#x27;s work. Its authors come from MetaMask, the Ethereum Foundation, Google and Coinbase. It is a Draft ERC: it reached Review in October 2025 and was returned to Draft in January 2026. Its reference registries are deployed on Ethereum mainnet and several other chains.</p><p>An agent&#x27;s owner registers it as an ERC-721 token (an NFT), whose URI points to a JSON file listing the agent&#x27;s name and services, such as A2A, MCP, ENS names, DIDs, wallets or an email address, and the trust models it supports. Anyone except the owner can post signed-number feedback and tags, and validators (e.g. re-execution with stake, zero-knowledge proofs, trusted execution environments) can post scores. A service deciding whether to deal with an agent can read these public signals, filtered by reviewers it trusts. ERC-8004 does not authenticate requests, carry credentials, define permissions or revocation, or identify users or models; it is a discovery and reputation layer meant to be combined with protocols such as A2A or MCP.</p><h2 id="how">How it works</h2><ol class="steps"><li>The agent&#x27;s owner calls register() on the chain&#x27;s Identity Registry, receiving an agentId (an ERC-721 token) whose agentURI points to the agent&#x27;s registration file, hosted on HTTPS, IPFS or fully on-chain.</li><li>The registration file lists the agent&#x27;s services (e.g. its A2A agent card, MCP endpoint, ENS name, DID, email) and the trust models it supports; optionally the owner proves control of an endpoint domain by publishing a matching /.well-known/agent-registration.json.</li><li>A client or service discovers the agent (e.g. by crawling the registry) and interacts with it through the listed protocol, such as A2A or MCP; ERC-8004 does not define that interaction or how the agent proves its identity in it.</li><li>Afterwards, clients post feedback (a value plus optional tags and an off-chain file) to the Reputation Registry, and the agent&#x27;s owner can ask a validator to check its work, which records a 0 to 100 score in the Validation Registry.</li><li>Before trusting the agent, a service reads summaries of feedback from reviewers it chooses and validation results from validators it trusts, and decides by its own policy.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>ERC-8004</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">On-chain registries for agent discovery and reputation</td></tr><tr><td class="prop">Use cases</td><td class="">Agent discovery, reputation and validation on-chain</td></tr><tr><td class="prop">Parties involved</td><td class="">Agent owner, operators, clients, validators, registries</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">Draft ERC; registries live on mainnet</td></tr><tr><td class="prop">Building blocks</td><td class="">ERC-721, EIP-712, ERC-1271, IPFS</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">agentRegistry + agentId, not sent in requests</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="red">No; only the agent&#x27;s owner address</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="red">None for requests</td></tr><tr><td class="prop">Credential lifetime</td><td class="red">Not applicable; no credential</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="red">No request credential; registration checkable</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="red">No</td></tr><tr><td class="prop">Scoped authorization</td><td class="red">No</td></tr><tr><td class="prop">Human approval</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="yellow">Optional: chosen reviewers and validators</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="red">No</td></tr><tr><td class="prop">Contact and escalation</td><td class="yellow">Optional email service entry</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="green">Yes: public on-chain feedback</td></tr><tr><td class="prop">Model identity</td><td class="red">No; validation could cover it, undefined</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>ERC-8004 gives a service public information to help decide whether to engage an agent (its advertised services, feedback from chosen reviewers, validator scores), but no credential or permissions to enforce on requests.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>A service can post negative feedback that other services can read, but there is no revocation or way to cut an agent off; the owner controls its registration and records cannot be deleted.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Registrations, feedback and validations form a permanent public record tied to blockchain addresses (the agent&#x27;s owner, reviewers, validators); requests themselves are not tied to the agent, a user or a model by this standard.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Acting for (authority):</b> No; only the agent&#x27;s owner address (not addressed by the specification)</li><li><b>Credential type:</b> None for requests (not addressed by the specification)</li><li><b>Credential lifetime:</b> Not applicable; no credential (not addressed by the specification)</li><li><b>Validity (credential validation):</b> No request credential; registration checkable (not addressed by the specification)</li><li><b>Authentication of the agent or user:</b> No (not addressed by the specification)</li><li><b>Scoped authorization:</b> No (not addressed by the specification)</li><li><b>Human approval:</b> No (not addressed by the specification)</li><li><b>Revocation:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No; validation could cover it, undefined (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>ERC-8004</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">A draft Ethereum standard that puts three registries on a blockchain (identity, reputation and validation) so that anyone can discover an agent&#x27;s advertised services and read public feedback and validator results about it, without a prior relationship; it does not authenticate the agent&#x27;s requests.<details><summary>Evidence (2)</summary><div class="claim">Purpose: discover, choose and interact with agents without pre-existing trust. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“This protocol proposes to use blockchains to discover, choose, and interact with agents across organizational boundaries without pre-existing trust”</blockquote></div><div class="claim">Three registries. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Motivation. <span class="chk">(quote verified against the source)</span><blockquote>“This ERC addresses this need through three lightweight registries, which can be deployed on any L2 or on Mainnet as per-chain singletons:”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Open agent economies where clients find agents and decide whether to trust them, with security scaled to the value at risk (from ordering pizza to medical diagnosis). Information lives in smart contracts and in a registration file the contract points to, not in request headers or tokens. Anyone can read it from the chain; the agent&#x27;s actual interaction runs over other protocols such as A2A or MCP, which ERC-8004 complements.<details><summary>Evidence (3)</summary><div class="claim">Trust models are tiered by value at risk. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“Trust models are pluggable and tiered, with security proportional to value at risk, from low-stake tasks like ordering pizza to high-stake tasks like medical diagnosis.”</blockquote></div><div class="claim">Communication protocols do not cover discovery and trust. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Motivation. <span class="chk">(quote verified against the source)</span><blockquote>“However, these agent communication protocols don&#x27;t inherently cover agent discovery and trust.”</blockquote></div><div class="claim">Endpoints point to other protocols. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Agent URI and Agent Registration File. <span class="chk">(quote verified against the source)</span><blockquote>“Agents MAY advertise their endpoints, which point to an A2A agent card, an MCP endpoint, an ENS agent name, DIDs, or the agent&#x27;s wallets on any chain”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">The agent&#x27;s owner (holder of the ERC-721 token), who may delegate management to operators. Clients (clientAddress), who give and revoke feedback. Validators (validatorAddress), smart contracts that answer validation requests. Responders: anyone may append responses to feedback. The three registry contracts (Identity, Reputation, Validation), expected as one deployment per chain. The agentWallet is the address where the agent receives payments.<details><summary>Evidence (5)</summary><div class="claim">Owner and operators. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Identity Registry. <span class="chk">(quote verified against the source)</span><blockquote>“The owner of the ERC-721 token is the owner of the agent and can transfer ownership or delegate management (e.g., updating the registration file) to operators”</blockquote></div><div class="claim">Clients give feedback. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Giving Feedback. <span class="chk">(quote verified against the source)</span><blockquote>“New feedback can be added by any clientAddress calling:”</blockquote></div><div class="claim">Validators respond. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Validation Response. <span class="chk">(quote verified against the source)</span><blockquote>“This function MUST be called by the validatorAddress specified in the original request.”</blockquote></div><div class="claim">Anyone can append responses. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Appending Responses. <span class="chk">(quote verified against the source)</span><blockquote>“Anyone (e.g., the agentId showing a refund, any off-chain data intelligence aggregator tagging feedback as spam) can call:”</blockquote></div><div class="claim">agentWallet receives payments. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, On-chain metadata. <span class="chk">(quote verified against the source)</span><blockquote>“It represents the address where the agent receives payments and is initially set to the owner&#x27;s address.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Draft. The ERC&#x27;s status is Draft, after an EIP editor returned it from Review in January 2026, and the text still carries editor&#x27;s notes; it requires ERC-721, EIP-712, ERC-1271 and EIP-155. The reference implementation deploys the Identity and Reputation Registries on Ethereum mainnet and several other chains; its README says the Validation Registry part is still being revised with the TEE community.<div class="meta">Why this rating: Still a draft standard, although its reference registries are publicly deployed (same as Web Bot Auth).</div><details><summary>Evidence (4)</summary><div class="claim">Status is Draft. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Preamble. <span class="chk">(quote verified against the source)</span><blockquote>“status: Draft”</blockquote></div><div class="claim">Required standards. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Preamble. <span class="chk">(quote verified against the source)</span><blockquote>“requires: 155, 712, 721, 1271”</blockquote></div><div class="claim">Deployment: Identity Registry on Ethereum mainnet. <i>Source states</i> <a href="https://github.com/erc-8004/erc-8004-contracts/blob/b9e466c250744a7e06b13dff9d3c2844ed64f825/README.md">ERC-8004 reference contracts README (erc-8004/erc-8004-contracts)</a>, Contract Addresses &gt; Ethereum Mainnet. <span class="chk">(quote verified against the source)</span><blockquote>“IdentityRegistry: 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432”</blockquote></div><div class="claim">Validation Registry still being revised. <i>Source states</i> <a href="https://github.com/erc-8004/erc-8004-contracts/blob/b9e466c250744a7e06b13dff9d3c2844ed64f825/README.md">ERC-8004 reference contracts README (erc-8004/erc-8004-contracts)</a>, Validation Registry. <span class="chk">(quote verified against the source)</span><blockquote>“portion of the ERC-8004 spec is still under active update and discussion with the TEE community.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">ERC-721 non-fungible tokens with the URIStorage extension for agent identities; EIP-712 typed signatures (for ordinary accounts) and ERC-1271 (for smart-contract wallets) to prove control of a new agent wallet; EIP-155 chain identifiers in the agentRegistry string; IPFS, HTTPS or data URIs for registration and feedback files, with keccak-256 hashes for integrity. The editors note that the URIStorage extension is not itself standardised.<details><summary>Evidence (3)</summary><div class="claim">Identity Registry uses ERC-721 with URIStorage. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Identity Registry. <span class="chk">(quote verified against the source)</span><blockquote>“The Identity Registry uses ERC-721 with the URIStorage extension for agent registration”</blockquote></div><div class="claim">Wallet change requires EIP-712 or ERC-1271 signature. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, On-chain metadata. <span class="chk">(quote verified against the source)</span><blockquote>“To change it, the agent owner must prove control of the new wallet by providing a valid EIP-712 signature for EOAs or ERC-1271 for smart contract wallets”</blockquote></div><div class="claim">Editor&#x27;s note on URIStorage. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Motivation. <span class="chk">(quote verified against the source)</span><blockquote>“Editor&#x27;s Note: where is URIStorage defined?”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Each agent gets a globally unique identifier: the registry address with its chain (agentRegistry, e.g. eip155:1:0x742...) plus an agentId, the ERC-721 token number. It names one registered agent, not its provider. But ERC-8004 defines no way for an agent to present this identifier, or prove it is that agent, when it sends a request, so a receiving service learns it only if told through another protocol. An agent may also be registered several times on different chains.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: The identifier names an individual agent registration, but the protocol gives the service no way to receive or bind it to a request; lower of two plausible colours (ANS, which presents its identifier in a certificate, is green).</div><details><summary>Evidence (4)</summary><div class="claim">Global identification by agentRegistry and agentId. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Identity Registry. <span class="chk">(quote verified against the source)</span><blockquote>“The ERC-721 tokenId assigned incrementally by the registry”</blockquote></div><div class="claim">Portable, censorship-resistant identifier. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Motivation. <span class="chk">(quote verified against the source)</span><blockquote>“providing every agent with a portable, censorship-resistant identifier.”</blockquote></div><div class="claim">Multiple registrations are possible. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Endpoint Domain Verification (Optional). <span class="chk">(quote verified against the source)</span><blockquote>“Agents SHOULD have at least one registration (multiple are possible), and all fields in the registration are mandatory.”</blockquote></div><div class="claim">Searched the specification for a way to present agentId or prove control of it in a request to a service. None is defined; interaction happens through listed endpoints of other protocols. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Specification; Rationale.</div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The agentId identifies a registered agent, which may have any number of running copies and endpoints. ERC-8004 defines nothing that identifies a specific running instance or session. Feedback files can mention A2A task and context identifiers, but those describe the interaction being rated, not the agent instance.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Feedback can reference A2A task and context IDs. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Off-Chain Feedback File Structure. <span class="chk">(quote verified against the source)</span><blockquote>“A2A: see &quot;Context Identifier Semantics&quot; and Task model in the A2A specification.”</blockquote></div><div class="claim">Searched the Identity Registry and registration file sections for an instance or session identifier. None is defined. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Identity Registry; Agent URI and Agent Registration File.</div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ERC-8004 records the agent&#x27;s owner (the address holding its token) and an agentWallet for payments, but defines nothing that tells a service on whose behalf a given request or task is performed. The owner is the party that controls the registration, not necessarily the user the agent serves.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not defined (same as MCP Authorization); the owner address is not the principal of a request.</div><details><summary>Evidence (2)</summary><div class="claim">The token owner is the agent&#x27;s owner. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Identity Registry. <span class="chk">(quote verified against the source)</span><blockquote>“The owner of the ERC-721 token is the owner of the agent and can transfer ownership or delegate management (e.g., updating the registration file) to operators”</blockquote></div><div class="claim">Searched the specification for a user, principal or on-behalf-of field. None is defined. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Specification.</div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ERC-8004 defines no credential that an agent presents to a service with its requests. Blockchain transactions to the registries are signed by the caller&#x27;s account, and changing the agent wallet needs a signature, but these protect registry updates, not the agent&#x27;s interactions with services. Authentication of requests is left to the protocols listed in the registration file (e.g. A2A, MCP, DIDs).<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No credential is presented to the service (all three calibration examples are green because they define one).</div><details><summary>Evidence (2)</summary><div class="claim">Wallet change needs a signature, for registry updates only. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, On-chain metadata. <span class="chk">(quote verified against the source)</span><blockquote>“function setAgentWallet(uint256 agentId, address newWallet, uint256 deadline, bytes calldata signature) external”</blockquote></div><div class="claim">Searched the specification for request signing, tokens or certificates presented to services. None is defined. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Specification.</div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not specified. With no request credential there is no lifetime to set. The only time limit in the specification is a deadline parameter on the signed request to change the agent wallet, which concerns registry management. Registrations themselves do not expire.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Unspecified, because no request credential is defined.</div><details><summary>Evidence (2)</summary><div class="claim">setAgentWallet takes a deadline. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, On-chain metadata. <span class="chk">(quote verified against the source)</span><blockquote>“function setAgentWallet(uint256 agentId, address newWallet, uint256 deadline, bytes calldata signature) external”</blockquote></div><div class="claim">Searched the Identity Registry for expiry of registrations or credentials. None is defined. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Identity Registry.</div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="red"><span class="badge">Not addressed</span><br>No, for requests. A service can check registry data, which is public and tamper-evident on the chain, and, optionally, that an endpoint domain publishes a matching registration file. But with no credential on requests, it cannot check that a given request really comes from the registered agent, and it cannot check that advertised capabilities are genuine.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: There is no request credential to validate; registry lookups and optional domain checks are noted in the answer.</div><details><summary>Evidence (2)</summary><div class="claim">Optional endpoint domain verification. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Endpoint Domain Verification (Optional). <span class="chk">(quote verified against the source)</span><blockquote>“an agent MAY optionally prove control of an HTTPS endpoint-domain by publishing”</blockquote></div><div class="claim">Capabilities are not guaranteed. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“it cannot cryptographically guarantee that advertised capabilities are functional and non-malicious.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ERC-8004 does not let a service authenticate an agent or a user. It records who controls a registration on-chain, but defines no proof an agent gives a service when it calls it; any authentication must come from the interaction protocol the agent advertises.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same colour as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the specification for authentication of agents or users toward services. None is defined. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Specification; Security Considerations.</div><div class="claim">Interaction runs through other protocols listed in the registration file. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Rationale. <span class="chk">(quote verified against the source)</span><blockquote>“this protocol links from the blockchain to a flexible registration file including a list where endpoints can be added at will”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ERC-8004 carries no permissions or limits for what an agent may do at a service. Feedback tags and validation scores describe past behaviour and quality, and the registration file describes offered services, but none of them grants or limits access; payments are explicitly not covered.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as Web Bot Auth).</div><details><summary>Evidence (2)</summary><div class="claim">Payments are not covered. <i>Out of scope per</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Motivation. <span class="chk">(quote verified against the source)</span><blockquote>“Payments are orthogonal to this protocol and not covered here.”</blockquote></div><div class="claim">Searched the registries and registration file for permissions, scopes or limits. None is defined. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Specification.</div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ERC-8004 has no step in which a person approves an agent&#x27;s access or action. Registration, feedback and validation are blockchain transactions by account holders, not approvals of individual agent actions.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as Web Bot Auth and Visa TAP).</div><details><summary>Evidence (1)</summary><div class="claim">Searched the specification for consent, approval or user confirmation. None is defined. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Specification.</div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly, and by the service&#x27;s own choice. Nobody is designated to vouch: clients post public feedback and validators (e.g. stake-secured re-execution, zero-knowledge proofs, trusted execution environments) post scores, and the service decides whose signals to trust. Summaries must be filtered by chosen reviewers because Sybil attacks (fake reviewers) are possible. Trust models are optional; an agent that lists none uses ERC-8004 for discovery only.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: Vouching is defined but optional and decentralised, with no party the protocol names as trusted (Web Bot Auth is red with no vouching; MCP Authorization and Visa TAP are green with a named party).</div><details><summary>Evidence (5)</summary><div class="claim">Trust is optional. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Endpoint Domain Verification (Optional). <span class="chk">(quote verified against the source)</span><blockquote>“If absent or empty, this ERC is used only for discovery, not for trust.”</blockquote></div><div class="claim">Summaries must be filtered by reviewers. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Read Functions (Reputation Registry). <span class="chk">(quote verified against the source)</span><blockquote>“clientAddresses MUST be provided (non-empty); results without filtering by clientAddresses are subject to Sybil/spam attacks.”</blockquote></div><div class="claim">Sybil attacks are possible. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Sybil attacks are possible, inflating the reputation of fake agents.”</blockquote></div><div class="claim">Validators can use re-execution, zkML or TEE oracles. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Validation Registry. <span class="chk">(quote verified against the source)</span><blockquote>“Validator smart contracts could use, for example, stake-secured inference re-execution, zkML verifiers or TEE oracles to validate or reject requests.”</blockquote></div><div class="claim">Validator incentives are out of scope. <i>Out of scope per</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Validation Response. <span class="chk">(quote verified against the source)</span><blockquote>“Incentives and slashing related to validation are managed by the specific validation protocol and are outside the scope of this registry.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ERC-8004 has no way to revoke an agent&#x27;s registration or access. The owner can change the registration file (which has an active flag) or transfer the agent, which clears its payment wallet, and clients can revoke their own feedback, but registrations cannot be removed and on-chain records cannot be deleted. Cutting off a misbehaving agent is left to each service.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No revocation is defined (same as all three calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">Clients can revoke their feedback. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Revoking Feedback. <span class="chk">(quote verified against the source)</span><blockquote>“clientAddress can revoke feedback by calling:”</blockquote></div><div class="claim">Records cannot be deleted. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“On-chain pointers and hashes cannot be deleted, ensuring audit trail integrity”</blockquote></div><div class="claim">The registration file carries an active flag. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Agent URI and Agent Registration File. <span class="chk">(quote verified against the source)</span><blockquote>“&quot;active&quot;: true,”</blockquote></div><div class="claim">Searched the Identity Registry for deregistration, burning or revocation of agents. None is defined. <i>Not found in</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Identity Registry; Registration.</div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The registration file&#x27;s service list, whose entries are free-form, includes an email service in the specification&#x27;s own example, so an agent may publish a contact address; it is not required. The owner&#x27;s blockchain address is public, and anyone, including the agent, can append public responses to feedback.<div class="meta">Optional in the specification</div><div class="meta">Why this rating: The protocol&#x27;s own registration format shows an optional email entry (the calibration examples are red because any contact field there sits outside the protocol).</div><details><summary>Evidence (2)</summary><div class="claim">The registration file example includes an email service. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Agent URI and Agent Registration File. <span class="chk">(quote verified against the source)</span><blockquote>“&quot;endpoint&quot;: &quot;mail@myagent.com&quot;”</blockquote></div><div class="claim">Endpoints are customizable, not required. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Agent URI and Agent Registration File. <span class="chk">(quote verified against the source)</span><blockquote>“The number and type of endpoints are fully customizable, allowing developers to add as many as they wish.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, this is ERC-8004&#x27;s core. Any client except the agent&#x27;s owner can post feedback about an agent to a public registry, as a value with optional tags (e.g. reachability, success rate) and an off-chain file; every other service can read and filter it. Anyone can append responses, e.g. marking feedback as spam. Signals can be faked by Sybil reviewers, so readers must choose whose feedback to count.<div class="meta">Part of the normal flow · requirement level: MUST NOT</div><div class="meta">Why this rating: A cross-party signalling mechanism is defined in the core specification (all three calibration examples are red).</div><details><summary>Evidence (3)</summary><div class="claim">Owners cannot rate their own agents. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Giving Feedback. <span class="chk">(quote verified against the source)</span><blockquote>“The feedback submitter MUST NOT be the agent owner or an approved operator for agentId.”</blockquote></div><div class="claim">Feedback is stored on-chain for composability. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Giving Feedback. <span class="chk">(quote verified against the source)</span><blockquote>“This exposes reputation signals to any smart contract, enabling on-chain composability.”</blockquote></div><div class="claim">Reputation Registry purpose. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Motivation. <span class="chk">(quote verified against the source)</span><blockquote>“A standard interface for posting and fetching feedback signals.”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ERC-8004 has no field for the AI model behind an agent. Its Validation Registry lets validators check an agent&#x27;s work, e.g. by re-running inference with stake, zero-knowledge machine-learning proofs or trusted execution environments, and the registration file can list a TEE attestation trust model, but the specification defines no model identity or attestation format; validators only record a 0 to 100 score with optional evidence.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No model identity is defined; validation hooks that could carry it are not counted (native-only rule, same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Validation response is a score with optional evidence. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Validation Response. <span class="chk">(quote verified against the source)</span><blockquote>“The response is a value between 0 and 100, which can be used as binary (0 for failed, 100 for passed) or with intermediate values for validations with a spectrum of outcomes.”</blockquote></div><div class="claim">Validation registry purpose. <i>Source states</i> <a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a>, Validation Registry. <span class="chk">(quote verified against the source)</span><blockquote>“This registry enables agents to request verification of their work and allows validator smart contracts to provide responses that can be tracked on-chain”</blockquote></div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md">ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)</a> (commit 503591a (status Draft), 2026-01-25)</li><li><a href="https://github.com/erc-8004/erc-8004-contracts/blob/b9e466c250744a7e06b13dff9d3c2844ed64f825/README.md">ERC-8004 reference contracts README (erc-8004/erc-8004-contracts)</a> (commit b9e466c, 2026-08-15)</li></ul><h2>Notes</h2><ul class="plain"><li>ERC-8004 is a discovery and reputation layer rather than a request-authentication protocol; many red rows reflect that design, with authentication left to protocols such as A2A or MCP that the registration file points to.</li><li>The ERC text at commit 503591a contains editor&#x27;s notes (e.g. on URIStorage and x402) and a commented-out Test Cases section, consistent with its Draft status.</li><li>The reference contracts at erc-8004/erc-8004-contracts are upgradeable proxies whose upgrade function is restricted to the contract owner; this is an implementation choice, not part of the ERC, but it affects who controls the deployed singletons.</li><li>Venue is recorded as other: the Ethereum ERC process has editors but is not a formal standards body.</li><li>The specification file in the contracts repository is identical to the ERC text from the Abstract onward.</li></ul><h2>Open questions</h2><ul class="plain"><li>How should an agent prove to a service that it controls a given agentId when it calls through A2A or MCP? The ERC lists DIDs, ENS and wallets as endpoints but defines no binding.</li><li>The Validation Registry is still being revised with the TEE community; will a model or runtime attestation format be added?</li><li>The email entry appears only in the registration-file example; is it intended as a standard service name?</li><li>Which of the deployed registries count as the canonical per-chain singletons the ERC expects, and who controls their upgrades?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (43 of 43 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-18. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-18",
+ "protocol": {
+  "name": "ERC-8004",
+  "full_name": "Trustless Agents",
+  "spec_version": "ERC-8004 (ERCS/erc-8004.md at commit 503591a, status Draft)",
+  "spec_date": "2026-01-25",
+  "maintainer": "ERC authors (M. De Rossi, MetaMask; D. Crapis, Ethereum Foundation; J. Ellis, Google; E. Reppel, Coinbase) through the Ethereum ERC process",
+  "newer_version_note": "Commit 503591a is the last change to the file; it is unchanged at the ERCs repository head (7214b22, 2026-11-17). The ERC moved to Review in October 2025 and an editor returned it to Draft on 2026-01-13."
+ },
+ "profile": {
+  "id": "erc-8004",
+  "category": "discovery-registry",
+  "secondary_categories": [
+   "attestation-provenance"
+  ],
+  "mechanisms": [
+   "other"
+  ],
+  "venue": "other",
+  "maturity": "draft",
+  "openness": "open-specification",
+  "layers": [
+   "metadata-document",
+   "other"
+  ],
+  "building_blocks": [
+   "ERC-721",
+   "EIP-712",
+   "ERC-1271",
+   "EIP-155",
+   "IPFS"
+  ],
+  "website": "https://eips.ethereum.org/EIPS/eip-8004",
+  "first_published": "2025-08"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "ERC-8004, \"Trustless Agents\", is an Ethereum standard proposal for finding AI agents and judging whether to trust them when there is no existing relationship. It defines three public registries as smart contracts on a blockchain: an Identity Registry that gives each agent an on-chain identifier pointing to a registration file, a Reputation Registry where clients post feedback about agents, and a Validation Registry where independent validators record checks of an agent's work. Its authors come from MetaMask, the Ethereum Foundation, Google and Coinbase. It is a Draft ERC: it reached Review in October 2025 and was returned to Draft in January 2026. Its reference registries are deployed on Ethereum mainnet and several other chains.",
+  "An agent's owner registers it as an ERC-721 token (an NFT), whose URI points to a JSON file listing the agent's name and services, such as A2A, MCP, ENS names, DIDs, wallets or an email address, and the trust models it supports. Anyone except the owner can post signed-number feedback and tags, and validators (e.g. re-execution with stake, zero-knowledge proofs, trusted execution environments) can post scores. A service deciding whether to deal with an agent can read these public signals, filtered by reviewers it trusts. ERC-8004 does not authenticate requests, carry credentials, define permissions or revocation, or identify users or models; it is a discovery and reputation layer meant to be combined with protocols such as A2A or MCP."
+ ],
+ "how_it_works": [
+  "The agent's owner calls register() on the chain's Identity Registry, receiving an agentId (an ERC-721 token) whose agentURI points to the agent's registration file, hosted on HTTPS, IPFS or fully on-chain.",
+  "The registration file lists the agent's services (e.g. its A2A agent card, MCP endpoint, ENS name, DID, email) and the trust models it supports; optionally the owner proves control of an endpoint domain by publishing a matching /.well-known/agent-registration.json.",
+  "A client or service discovers the agent (e.g. by crawling the registry) and interacts with it through the listed protocol, such as A2A or MCP; ERC-8004 does not define that interaction or how the agent proves its identity in it.",
+  "Afterwards, clients post feedback (a value plus optional tags and an off-chain file) to the Reputation Registry, and the agent's owner can ask a validator to check its work, which records a 0 to 100 score in the Validation Registry.",
+  "Before trusting the agent, a service reads summaries of feedback from reviewers it chooses and validation results from validators it trusts, and decides by its own policy."
+ ],
+ "sources": [
+  {
+   "id": "erc",
+   "title": "ERC-8004: Trustless Agents (ethereum/ERCs, ERCS/erc-8004.md)",
+   "url": "https://github.com/ethereum/ERCs/blob/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md",
+   "fetch_url": "https://raw.githubusercontent.com/ethereum/ERCs/503591a6e80e6e1affdd6403341e25269141f046/ERCS/erc-8004.md",
+   "version": "commit 503591a (status Draft)",
+   "date": "2026-01-25",
+   "kind": "primary"
+  },
+  {
+   "id": "contracts",
+   "title": "ERC-8004 reference contracts README (erc-8004/erc-8004-contracts)",
+   "url": "https://github.com/erc-8004/erc-8004-contracts/blob/b9e466c250744a7e06b13dff9d3c2844ed64f825/README.md",
+   "fetch_url": "https://raw.githubusercontent.com/erc-8004/erc-8004-contracts/b9e466c250744a7e06b13dff9d3c2844ed64f825/README.md",
+   "version": "commit b9e466c",
+   "date": "2026-08-15",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "On-chain registries for agent discovery and reputation",
+   "answer": "A draft Ethereum standard that puts three registries on a blockchain (identity, reputation and validation) so that anyone can discover an agent's advertised services and read public feedback and validator results about it, without a prior relationship; it does not authenticate the agent's requests.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Purpose: discover, choose and interact with agents without pre-existing trust.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Abstract",
+     "quote": "This protocol proposes to use blockchains to discover, choose, and interact with agents across organizational boundaries without pre-existing trust",
+     "check": "OK",
+     "check_fp": "ce65fd4202"
+    },
+    {
+     "text": "Three registries.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Motivation",
+     "quote": "This ERC addresses this need through three lightweight registries, which can be deployed on any L2 or on Mainnet as per-chain singletons:",
+     "check": "OK",
+     "check_fp": "de50f7e991"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agent discovery, reputation and validation on-chain",
+   "answer": "Open agent economies where clients find agents and decide whether to trust them, with security scaled to the value at risk (from ordering pizza to medical diagnosis). Information lives in smart contracts and in a registration file the contract points to, not in request headers or tokens. Anyone can read it from the chain; the agent's actual interaction runs over other protocols such as A2A or MCP, which ERC-8004 complements.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Trust models are tiered by value at risk.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Abstract",
+     "quote": "Trust models are pluggable and tiered, with security proportional to value at risk, from low-stake tasks like ordering pizza to high-stake tasks like medical diagnosis.",
+     "check": "OK",
+     "check_fp": "056e1c8239"
+    },
+    {
+     "text": "Communication protocols do not cover discovery and trust.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Motivation",
+     "quote": "However, these agent communication protocols don't inherently cover agent discovery and trust.",
+     "check": "OK",
+     "check_fp": "cb7995ff18"
+    },
+    {
+     "text": "Endpoints point to other protocols.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Agent URI and Agent Registration File",
+     "quote": "Agents MAY advertise their endpoints, which point to an A2A agent card, an MCP endpoint, an ENS agent name, DIDs, or the agent's wallets on any chain",
+     "check": "OK",
+     "check_fp": "701411f607"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Agent owner, operators, clients, validators, registries",
+   "answer": "The agent's owner (holder of the ERC-721 token), who may delegate management to operators. Clients (clientAddress), who give and revoke feedback. Validators (validatorAddress), smart contracts that answer validation requests. Responders: anyone may append responses to feedback. The three registry contracts (Identity, Reputation, Validation), expected as one deployment per chain. The agentWallet is the address where the agent receives payments.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Owner and operators.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Identity Registry",
+     "quote": "The owner of the ERC-721 token is the owner of the agent and can transfer ownership or delegate management (e.g., updating the registration file) to operators",
+     "check": "OK",
+     "check_fp": "42af08d598"
+    },
+    {
+     "text": "Clients give feedback.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Giving Feedback",
+     "quote": "New feedback can be added by any clientAddress calling:",
+     "check": "OK",
+     "check_fp": "d3c975f6c3"
+    },
+    {
+     "text": "Validators respond.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Validation Response",
+     "quote": "This function MUST be called by the validatorAddress specified in the original request.",
+     "check": "OK",
+     "check_fp": "0eec13e247"
+    },
+    {
+     "text": "Anyone can append responses.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Appending Responses",
+     "quote": "Anyone (e.g., the agentId showing a refund, any off-chain data intelligence aggregator tagging feedback as spam) can call:",
+     "check": "OK",
+     "check_fp": "7533b8f261"
+    },
+    {
+     "text": "agentWallet receives payments.",
+     "type": "fact",
+     "source": "erc",
+     "section": "On-chain metadata",
+     "quote": "It represents the address where the agent receives payments and is initially set to the owner's address.",
+     "check": "OK",
+     "check_fp": "0f43476a5a"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Draft ERC; registries live on mainnet",
+   "answer": "Draft. The ERC's status is Draft, after an EIP editor returned it from Review in January 2026, and the text still carries editor's notes; it requires ERC-721, EIP-712, ERC-1271 and EIP-155. The reference implementation deploys the Identity and Reputation Registries on Ethereum mainnet and several other chains; its README says the Validation Registry part is still being revised with the TEE community.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: still a draft standard, although its reference registries are publicly deployed (same as Web Bot Auth).",
+   "claims": [
+    {
+     "text": "Status is Draft.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Preamble",
+     "quote": "status: Draft",
+     "check": "OK",
+     "check_fp": "e2f56568ff"
+    },
+    {
+     "text": "Required standards.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Preamble",
+     "quote": "requires: 155, 712, 721, 1271",
+     "check": "OK",
+     "check_fp": "ccf03a7328"
+    },
+    {
+     "text": "Deployment: Identity Registry on Ethereum mainnet.",
+     "type": "fact",
+     "source": "contracts",
+     "section": "Contract Addresses > Ethereum Mainnet",
+     "quote": "IdentityRegistry: 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+     "check": "OK",
+     "check_fp": "9218ac28b3"
+    },
+    {
+     "text": "Validation Registry still being revised.",
+     "type": "fact",
+     "source": "contracts",
+     "section": "Validation Registry",
+     "quote": "portion of the ERC-8004 spec is still under active update and discussion with the TEE community.",
+     "check": "OK",
+     "check_fp": "d291bfc4fb"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "ERC-721, EIP-712, ERC-1271, IPFS",
+   "answer": "ERC-721 non-fungible tokens with the URIStorage extension for agent identities; EIP-712 typed signatures (for ordinary accounts) and ERC-1271 (for smart-contract wallets) to prove control of a new agent wallet; EIP-155 chain identifiers in the agentRegistry string; IPFS, HTTPS or data URIs for registration and feedback files, with keccak-256 hashes for integrity. The editors note that the URIStorage extension is not itself standardised.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Identity Registry uses ERC-721 with URIStorage.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Identity Registry",
+     "quote": "The Identity Registry uses ERC-721 with the URIStorage extension for agent registration",
+     "check": "OK",
+     "check_fp": "6b6280ac62"
+    },
+    {
+     "text": "Wallet change requires EIP-712 or ERC-1271 signature.",
+     "type": "fact",
+     "source": "erc",
+     "section": "On-chain metadata",
+     "quote": "To change it, the agent owner must prove control of the new wallet by providing a valid EIP-712 signature for EOAs or ERC-1271 for smart contract wallets",
+     "check": "OK",
+     "check_fp": "7b84f3482a"
+    },
+    {
+     "text": "Editor's note on URIStorage.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Motivation",
+     "quote": "Editor's Note: where is URIStorage defined?",
+     "check": "OK",
+     "check_fp": "ee1917dba5"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "agentRegistry + agentId, not sent in requests",
+   "answer": "Partly. Each agent gets a globally unique identifier: the registry address with its chain (agentRegistry, e.g. eip155:1:0x742...) plus an agentId, the ERC-721 token number. It names one registered agent, not its provider. But ERC-8004 defines no way for an agent to present this identifier, or prove it is that agent, when it sends a request, so a receiving service learns it only if told through another protocol. An agent may also be registered several times on different chains.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Yellow: the identifier names an individual agent registration, but the protocol gives the service no way to receive or bind it to a request; lower of two plausible colours (ANS, which presents its identifier in a certificate, is green).",
+   "claims": [
+    {
+     "text": "Global identification by agentRegistry and agentId.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Identity Registry",
+     "quote": "The ERC-721 tokenId assigned incrementally by the registry",
+     "check": "OK",
+     "check_fp": "f98f83f00d"
+    },
+    {
+     "text": "Portable, censorship-resistant identifier.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Motivation",
+     "quote": "providing every agent with a portable, censorship-resistant identifier.",
+     "check": "OK",
+     "check_fp": "d8d28ace7b"
+    },
+    {
+     "text": "Multiple registrations are possible.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Endpoint Domain Verification (Optional)",
+     "quote": "Agents SHOULD have at least one registration (multiple are possible), and all fields in the registration are mandatory.",
+     "check": "OK",
+     "check_fp": "389a9efc6a"
+    },
+    {
+     "text": "Searched the specification for a way to present agentId or prove control of it in a request to a service. None is defined; interaction happens through listed endpoints of other protocols.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Specification; Rationale",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. The agentId identifies a registered agent, which may have any number of running copies and endpoints. ERC-8004 defines nothing that identifies a specific running instance or session. Feedback files can mention A2A task and context identifiers, but those describe the interaction being rated, not the agent instance.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Feedback can reference A2A task and context IDs.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Off-Chain Feedback File Structure",
+     "quote": "A2A: see \"Context Identifier Semantics\" and Task model in the A2A specification.",
+     "check": "OK",
+     "check_fp": "122c2c420f"
+    },
+    {
+     "text": "Searched the Identity Registry and registration file sections for an instance or session identifier. None is defined.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Identity Registry; Agent URI and Agent Registration File",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "No; only the agent's owner address",
+   "answer": "No. ERC-8004 records the agent's owner (the address holding its token) and an agentWallet for payments, but defines nothing that tells a service on whose behalf a given request or task is performed. The owner is the party that controls the registration, not necessarily the user the agent serves.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not defined (same as MCP Authorization); the owner address is not the principal of a request.",
+   "claims": [
+    {
+     "text": "The token owner is the agent's owner.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Identity Registry",
+     "quote": "The owner of the ERC-721 token is the owner of the agent and can transfer ownership or delegate management (e.g., updating the registration file) to operators",
+     "check": "OK",
+     "check_fp": "42af08d598"
+    },
+    {
+     "text": "Searched the specification for a user, principal or on-behalf-of field. None is defined.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Specification",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "None for requests",
+   "answer": "No. ERC-8004 defines no credential that an agent presents to a service with its requests. Blockchain transactions to the registries are signed by the caller's account, and changing the agent wallet needs a signature, but these protect registry updates, not the agent's interactions with services. Authentication of requests is left to the protocols listed in the registration file (e.g. A2A, MCP, DIDs).",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no credential is presented to the service (all three calibration examples are green because they define one).",
+   "claims": [
+    {
+     "text": "Wallet change needs a signature, for registry updates only.",
+     "type": "fact",
+     "source": "erc",
+     "section": "On-chain metadata",
+     "quote": "function setAgentWallet(uint256 agentId, address newWallet, uint256 deadline, bytes calldata signature) external",
+     "check": "OK",
+     "check_fp": "584f1c5481"
+    },
+    {
+     "text": "Searched the specification for request signing, tokens or certificates presented to services. None is defined.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Specification",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Not applicable; no credential",
+   "answer": "Not specified. With no request credential there is no lifetime to set. The only time limit in the specification is a deadline parameter on the signed request to change the agent wallet, which concerns registry management. Registrations themselves do not expire.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: unspecified, because no request credential is defined.",
+   "claims": [
+    {
+     "text": "setAgentWallet takes a deadline.",
+     "type": "fact",
+     "source": "erc",
+     "section": "On-chain metadata",
+     "quote": "function setAgentWallet(uint256 agentId, address newWallet, uint256 deadline, bytes calldata signature) external",
+     "check": "OK",
+     "check_fp": "584f1c5481"
+    },
+    {
+     "text": "Searched the Identity Registry for expiry of registrations or credentials. None is defined.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Identity Registry",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "No request credential; registration checkable",
+   "answer": "No, for requests. A service can check registry data, which is public and tamper-evident on the chain, and, optionally, that an endpoint domain publishes a matching registration file. But with no credential on requests, it cannot check that a given request really comes from the registered agent, and it cannot check that advertised capabilities are genuine.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: there is no request credential to validate; registry lookups and optional domain checks are noted in the answer.",
+   "claims": [
+    {
+     "text": "Optional endpoint domain verification.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Endpoint Domain Verification (Optional)",
+     "quote": "an agent MAY optionally prove control of an HTTPS endpoint-domain by publishing",
+     "check": "OK",
+     "check_fp": "97ce9dab23"
+    },
+    {
+     "text": "Capabilities are not guaranteed.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Security Considerations",
+     "quote": "it cannot cryptographically guarantee that advertised capabilities are functional and non-malicious.",
+     "check": "OK",
+     "check_fp": "f975783cf9"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "No",
+   "answer": "No. ERC-8004 does not let a service authenticate an agent or a user. It records who controls a registration on-chain, but defines no proof an agent gives a service when it calls it; any authentication must come from the interaction protocol the agent advertises.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same colour as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the specification for authentication of agents or users toward services. None is defined.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Specification; Security Considerations",
+     "quote": ""
+    },
+    {
+     "text": "Interaction runs through other protocols listed in the registration file.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Rationale",
+     "quote": "this protocol links from the blockchain to a flexible registration file including a list where endpoints can be added at will",
+     "check": "OK",
+     "check_fp": "e94b445973"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "No",
+   "answer": "No. ERC-8004 carries no permissions or limits for what an agent may do at a service. Feedback tags and validation scores describe past behaviour and quality, and the registration file describes offered services, but none of them grants or limits access; payments are explicitly not covered.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as Web Bot Auth).",
+   "claims": [
+    {
+     "text": "Payments are not covered.",
+     "type": "out_of_scope",
+     "source": "erc",
+     "section": "Motivation",
+     "quote": "Payments are orthogonal to this protocol and not covered here.",
+     "check": "OK",
+     "check_fp": "a15f4300e4"
+    },
+    {
+     "text": "Searched the registries and registration file for permissions, scopes or limits. None is defined.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Specification",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "No",
+   "answer": "No. ERC-8004 has no step in which a person approves an agent's access or action. Registration, feedback and validation are blockchain transactions by account holders, not approvals of individual agent actions.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as Web Bot Auth and Visa TAP).",
+   "claims": [
+    {
+     "text": "Searched the specification for consent, approval or user confirmation. None is defined.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Specification",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Optional: chosen reviewers and validators",
+   "answer": "Partly, and by the service's own choice. Nobody is designated to vouch: clients post public feedback and validators (e.g. stake-secured re-execution, zero-knowledge proofs, trusted execution environments) post scores, and the service decides whose signals to trust. Summaries must be filtered by chosen reviewers because Sybil attacks (fake reviewers) are possible. Trust models are optional; an agent that lists none uses ERC-8004 for discovery only.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: vouching is defined but optional and decentralised, with no party the protocol names as trusted (Web Bot Auth is red with no vouching; MCP Authorization and Visa TAP are green with a named party).",
+   "claims": [
+    {
+     "text": "Trust is optional.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Endpoint Domain Verification (Optional)",
+     "quote": "If absent or empty, this ERC is used only for discovery, not for trust.",
+     "check": "OK",
+     "check_fp": "c15c50924a"
+    },
+    {
+     "text": "Summaries must be filtered by reviewers.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Read Functions (Reputation Registry)",
+     "quote": "clientAddresses MUST be provided (non-empty); results without filtering by clientAddresses are subject to Sybil/spam attacks.",
+     "check": "OK",
+     "check_fp": "7dbb867582"
+    },
+    {
+     "text": "Sybil attacks are possible.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Security Considerations",
+     "quote": "Sybil attacks are possible, inflating the reputation of fake agents.",
+     "check": "OK",
+     "check_fp": "9f974d2082"
+    },
+    {
+     "text": "Validators can use re-execution, zkML or TEE oracles.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Validation Registry",
+     "quote": "Validator smart contracts could use, for example, stake-secured inference re-execution, zkML verifiers or TEE oracles to validate or reject requests.",
+     "check": "OK",
+     "check_fp": "6951baf82b"
+    },
+    {
+     "text": "Validator incentives are out of scope.",
+     "type": "out_of_scope",
+     "source": "erc",
+     "section": "Validation Response",
+     "quote": "Incentives and slashing related to validation are managed by the specific validation protocol and are outside the scope of this registry.",
+     "check": "OK",
+     "check_fp": "bf309e5628"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "No",
+   "answer": "No. ERC-8004 has no way to revoke an agent's registration or access. The owner can change the registration file (which has an active flag) or transfer the agent, which clears its payment wallet, and clients can revoke their own feedback, but registrations cannot be removed and on-chain records cannot be deleted. Cutting off a misbehaving agent is left to each service.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no revocation is defined (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Clients can revoke their feedback.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Revoking Feedback",
+     "quote": "clientAddress can revoke feedback by calling:",
+     "check": "OK",
+     "check_fp": "5f4b2275a9"
+    },
+    {
+     "text": "Records cannot be deleted.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Security Considerations",
+     "quote": "On-chain pointers and hashes cannot be deleted, ensuring audit trail integrity",
+     "check": "OK",
+     "check_fp": "8b4cf50826"
+    },
+    {
+     "text": "The registration file carries an active flag.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Agent URI and Agent Registration File",
+     "quote": "\"active\": true,",
+     "check": "OK",
+     "check_fp": "49cfeedf33"
+    },
+    {
+     "text": "Searched the Identity Registry for deregistration, burning or revocation of agents. None is defined.",
+     "type": "silent",
+     "source": "erc",
+     "section": "Identity Registry; Registration",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "Optional email service entry",
+   "answer": "Partly. The registration file's service list, whose entries are free-form, includes an email service in the specification's own example, so an agent may publish a contact address; it is not required. The owner's blockchain address is public, and anyone, including the agent, can append public responses to feedback.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "none",
+   "rating_reason": "Yellow: the protocol's own registration format shows an optional email entry (the calibration examples are red because any contact field there sits outside the protocol).",
+   "claims": [
+    {
+     "text": "The registration file example includes an email service.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Agent URI and Agent Registration File",
+     "quote": "\"endpoint\": \"mail@myagent.com\"",
+     "check": "OK",
+     "check_fp": "9fd448fcfa"
+    },
+    {
+     "text": "Endpoints are customizable, not required.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Agent URI and Agent Registration File",
+     "quote": "The number and type of endpoints are fully customizable, allowing developers to add as many as they wish.",
+     "check": "OK",
+     "check_fp": "3851fb8a72"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "Yes: public on-chain feedback",
+   "answer": "Yes, this is ERC-8004's core. Any client except the agent's owner can post feedback about an agent to a public registry, as a value with optional tags (e.g. reachability, success rate) and an off-chain file; every other service can read and filter it. Anyone can append responses, e.g. marking feedback as spam. Signals can be faked by Sybil reviewers, so readers must choose whose feedback to count.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST NOT",
+   "rating_reason": "Green: a cross-party signalling mechanism is defined in the core specification (all three calibration examples are red).",
+   "claims": [
+    {
+     "text": "Owners cannot rate their own agents.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Giving Feedback",
+     "quote": "The feedback submitter MUST NOT be the agent owner or an approved operator for agentId.",
+     "check": "OK",
+     "check_fp": "51abc0ae41"
+    },
+    {
+     "text": "Feedback is stored on-chain for composability.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Giving Feedback",
+     "quote": "This exposes reputation signals to any smart contract, enabling on-chain composability.",
+     "check": "OK",
+     "check_fp": "3426cff5e1"
+    },
+    {
+     "text": "Reputation Registry purpose.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Motivation",
+     "quote": "A standard interface for posting and fetching feedback signals.",
+     "check": "OK",
+     "check_fp": "7cf77f353b"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No; validation could cover it, undefined",
+   "answer": "No. ERC-8004 has no field for the AI model behind an agent. Its Validation Registry lets validators check an agent's work, e.g. by re-running inference with stake, zero-knowledge machine-learning proofs or trusted execution environments, and the registration file can list a TEE attestation trust model, but the specification defines no model identity or attestation format; validators only record a 0 to 100 score with optional evidence.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no model identity is defined; validation hooks that could carry it are not counted (native-only rule, same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Validation response is a score with optional evidence.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Validation Response",
+     "quote": "The response is a value between 0 and 100, which can be used as binary (0 for failed, 100 for passed) or with intermediate values for validations with a spectrum of outcomes.",
+     "check": "OK",
+     "check_fp": "079e7df91d"
+    },
+    {
+     "text": "Validation registry purpose.",
+     "type": "fact",
+     "source": "erc",
+     "section": "Validation Registry",
+     "quote": "This registry enables agents to request verification of their work and allows validator smart contracts to provide responses that can be tracked on-chain",
+     "check": "OK",
+     "check_fp": "4395c27ceb"
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "ERC-8004 gives a service public information to help decide whether to engage an agent (its advertised services, feedback from chosen reviewers, validator scores), but no credential or permissions to enforce on requests.",
+  "incident_response": "A service can post negative feedback that other services can read, but there is no revocation or way to cut an agent off; the owner controls its registration and records cannot be deleted.",
+  "accountability": "Registrations, feedback and validations form a permanent public record tied to blockchain addresses (the agent's owner, reviewers, validators); requests themselves are not tied to the agent, a user or a model by this standard."
+ },
+ "notes": [
+  "ERC-8004 is a discovery and reputation layer rather than a request-authentication protocol; many red rows reflect that design, with authentication left to protocols such as A2A or MCP that the registration file points to.",
+  "The ERC text at commit 503591a contains editor's notes (e.g. on URIStorage and x402) and a commented-out Test Cases section, consistent with its Draft status.",
+  "The reference contracts at erc-8004/erc-8004-contracts are upgradeable proxies whose upgrade function is restricted to the contract owner; this is an implementation choice, not part of the ERC, but it affects who controls the deployed singletons.",
+  "Venue is recorded as other: the Ethereum ERC process has editors but is not a formal standards body.",
+  "The specification file in the contracts repository is identical to the ERC text from the Abstract onward."
+ ],
+ "open_questions": [
+  "How should an agent prove to a service that it controls a given agentId when it calls through A2A or MCP? The ERC lists DIDs, ENS and wallets as endpoints but defines no binding.",
+  "The Validation Registry is still being revised with the TEE community; will a model or runtime attestation format be added?",
+  "The email entry appears only in the registration-file example; is it intended as a standard service name?",
+  "Which of the deployed registries count as the canonical per-chain singletons the ERC expects, and who controls their upgrades?"
+ ]
+}</script></body></html>

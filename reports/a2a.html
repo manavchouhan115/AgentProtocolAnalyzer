@@ -1,0 +1,1096 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>A2A: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>A2A<small>Agent2Agent (A2A) Protocol</small></h1><ul class="facts"><li><b>Specification:</b> A2A Protocol v1.0.1 (git tag v1.0.1, commit 3303592)</li><li><b>Date:</b> 2026-05-26</li><li><b>Maintainer:</b> A2A project under the Linux Foundation (contributed by Google), guided by a technical steering committee</li><li><b>Analysed:</b> 2026-11-18</li><li><b>Version note:</b> v1.0.1 is the latest released version. A release candidate v1.1.0-rc (tagged 2026-10-29) exists and was not analysed; it adds, among other things, a section stating that A2A does not define the scope, validity or revocation of in-task authorization.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent communication</span><span class="chip"><b>Also:</b> Discovery registry</span><span class="chip"><b>Mechanism:</b> Bearer token, API key, mTLS, Signed metadata</span><span class="chip"><b>Venue:</b> Foundation</span><span class="chip"><b>Maturity:</b> Stable</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>The Agent2Agent (A2A) Protocol is an open standard for AI agents built by different vendors and frameworks to discover each other, hand over tasks and exchange results, without sharing their internal memory or tools. One agent (the A2A client) sends messages and tasks to another agent (the A2A server, or remote agent), which publishes an Agent Card describing what it can do and how callers must authenticate. Google started the project in April 2025; it is now maintained under the Linux Foundation. Version 1.0 was released in March 2026 as the first stable version, and v1.0.1 (May 2026) is the latest release. Microsoft Foundry Agent Service, among others, serves it.</p><p>For identity and access, A2A deliberately reuses standard web security rather than defining its own. The server lists in its Agent Card which schemes it accepts (API key, HTTP authentication such as a bearer token, OAuth 2.0, OpenID Connect or mutual TLS); the client obtains credentials outside A2A and sends them with every request, and the server must authenticate and authorize every request. A2A messages themselves carry no user or client identity. Agent Cards can be signed, which helps the client trust the server, not the other way round. A2A defines a task state for asking the client to obtain extra authorization mid-task, but no client agent identifier, credential lifetime, revocation, contact channel or model identity.</p><h2 id="how">How it works</h2><ol class="steps"><li>The A2A server (the receiving agent) publishes an Agent Card, e.g. at /.well-known/agent-card.json, describing its skills, endpoints and the security schemes and scopes it requires. The card may be signed with JWS.</li><li>The A2A client (the calling agent or application) reads the Agent Card and picks a protocol binding (JSON-RPC, gRPC or HTTP+JSON) and a security scheme.</li><li>The client obtains the matching credential outside A2A, e.g. an OAuth access token from the authorization server named in the card, an API key, or a client certificate for mutual TLS.</li><li>The client sends a message (e.g. SendMessage) with the credential in an HTTP header or gRPC metadata on every request. A2A messages carry no user or client identity of their own.</li><li>The server authenticates the request with its declared scheme, applies its own authorization policy (e.g. per-skill scopes), and creates or continues a task. If it needs more authorization during the task, it sets the task to TASK_STATE_AUTH_REQUIRED and the client arranges it outside A2A.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>A2A</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Agents delegate tasks to other agents</td></tr><tr><td class="prop">Use cases</td><td class="">Agent-to-agent task delegation over HTTP or gRPC</td></tr><tr><td class="prop">Parties involved</td><td class="">A2A client, A2A server (remote agent), user</td></tr><tr><td class="prop">Status and adoption</td><td class="green">Stable v1.0.1; served by Microsoft Foundry</td></tr><tr><td class="prop">Building blocks</td><td class="">HTTP, JSON-RPC, gRPC, OpenAPI security schemes, OAuth, JWS</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="red">None for the calling agent</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="red">No; depends on chosen auth scheme</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Server&#x27;s choice: API key, token, OAuth, OIDC, mTLS</td></tr><tr><td class="prop">Credential lifetime</td><td class="red">Not specified</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="yellow">Must reject invalid; checks left to scheme</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="red">Credential check only; scheme decides whose</td></tr><tr><td class="prop">Scoped authorization</td><td class="yellow">Checks required; scopes optional, per skill</td></tr><tr><td class="prop">Human approval</td><td class="yellow">Optional mid-task request; approval outside A2A</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="yellow">Only the issuer named in OAuth/OIDC schemes</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="red">Recommended, not defined</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No for callers</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The receiving agent must authenticate and authorize every request with the scheme it declared, and can require OAuth scopes per skill, but what is checked and how finely is left to each agent and to the external credential issuer.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>A2A defines no revocation; a misbehaving caller can be cut off only through the credential scheme (e.g. deleting its API key or revoking its OAuth grant), at the granularity that scheme gives, which is usually a client or user, not an agent instance.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>An action can be traced only to whatever identity the credential carries (a key holder, an OAuth client, a user or a certificate subject); A2A messages add no caller, user or model identity.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Identifier:</b> None for the calling agent (handled outside the protocol)</li><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Acting for (authority):</b> No; depends on chosen auth scheme (handled outside the protocol)</li><li><b>Credential lifetime:</b> Not specified (not addressed by the specification)</li><li><b>Authentication of the agent or user:</b> Credential check only; scheme decides whose (handled outside the protocol)</li><li><b>Revocation:</b> Recommended, not defined (not addressed by the specification)</li><li><b>Contact and escalation:</b> No for callers (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>A2A</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An open protocol in which one AI agent sends tasks and messages to another agent&#x27;s A2A endpoint, discovered through that agent&#x27;s Agent Card, with authentication delegated to standard web schemes (API keys, OAuth 2.0, OpenID Connect, mutual TLS) that the receiving agent declares.<details><summary>Evidence (3)</summary><div class="claim">A2A is an open standard for communication between independent agent systems. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“The Agent2Agent (A2A) Protocol is an open standard designed to facilitate communication and interoperability between independent, potentially opaque AI agent systems.”</blockquote></div><div class="claim">Every A2A server publishes an Agent Card. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 8.1. Purpose. <span class="chk">(quote verified against the source)</span><blockquote>“A2A Servers MUST make an Agent Card available.”</blockquote></div><div class="claim">Authentication schemes are declared in the Agent Card and credentials are obtained outside A2A. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.3. Client Authentication Process. <span class="chk">(quote verified against the source)</span><blockquote>“The client discovers the server&#x27;s required authentication schemes via the securitySchemes field in the AgentCard.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Multi-agent systems where an agent or application (the A2A client) delegates work to a remote agent (the A2A server), across vendors and organisations. Messages travel in the body of JSON-RPC, gRPC or HTTP+JSON requests; credentials travel in HTTP headers or gRPC metadata, and identity is established at that transport layer, not inside A2A messages. The receiving agent, or a gateway in front of it, verifies the credential with whatever scheme it declared.<details><summary>Evidence (5)</summary><div class="claim">The client initiates requests on behalf of a user or another system. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 2.2. Core Concepts. <span class="chk">(quote verified against the source)</span><blockquote>“A2A Client: An application or agent that initiates requests to an A2A Server on behalf of a user or another system.”</blockquote></div><div class="claim">Three standard protocol bindings. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 1.3. Specification Structure. <span class="chk">(quote verified against the source)</span><blockquote>“Layer 3: Protocol Bindings provides concrete mappings of the abstract operations and data structures to specific protocol bindings (JSON-RPC, gRPC, HTTP/REST)”</blockquote></div><div class="claim">Credentials are sent in headers or metadata on every request. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.3. Client Authentication Process. <span class="chk">(quote verified against the source)</span><blockquote>“The client includes these credentials in protocol-appropriate headers or metadata for every A2A request.”</blockquote></div><div class="claim">Identity is handled at the transport layer, not inside A2A. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7. Authentication and Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“Identity information is handled at the protocol layer, not within A2A semantics.”</blockquote></div><div class="claim">Verification by a gateway in front of the agent is not described by A2A; it follows from the use of standard HTTP authentication schemes (inference). <i>Inferred from</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md">A2A documentation, Enterprise Implementation of A2A (docs/topics/enterprise-ready.md)</a>, Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“A2A delegates authentication to standard web mechanisms.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">A2A Client: an application or agent that starts requests to an A2A server on behalf of a user or another system. A2A Server (Remote Agent): an agent that exposes an A2A endpoint, processes tasks and publishes an Agent Card naming its provider (organization and URL). User: the party the client acts for; messages from the client side carry the role &quot;user&quot;. Credential issuers (e.g. an OAuth authorization server or OpenID Connect provider) and agent registries appear only by reference; A2A does not define them as roles.<details><summary>Evidence (5)</summary><div class="claim">A2A Client role. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 2.2. Core Concepts. <span class="chk">(quote verified against the source)</span><blockquote>“A2A Client: An application or agent that initiates requests to an A2A Server on behalf of a user or another system.”</blockquote></div><div class="claim">A2A Server role. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 2.2. Core Concepts. <span class="chk">(quote verified against the source)</span><blockquote>“A2A Server (Remote Agent): An agent or agentic system that exposes an A2A-compliant endpoint, processing tasks and providing responses.”</blockquote></div><div class="claim">The Agent Card names the server&#x27;s provider. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message AgentProvider. <span class="chk">(quote verified against the source)</span><blockquote>“The name of the agent provider&#x27;s organization.”</blockquote></div><div class="claim">The client-side message role is called user. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, enum Role. <span class="chk">(quote verified against the source)</span><blockquote>“The message is from the client to the server.”</blockquote></div><div class="claim">Registries are a discovery option without a defined API. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/agent-discovery.md">A2A documentation, Agent Discovery (docs/topics/agent-discovery.md)</a>, 2. Curated Registries (Catalog-Based Discovery). <span class="chk">(quote verified against the source)</span><blockquote>“The current A2A specification does not prescribe a standard API for curated registries.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="green"><span class="badge">Addressed</span><br>Released. v1.0, released in March 2026, is described by the project as its first stable, production-ready version, and v1.0.1 (May 2026) is the latest release; a v1.1.0 release candidate exists. The project is open source under the Linux Foundation, contributed by Google. Microsoft Foundry Agent Service serves A2A v1.0 as generally available for agents exposed as A2A endpoints.<div class="meta">Why this rating: A released version its maintainers call production-ready, with a named deployment documented by the deployer (Microsoft Foundry).</div><details><summary>Evidence (4)</summary><div class="claim">v1.0 is the first stable, production-ready version. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/announcing-1.0.md">A2A Protocol Ships v1.0 (docs/announcing-1.0.md)</a>, A2A Protocol Ships v1.0. <span class="chk">(quote verified against the source)</span><blockquote>“marking the first stable, production-ready version of the open standard for communication between AI agents”</blockquote></div><div class="claim">v1.0.1 release entry in the changelog. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/CHANGELOG.md">A2A repository CHANGELOG.md</a>, Changelog entry for release 1.0.1. <span class="chk">(quote verified against the source)</span><blockquote>“1.0.1 (2026-05-26)”</blockquote></div><div class="claim">Maintained under the Linux Foundation, contributed by Google. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/README.md">A2A repository README.md</a>, About. <span class="chk">(quote verified against the source)</span><blockquote>“The A2A Protocol is an open source project under the Linux Foundation, contributed by Google.”</blockquote></div><div class="claim">Deployment: Microsoft Foundry Agent Service supports A2A 1.0 as generally available. <i>Source states</i> <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/enable-agent-to-agent-endpoint">Microsoft Learn, Enable an A2A endpoint for a Foundry agent</a>, Supported versions. <span class="chk">(quote verified against the source)</span><blockquote>“Foundry Agent Service supports generally available A2A protocol version 1.0 and preview version 0.3.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">Transport: HTTP, JSON-RPC 2.0, gRPC and Server-Sent Events, with Protocol Buffers as the normative data model. Security schemes follow the OpenAPI 3.2 Security Scheme Object: API key, HTTP authentication, OAuth 2.0 (with RFC 8414 metadata, PKCE and the device code flow), OpenID Connect and mutual TLS; the OAuth implicit and password flows are deprecated. Agent Card signing uses JWS (RFC 7515) over JSON canonicalized with JCS (RFC 8785).<details><summary>Evidence (5)</summary><div class="claim">Reuses HTTP, JSON-RPC 2.0 and SSE. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 1.2. Guiding Principles. <span class="chk">(quote verified against the source)</span><blockquote>“Reuse existing, well-understood standards (HTTP, JSON-RPC 2.0, Server-Sent Events).”</blockquote></div><div class="claim">Security schemes are based on OpenAPI 3.2. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message SecurityScheme. <span class="chk">(quote verified against the source)</span><blockquote>“This is a discriminated union type based on the OpenAPI 3.2 Security Scheme Object.”</blockquote></div><div class="claim">Implicit flow deprecated in favour of authorization code with PKCE. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message OAuthFlows. <span class="chk">(quote verified against the source)</span><blockquote>“Deprecated: Use Authorization Code + PKCE instead.”</blockquote></div><div class="claim">Agent Card signing uses JWS. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 8.4. Agent Card Signing. <span class="chk">(quote verified against the source)</span><blockquote>“Agent Cards MAY be digitally signed using JSON Web Signature (JWS) as defined in RFC 7515 to ensure authenticity and integrity.”</blockquote></div><div class="claim">Canonicalization uses JCS (RFC 8785). <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 8.4.1. Canonicalization Requirements. <span class="chk">(quote verified against the source)</span><blockquote>“Before signing, the Agent Card content MUST be canonicalized using the JSON Canonicalization Scheme (JCS) as defined in RFC 8785.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No A2A identifier for the calling agent. The Agent Card identifies the receiving agent (the server) to the caller, not the other way round, and A2A messages carry no client or user identity. Whatever identity the server learns comes from the security scheme it chose (e.g. an API key, an OAuth token&#x27;s client, or a client certificate), so its form and meaning are left to that scheme.<div class="meta">Handled outside the protocol</div><div class="meta">Why this rating: A2A defines no identifier for the agent side; identity comes only from the external credential scheme. This differs from MCP Authorization (yellow), which requires a client_id from its own registration mechanisms.</div><details><summary>Evidence (4)</summary><div class="claim">The Agent Card describes the server, not the client. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 8.1. Purpose. <span class="chk">(quote verified against the source)</span><blockquote>“The Agent Card describes the server&#x27;s identity, capabilities, skills, and interaction requirements.”</blockquote></div><div class="claim">A2A payloads carry no user or client identity. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md">A2A documentation, Enterprise Implementation of A2A (docs/topics/enterprise-ready.md)</a>, Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“A2A protocol payloads, such as JSON-RPC messages, don&#x27;t carry user or client identity information directly.”</blockquote></div><div class="claim">Identity is established at the transport layer. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md">A2A documentation, Enterprise Implementation of A2A (docs/topics/enterprise-ready.md)</a>, Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“Identity is established at the transport/HTTP layer.”</blockquote></div><div class="claim">Searched Core Concepts, the Message object, Section 7 and the proto for a client or caller identifier. The Message has only a message ID, a role and optional context and task IDs. <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message Message; message SendMessageRequest.</div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. A2A defines no identifier for a specific calling agent instance. The contextId and taskId fields group related messages and track units of work; they identify a conversation or a task, not the agent that sent it, and the server usually generates them. The tenant field routes requests to one of several agents behind a server endpoint, so it names a receiving agent, not a caller.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier for the caller is defined (same as all three calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">contextId groups related tasks and messages. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 3.4.1. Context Identifier Semantics. <span class="chk">(quote verified against the source)</span><blockquote>“A contextId is an identifier that logically groups multiple related Task and Message objects, providing continuity across a series of interactions.”</blockquote></div><div class="claim">Task IDs are generated by the server. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 3.4.2. Task Identifier Semantics. <span class="chk">(quote verified against the source)</span><blockquote>“Task IDs are server-generated when a new task is created in response to a Message”</blockquote></div><div class="claim">tenant routes to a receiving agent behind a shared endpoint. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message AgentInterface. <span class="chk">(quote verified against the source)</span><blockquote>“An opaque string used for routing requests to a specific agent”</blockquote></div><div class="claim">Searched Section 3.4, Section 7 and the proto Message and request objects for an agent instance or session identifier of the caller. None is defined. <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 3.4. Multi-Turn Interactions; 7. Authentication and Authorization.</div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not by A2A. The client acts on behalf of a user or another system, but A2A messages do not say who that is; the role &quot;user&quot; only marks a message as coming from the client side. The server may learn the user from its chosen credential (e.g. an OpenID Connect or OAuth token that represents an end user), and the documentation says authorization should use that identity, which could be a user, a client application, or both.<div class="meta">Handled outside the protocol</div><div class="meta">Why this rating: A2A defines no field naming the principal; it is available only if the external credential scheme carries it (native-only rule, same as MCP Authorization).</div><details><summary>Evidence (4)</summary><div class="claim">The client acts on behalf of a user or another system. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 2.2. Core Concepts. <span class="chk">(quote verified against the source)</span><blockquote>“A2A Client: An application or agent that initiates requests to an A2A Server on behalf of a user or another system.”</blockquote></div><div class="claim">Payloads carry no user identity. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md">A2A documentation, Enterprise Implementation of A2A (docs/topics/enterprise-ready.md)</a>, Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“A2A protocol payloads, such as JSON-RPC messages, don&#x27;t carry user or client identity information directly.”</blockquote></div><div class="claim">The authenticated identity could be a user, a client application, or both. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md">A2A documentation, Enterprise Implementation of A2A (docs/topics/enterprise-ready.md)</a>, Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“Authorization should be applied based on the authenticated identity, which could represent an end user, a client application, or both.”</blockquote></div><div class="claim">The user role only marks the message direction. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, enum Role. <span class="chk">(quote verified against the source)</span><blockquote>“The message is from the client to the server.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, a credential on every request, of a type the server chooses. The Agent Card declares one or more security schemes (API key, HTTP authentication such as a bearer token, OAuth 2.0, OpenID Connect, or mutual TLS); the client sends the credential in headers or gRPC metadata on every request, and the server must authenticate each one. Except for mutual TLS, these are bearer credentials: whoever holds them can use them. For credentials passed in-band during a task, the spec recommends binding them to the requesting agent but defines no mechanism.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A credential declared by the server is presented on every request and must be verified (same as MCP Authorization); the answer notes most schemes are bearer credentials.</div><details><summary>Evidence (5)</summary><div class="claim">Credentials are sent on every request. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.3. Client Authentication Process. <span class="chk">(quote verified against the source)</span><blockquote>“The client includes these credentials in protocol-appropriate headers or metadata for every A2A request.”</blockquote></div><div class="claim">The server must authenticate every request. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.4. Server Authentication Responsibilities. <span class="chk">(quote verified against the source)</span><blockquote>“MUST authenticate every incoming request based on the provided credentials and its declared authentication requirements.”</blockquote></div><div class="claim">Five scheme types are defined. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message SecurityScheme. <span class="chk">(quote verified against the source)</span><blockquote>“This is a discriminated union type based on the OpenAPI 3.2 Security Scheme Object.”</blockquote></div><div class="claim">In-band credentials should be bound to the requesting agent, without a defined mechanism. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.6.3 In-Task Authorization Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Credentials SHOULD be bound to the agent which originated the request, such that only this agent is able to use the credentials.”</blockquote></div><div class="claim">Proof of possession: only the mutual TLS scheme proves possession of a key; API keys and bearer tokens are bearer credentials (inference from the scheme list; A2A defines no DPoP or similar binding). <i>Inferred from</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message HTTPAuthSecurityScheme. <span class="chk">(quote verified against the source)</span><blockquote>“A hint to the client to identify how the bearer token is formatted (e.g., &quot;JWT&quot;).”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not specified. A2A sets no lifetime for the credentials sent with requests; that is left to the chosen scheme and its issuer (e.g. an OAuth authorization server). The security considerations only say credentials should be rotated periodically, which concerns replacing long-lived secrets, not how long each credential is accepted.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No lifetime is specified (MCP Authorization and Web Bot Auth at least recommend one, so they are yellow).</div><details><summary>Evidence (2)</summary><div class="claim">Only periodic rotation is recommended. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 13.4. General Security Best Practices. <span class="chk">(quote verified against the source)</span><blockquote>“Credentials SHOULD be rotated periodically”</blockquote></div><div class="claim">Searched Sections 7, 13 and the security scheme objects for lifetime, expiry, short-lived or freshness rules for request credentials. None is set. <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7. Authentication and Authorization; 13. Security Considerations.</div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The server must reject requests with missing or invalid credentials, but A2A does not say what makes a credential valid: it lists no checks for expiry, audience or signature. Those come from the chosen scheme; with OAuth 2.0 or OpenID Connect the card points to the issuer&#x27;s metadata, so the server can validate tokens against it, while API keys and HTTP Basic credentials only work after the server has issued them to the client beforehand.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Rejection of invalid credentials is required, but A2A defines no validation steps and some schemes need prior setup with the client; lower of two plausible colours (the calibration examples define their checks and are green).</div><details><summary>Evidence (4)</summary><div class="claim">Invalid credentials must be rejected. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 3.3.2. Error Handling. <span class="chk">(quote verified against the source)</span><blockquote>“Servers MUST reject requests with invalid or missing authentication credentials”</blockquote></div><div class="claim">Credentials are obtained outside A2A. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.3. Client Authentication Process. <span class="chk">(quote verified against the source)</span><blockquote>“The client obtains the necessary credentials through an out-of-band process specific to the required authentication scheme.”</blockquote></div><div class="claim">The OAuth scheme can point to the authorization server&#x27;s metadata. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message OAuth2SecurityScheme. <span class="chk">(quote verified against the source)</span><blockquote>“URL to the OAuth2 authorization server metadata”</blockquote></div><div class="claim">Searched Sections 3.3.2, 7 and 13 for required checks on expiry, audience, issuer or signature of request credentials. None is listed. <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 3.3.2. Error Handling; 7. Authentication and Authorization; 13. Security Considerations.</div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not of the individual agent, as defined by A2A. The server must authenticate every request, but in A2A this means checking the credential of whichever scheme it declared; the credential is obtained outside A2A, and user sign-in, if any, happens at an OAuth or OpenID Connect provider. A2A defines no per-agent key, so a server learns the individual agent only if its own setup issues one (e.g. a client certificate per agent for mutual TLS).<div class="meta">Handled outside the protocol · requirement level: MUST</div><div class="meta">Why this rating: The server checks a credential issued or set up outside A2A and no per-agent proof is defined (same as all three calibration examples), even though A2A requires the check itself.</div><details><summary>Evidence (4)</summary><div class="claim">The server must authenticate every request against its declared requirements. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.4. Server Authentication Responsibilities. <span class="chk">(quote verified against the source)</span><blockquote>“MUST authenticate every incoming request based on the provided credentials and its declared authentication requirements.”</blockquote></div><div class="claim">Credentials come from an out-of-band process. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.3. Client Authentication Process. <span class="chk">(quote verified against the source)</span><blockquote>“The client obtains the necessary credentials through an out-of-band process specific to the required authentication scheme.”</blockquote></div><div class="claim">Credentials such as OAuth tokens or API keys come from processes outside A2A. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md">A2A documentation, Enterprise Implementation of A2A (docs/topics/enterprise-ready.md)</a>, Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“The A2A Client obtains the necessary credentials, such as OAuth 2.0 tokens or API keys, through processes external to the A2A protocol itself.”</blockquote></div><div class="claim">The mutual TLS scheme carries only a description, so A2A does not say whose certificate it is (inference). <i>Inferred from</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message MutualTlsSecurityScheme. <span class="chk">(quote verified against the source)</span><blockquote>“Defines a security scheme using mTLS authentication.”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The server must run an authorization check on every request and limit results to what the caller may see, but the authorization model is the agent&#x27;s own and is not prescribed by A2A. The Agent Card can state required OAuth scopes for the whole agent and for each skill, and the server may use scopes when deciding; this applies only when an OAuth 2.0 or OpenID Connect scheme is used. A2A defines no per-action limits such as amounts.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: Scopes are defined but only for OAuth-based schemes and the server only MAY consider them, while the authorization model is left to each agent; MCP Authorization is green because scopes are part of its normal flow.</div><details><summary>Evidence (5)</summary><div class="claim">Authorization checks are required on every request. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 13.1. Data Access and Authorization Scoping. <span class="chk">(quote verified against the source)</span><blockquote>“Servers MUST implement authorization checks on every A2A Protocol Operations request”</blockquote></div><div class="claim">The authorization model is not prescribed. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 13.1. Data Access and Authorization Scoping. <span class="chk">(quote verified against the source)</span><blockquote>“Authorization boundaries are defined by each agent&#x27;s authorization model, not prescribed by the protocol”</blockquote></div><div class="claim">Authorization logic may consider skills and OAuth scopes. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.5. Server Authorization Responsibilities. <span class="chk">(quote verified against the source)</span><blockquote>“Authorization logic is implementation-specific and MAY consider:”</blockquote></div><div class="claim">Each skill can declare its own security requirements. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message AgentSkill. <span class="chk">(quote verified against the source)</span><blockquote>“Security schemes necessary for this skill.”</blockquote></div><div class="claim">Security requirements map schemes to required scopes. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message SecurityRequirement. <span class="chk">(quote verified against the source)</span><blockquote>“A map of security schemes to the required scopes.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. During a task, the server can set the task to TASK_STATE_AUTH_REQUIRED to ask the client to obtain authorization, and the spec gives human approval before a destructive action as an example. The approval itself happens outside A2A: the client may pass the request to a person, another agent or a service, and credentials are delivered out of band. A user approval step in an OAuth flow, if used, also happens outside A2A.<div class="meta">Optional in the specification · requirement level: MAY*</div><div class="meta">Why this rating: A defined but optional way for the service to request approval, which may be fulfilled by software rather than a person; MCP Authorization is green because user approval is part of its main flow.</div><details><summary>Evidence (4)</summary><div class="claim">Human approval is an example of in-task authorization. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.6. In-Task Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“An agent requiring human approval before a destructive action is taken”</blockquote></div><div class="claim">The server can delegate the request to the client through a task state. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.6. In-Task Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“A2A provides the capability for agents to delegate the fulfillment of this authorization to the client via the TASK_STATE_AUTH_REQUIRED Task state.”</blockquote></div><div class="claim">The client may hand the request to another human, agent or service. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.6.2 In-Task Authorization Client Responsibilities. <span class="chk">(quote verified against the source)</span><blockquote>“Contact another human, agent, or service to fulfill the authorization request”</blockquote></div><div class="claim">Credentials arrive out of band unless otherwise negotiated. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7.6.1 In-Task Authorization Agent Responsibilities. <span class="chk">(quote verified against the source)</span><blockquote>“Agents MUST arrange to receive credentials via an out-of-band means, unless an in-band mechanism has been negotiated out-of-band or via an extension.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The server chooses its schemes, and for OAuth 2.0 and OpenID Connect the Agent Card points to the issuer, so a valid token means that issuer approved the client. For API keys and HTTP authentication the server is its own issuer, and the mutual TLS scheme names no certificate authority. Signed Agent Cards and registries help the client trust the server, not the server trust the client.<div class="meta">Optional in the specification</div><div class="meta">Why this rating: A vouching party is named only in some schemes; MCP Authorization is green because clients must use tokens from the server&#x27;s named authorization server.</div><details><summary>Evidence (4)</summary><div class="claim">The OIDC scheme names the provider&#x27;s discovery URL. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message OpenIdConnectSecurityScheme. <span class="chk">(quote verified against the source)</span><blockquote>“The OpenID Connect Discovery URL for the OIDC provider&#x27;s metadata.”</blockquote></div><div class="claim">The OAuth scheme can name the authorization server&#x27;s metadata. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message OAuth2SecurityScheme. <span class="chk">(quote verified against the source)</span><blockquote>“URL to the OAuth2 authorization server metadata”</blockquote></div><div class="claim">Agent Card signatures let clients verify the server&#x27;s card. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 8.4. Agent Card Signing. <span class="chk">(quote verified against the source)</span><blockquote>“Signatures allow clients to verify that an Agent Card has not been tampered with and originates from the claimed provider.”</blockquote></div><div class="claim">The mutual TLS scheme object has only a description field and names no trust anchor (searched the proto and Section 7). <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message MutualTlsSecurityScheme.</div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not defined by A2A. The security considerations say agents should implement credential revocation mechanisms, but A2A defines none, so revocation depends on the chosen scheme: the server can delete an API key it issued, or the OAuth authorization server can revoke tokens (e.g. under RFC 7009), with the speed and granularity that scheme allows. The revocation rule for signing keys covers Agent Card signatures, which the client checks, not request credentials.<div class="meta">Not addressed by the specification · requirement level: SHOULD</div><div class="meta">Why this rating: A2A only recommends (SHOULD) that agents have revocation and defines no mechanism, so coverage is none (same colour as all three calibration examples, which also leave revocation to other parties).</div><details><summary>Evidence (3)</summary><div class="claim">Revocation mechanisms are recommended. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 13.4. General Security Best Practices. <span class="chk">(quote verified against the source)</span><blockquote>“Agents SHOULD implement credential revocation mechanisms”</blockquote></div><div class="claim">The only other revocation rule covers Agent Card signing keys, checked by clients. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 8.4.3. Signature Verification. <span class="chk">(quote verified against the source)</span><blockquote>“Expired or revoked keys MUST NOT be used for verification”</blockquote></div><div class="claim">Searched Sections 7, 13 and the proto for a revocation endpoint, status list or signal. None is defined. <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7. Authentication and Authorization; 13. Security Considerations.</div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The Agent Card names the provider organization and a URL, but that card describes the receiving agent and is read by the caller; the calling agent sends no card or contact details to the server. A2A defines no contact, abuse or security channel for whoever operates a calling agent.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact for the caller is defined (same as all three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Provider details are part of the server&#x27;s Agent Card. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message AgentProvider. <span class="chk">(quote verified against the source)</span><blockquote>“A URL for the agent provider&#x27;s website or relevant documentation.”</blockquote></div><div class="claim">The Agent Card describes the server. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 8.1. Purpose. <span class="chk">(quote verified against the source)</span><blockquote>“The Agent Card describes the server&#x27;s identity, capabilities, skills, and interaction requirements.”</blockquote></div><div class="claim">Searched the request objects, Section 7 and Section 13 for a caller contact, abuse or security field. None is defined. <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 7. Authentication and Authorization; 13. Security Considerations.</div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. A2A asks agents to log security events, watch for unusual patterns and rate-limit callers, but these are local measures. It defines no way for one agent to warn other agents, registries or credential issuers about a misbehaving caller.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Security event logging is local. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 13.4. General Security Best Practices. <span class="chk">(quote verified against the source)</span><blockquote>“Agents SHOULD log security-relevant events (authentication failures, authorization denials, suspicious requests)”</blockquote></div><div class="claim">Searched Section 13, the discovery guide and the extension list for shared signals, reputation or abuse reporting. None is defined. <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 13. Security Considerations.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. A2A says nothing about which AI model is behind the calling agent. The Agent Card&#x27;s version field gives the version of the receiving agent, not a model, and the calling agent sends no card. Agents are treated as opaque by design.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No model identity (same as all three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">The version field names the agent&#x27;s version. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a>, message AgentCard. <span class="chk">(quote verified against the source)</span><blockquote>“The version of the agent.”</blockquote></div><div class="claim">Agents are opaque by design. <i>Source states</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 1.2. Guiding Principles. <span class="chk">(quote verified against the source)</span><blockquote>“Agents collaborate based on declared capabilities and exchanged information, without needing to share their internal thoughts, plans, or tool implementations.”</blockquote></div><div class="claim">Searched the proto and the specification for model, attestation or provenance fields. None is defined. <i>Not found in</i> <a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a>, 4. Protocol Data Model; 8. Agent Discovery: The Agent Card.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md">Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)</a> (v1.0.1 (commit 3303592), 2026-05-26)</li><li><a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto">A2A normative data model, specification/a2a.proto, v1.0.1</a> (v1.0.1 (commit 3303592), 2026-05-26)</li><li><a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md">A2A documentation, Enterprise Implementation of A2A (docs/topics/enterprise-ready.md)</a> (v1.0.1 (commit 3303592), 2026-05-26)</li><li><a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/agent-discovery.md">A2A documentation, Agent Discovery (docs/topics/agent-discovery.md)</a> (v1.0.1 (commit 3303592), 2026-05-26)</li><li><a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/CHANGELOG.md">A2A repository CHANGELOG.md</a> (v1.0.1 (commit 3303592), 2026-05-26)</li><li><a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/announcing-1.0.md">A2A Protocol Ships v1.0 (docs/announcing-1.0.md)</a> (v1.0.1 (commit 3303592), 2026-03)</li><li><a href="https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/README.md">A2A repository README.md</a> (v1.0.1 (commit 3303592), 2026-05-26)</li><li><a href="https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/enable-agent-to-agent-endpoint">Microsoft Learn, Enable an A2A endpoint for a Foundry agent</a> (accessed 2026-11-18)</li></ul><h2>Notes</h2><ul class="plain"><li>A2A is analysed from the side of the A2A server (the receiving agent). Many A2A identity features, such as the Agent Card and its signatures, help the calling agent trust the server, not the reverse; the rows say so where relevant.</li><li>A2A uses RFC 2119 keywords. The human approval row rests on lowercase wording (&quot;provides the capability&quot;, &quot;may&quot;), so its requirement is marked MAY*.</li><li>Two rows also cite the A2A documentation page Enterprise Implementation of A2A, which is non-normative; it is used only where it repeats or explains the specification (e.g. that A2A payloads carry no user or client identity).</li><li>The specification file at the v1.0.1 tag still shows &quot;Latest Released Version 1.0.0&quot; in its header; the changelog dates v1.0.1 to 2026-05-26 and the git tag to 2026-05-28.</li><li>A Secure Passport extension is listed among example extensions in the A2A documentation; it lives in the samples repository, is not part of the specification and was not counted.</li><li>The Microsoft Learn page could not be checked by the script; its quote was checked with a web tool.</li></ul><h2>Open questions</h2><ul class="plain"><li>Section 7.4 requires the server to authenticate every request. Does the project intend this to identify the calling agent, or only to validate the credential of the declared scheme?</li><li>The mutual TLS scheme object carries only a description. How is a server expected to tell clients which certificate authorities or certificates it accepts?</li><li>The v1.0.1 sample Agent Card uses a &quot;security&quot; field while the normative proto names it security_requirements (the v1.1.0 release candidate updates the sample). Implementations may differ on this.</li><li>Section 7.6.3 recommends binding in-band credentials to the requesting agent but gives no mechanism. Is an official extension planned for this?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (64 of 64 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-18. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-18",
+ "protocol": {
+  "name": "A2A",
+  "full_name": "Agent2Agent (A2A) Protocol",
+  "spec_version": "A2A Protocol v1.0.1 (git tag v1.0.1, commit 3303592)",
+  "spec_date": "2026-05-26",
+  "maintainer": "A2A project under the Linux Foundation (contributed by Google), guided by a technical steering committee",
+  "newer_version_note": "v1.0.1 is the latest released version. A release candidate v1.1.0-rc (tagged 2026-10-29) exists and was not analysed; it adds, among other things, a section stating that A2A does not define the scope, validity or revocation of in-task authorization."
+ },
+ "profile": {
+  "id": "a2a",
+  "category": "agent-communication",
+  "secondary_categories": [
+   "discovery-registry"
+  ],
+  "mechanisms": [
+   "bearer-token",
+   "api-key",
+   "mtls",
+   "signed-metadata"
+  ],
+  "venue": "foundation",
+  "maturity": "stable",
+  "openness": "open-specification",
+  "layers": [
+   "http-header",
+   "transport",
+   "application-message",
+   "metadata-document"
+  ],
+  "building_blocks": [
+   "HTTP",
+   "JSON-RPC 2.0",
+   "gRPC",
+   "Server-Sent Events",
+   "OpenAPI 3.2 security schemes",
+   "OAuth 2.0",
+   "RFC 8414",
+   "OpenID Connect",
+   "RFC 7636",
+   "RFC 8628",
+   "RFC 7515",
+   "RFC 8785",
+   "RFC 9111",
+   "TLS"
+  ],
+  "website": "https://a2a-protocol.org/",
+  "first_published": "2025-04"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "The Agent2Agent (A2A) Protocol is an open standard for AI agents built by different vendors and frameworks to discover each other, hand over tasks and exchange results, without sharing their internal memory or tools. One agent (the A2A client) sends messages and tasks to another agent (the A2A server, or remote agent), which publishes an Agent Card describing what it can do and how callers must authenticate. Google started the project in April 2025; it is now maintained under the Linux Foundation. Version 1.0 was released in March 2026 as the first stable version, and v1.0.1 (May 2026) is the latest release. Microsoft Foundry Agent Service, among others, serves it.",
+  "For identity and access, A2A deliberately reuses standard web security rather than defining its own. The server lists in its Agent Card which schemes it accepts (API key, HTTP authentication such as a bearer token, OAuth 2.0, OpenID Connect or mutual TLS); the client obtains credentials outside A2A and sends them with every request, and the server must authenticate and authorize every request. A2A messages themselves carry no user or client identity. Agent Cards can be signed, which helps the client trust the server, not the other way round. A2A defines a task state for asking the client to obtain extra authorization mid-task, but no client agent identifier, credential lifetime, revocation, contact channel or model identity."
+ ],
+ "how_it_works": [
+  "The A2A server (the receiving agent) publishes an Agent Card, e.g. at /.well-known/agent-card.json, describing its skills, endpoints and the security schemes and scopes it requires. The card may be signed with JWS.",
+  "The A2A client (the calling agent or application) reads the Agent Card and picks a protocol binding (JSON-RPC, gRPC or HTTP+JSON) and a security scheme.",
+  "The client obtains the matching credential outside A2A, e.g. an OAuth access token from the authorization server named in the card, an API key, or a client certificate for mutual TLS.",
+  "The client sends a message (e.g. SendMessage) with the credential in an HTTP header or gRPC metadata on every request. A2A messages carry no user or client identity of their own.",
+  "The server authenticates the request with its declared scheme, applies its own authorization policy (e.g. per-skill scopes), and creates or continues a task. If it needs more authorization during the task, it sets the task to TASK_STATE_AUTH_REQUIRED and the client arranges it outside A2A."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "Agent2Agent (A2A) Protocol Specification, v1.0.1 (docs/specification.md)",
+   "url": "https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md",
+   "fetch_url": "https://raw.githubusercontent.com/a2aproject/A2A/3303592588e388e62e0f69f701af531d2f4e3991/docs/specification.md",
+   "version": "v1.0.1 (commit 3303592)",
+   "date": "2026-05-26",
+   "kind": "primary"
+  },
+  {
+   "id": "proto",
+   "title": "A2A normative data model, specification/a2a.proto, v1.0.1",
+   "url": "https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto",
+   "fetch_url": "https://raw.githubusercontent.com/a2aproject/A2A/3303592588e388e62e0f69f701af531d2f4e3991/specification/a2a.proto",
+   "version": "v1.0.1 (commit 3303592)",
+   "date": "2026-05-26",
+   "kind": "primary"
+  },
+  {
+   "id": "ent",
+   "title": "A2A documentation, Enterprise Implementation of A2A (docs/topics/enterprise-ready.md)",
+   "url": "https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md",
+   "fetch_url": "https://raw.githubusercontent.com/a2aproject/A2A/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/enterprise-ready.md",
+   "version": "v1.0.1 (commit 3303592)",
+   "date": "2026-05-26",
+   "kind": "primary"
+  },
+  {
+   "id": "disc",
+   "title": "A2A documentation, Agent Discovery (docs/topics/agent-discovery.md)",
+   "url": "https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/agent-discovery.md",
+   "fetch_url": "https://raw.githubusercontent.com/a2aproject/A2A/3303592588e388e62e0f69f701af531d2f4e3991/docs/topics/agent-discovery.md",
+   "version": "v1.0.1 (commit 3303592)",
+   "date": "2026-05-26",
+   "kind": "primary"
+  },
+  {
+   "id": "changelog",
+   "title": "A2A repository CHANGELOG.md",
+   "url": "https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/CHANGELOG.md",
+   "fetch_url": "https://raw.githubusercontent.com/a2aproject/A2A/3303592588e388e62e0f69f701af531d2f4e3991/CHANGELOG.md",
+   "version": "v1.0.1 (commit 3303592)",
+   "date": "2026-05-26",
+   "kind": "primary"
+  },
+  {
+   "id": "announce",
+   "title": "A2A Protocol Ships v1.0 (docs/announcing-1.0.md)",
+   "url": "https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/docs/announcing-1.0.md",
+   "fetch_url": "https://raw.githubusercontent.com/a2aproject/A2A/3303592588e388e62e0f69f701af531d2f4e3991/docs/announcing-1.0.md",
+   "version": "v1.0.1 (commit 3303592)",
+   "date": "2026-03",
+   "kind": "primary"
+  },
+  {
+   "id": "readme",
+   "title": "A2A repository README.md",
+   "url": "https://github.com/a2aproject/A2A/blob/3303592588e388e62e0f69f701af531d2f4e3991/README.md",
+   "fetch_url": "https://raw.githubusercontent.com/a2aproject/A2A/3303592588e388e62e0f69f701af531d2f4e3991/README.md",
+   "version": "v1.0.1 (commit 3303592)",
+   "date": "2026-05-26",
+   "kind": "primary"
+  },
+  {
+   "id": "msft",
+   "title": "Microsoft Learn, Enable an A2A endpoint for a Foundry agent",
+   "url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/enable-agent-to-agent-endpoint",
+   "fetch_url": "https://learn.microsoft.com/en-us/azure/foundry/agents/how-to/enable-agent-to-agent-endpoint",
+   "version": "",
+   "date": "accessed 2026-11-18",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Agents delegate tasks to other agents",
+   "answer": "An open protocol in which one AI agent sends tasks and messages to another agent's A2A endpoint, discovered through that agent's Agent Card, with authentication delegated to standard web schemes (API keys, OAuth 2.0, OpenID Connect, mutual TLS) that the receiving agent declares.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "A2A is an open standard for communication between independent agent systems.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "The Agent2Agent (A2A) Protocol is an open standard designed to facilitate communication and interoperability between independent, potentially opaque AI agent systems.",
+     "check": "OK",
+     "check_fp": "eb15845781"
+    },
+    {
+     "text": "Every A2A server publishes an Agent Card.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8.1. Purpose",
+     "quote": "A2A Servers MUST make an Agent Card available.",
+     "check": "OK",
+     "check_fp": "a7a752d316"
+    },
+    {
+     "text": "Authentication schemes are declared in the Agent Card and credentials are obtained outside A2A.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.3. Client Authentication Process",
+     "quote": "The client discovers the server's required authentication schemes via the securitySchemes field in the AgentCard.",
+     "check": "OK",
+     "check_fp": "c6803f875f"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agent-to-agent task delegation over HTTP or gRPC",
+   "answer": "Multi-agent systems where an agent or application (the A2A client) delegates work to a remote agent (the A2A server), across vendors and organisations. Messages travel in the body of JSON-RPC, gRPC or HTTP+JSON requests; credentials travel in HTTP headers or gRPC metadata, and identity is established at that transport layer, not inside A2A messages. The receiving agent, or a gateway in front of it, verifies the credential with whatever scheme it declared.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The client initiates requests on behalf of a user or another system.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.2. Core Concepts",
+     "quote": "A2A Client: An application or agent that initiates requests to an A2A Server on behalf of a user or another system.",
+     "check": "OK",
+     "check_fp": "b2cd8dbafa"
+    },
+    {
+     "text": "Three standard protocol bindings.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1.3. Specification Structure",
+     "quote": "Layer 3: Protocol Bindings provides concrete mappings of the abstract operations and data structures to specific protocol bindings (JSON-RPC, gRPC, HTTP/REST)",
+     "check": "OK",
+     "check_fp": "f18dc2ca36"
+    },
+    {
+     "text": "Credentials are sent in headers or metadata on every request.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.3. Client Authentication Process",
+     "quote": "The client includes these credentials in protocol-appropriate headers or metadata for every A2A request.",
+     "check": "OK",
+     "check_fp": "bc29cda0b8"
+    },
+    {
+     "text": "Identity is handled at the transport layer, not inside A2A.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7. Authentication and Authorization",
+     "quote": "Identity information is handled at the protocol layer, not within A2A semantics.",
+     "check": "OK",
+     "check_fp": "17e1e028ab"
+    },
+    {
+     "text": "Verification by a gateway in front of the agent is not described by A2A; it follows from the use of standard HTTP authentication schemes (inference).",
+     "type": "inference",
+     "source": "ent",
+     "section": "Authentication",
+     "quote": "A2A delegates authentication to standard web mechanisms.",
+     "check": "OK",
+     "check_fp": "6a7634e96d"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "A2A client, A2A server (remote agent), user",
+   "answer": "A2A Client: an application or agent that starts requests to an A2A server on behalf of a user or another system. A2A Server (Remote Agent): an agent that exposes an A2A endpoint, processes tasks and publishes an Agent Card naming its provider (organization and URL). User: the party the client acts for; messages from the client side carry the role \"user\". Credential issuers (e.g. an OAuth authorization server or OpenID Connect provider) and agent registries appear only by reference; A2A does not define them as roles.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "A2A Client role.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.2. Core Concepts",
+     "quote": "A2A Client: An application or agent that initiates requests to an A2A Server on behalf of a user or another system.",
+     "check": "OK",
+     "check_fp": "b2cd8dbafa"
+    },
+    {
+     "text": "A2A Server role.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.2. Core Concepts",
+     "quote": "A2A Server (Remote Agent): An agent or agentic system that exposes an A2A-compliant endpoint, processing tasks and providing responses.",
+     "check": "OK",
+     "check_fp": "5d37ba2e75"
+    },
+    {
+     "text": "The Agent Card names the server's provider.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message AgentProvider",
+     "quote": "The name of the agent provider's organization.",
+     "check": "OK",
+     "check_fp": "97c2091570"
+    },
+    {
+     "text": "The client-side message role is called user.",
+     "type": "fact",
+     "source": "proto",
+     "section": "enum Role",
+     "quote": "The message is from the client to the server.",
+     "check": "OK",
+     "check_fp": "4cce1ea856"
+    },
+    {
+     "text": "Registries are a discovery option without a defined API.",
+     "type": "fact",
+     "source": "disc",
+     "section": "2. Curated Registries (Catalog-Based Discovery)",
+     "quote": "The current A2A specification does not prescribe a standard API for curated registries.",
+     "check": "OK",
+     "check_fp": "e75b81e1e3"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Stable v1.0.1; served by Microsoft Foundry",
+   "answer": "Released. v1.0, released in March 2026, is described by the project as its first stable, production-ready version, and v1.0.1 (May 2026) is the latest release; a v1.1.0 release candidate exists. The project is open source under the Linux Foundation, contributed by Google. Microsoft Foundry Agent Service serves A2A v1.0 as generally available for agents exposed as A2A endpoints.",
+   "rating": "green",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Green: a released version its maintainers call production-ready, with a named deployment documented by the deployer (Microsoft Foundry).",
+   "claims": [
+    {
+     "text": "v1.0 is the first stable, production-ready version.",
+     "type": "fact",
+     "source": "announce",
+     "section": "A2A Protocol Ships v1.0",
+     "quote": "marking the first stable, production-ready version of the open standard for communication between AI agents",
+     "check": "OK",
+     "check_fp": "546822f144"
+    },
+    {
+     "text": "v1.0.1 release entry in the changelog.",
+     "type": "fact",
+     "source": "changelog",
+     "section": "Changelog entry for release 1.0.1",
+     "quote": "1.0.1 (2026-05-26)",
+     "check": "OK",
+     "check_fp": "ee39b58892"
+    },
+    {
+     "text": "Maintained under the Linux Foundation, contributed by Google.",
+     "type": "fact",
+     "source": "readme",
+     "section": "About",
+     "quote": "The A2A Protocol is an open source project under the Linux Foundation, contributed by Google.",
+     "check": "OK",
+     "check_fp": "ac09bd4c9b"
+    },
+    {
+     "text": "Deployment: Microsoft Foundry Agent Service supports A2A 1.0 as generally available.",
+     "type": "fact",
+     "source": "msft",
+     "section": "Supported versions",
+     "quote": "Foundry Agent Service supports generally available A2A protocol version 1.0 and preview version 0.3.",
+     "check": "WEB-OK",
+     "check_fp": "2c9852983b"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "HTTP, JSON-RPC, gRPC, OpenAPI security schemes, OAuth, JWS",
+   "answer": "Transport: HTTP, JSON-RPC 2.0, gRPC and Server-Sent Events, with Protocol Buffers as the normative data model. Security schemes follow the OpenAPI 3.2 Security Scheme Object: API key, HTTP authentication, OAuth 2.0 (with RFC 8414 metadata, PKCE and the device code flow), OpenID Connect and mutual TLS; the OAuth implicit and password flows are deprecated. Agent Card signing uses JWS (RFC 7515) over JSON canonicalized with JCS (RFC 8785).",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Reuses HTTP, JSON-RPC 2.0 and SSE.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1.2. Guiding Principles",
+     "quote": "Reuse existing, well-understood standards (HTTP, JSON-RPC 2.0, Server-Sent Events).",
+     "check": "OK",
+     "check_fp": "269190a88f"
+    },
+    {
+     "text": "Security schemes are based on OpenAPI 3.2.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message SecurityScheme",
+     "quote": "This is a discriminated union type based on the OpenAPI 3.2 Security Scheme Object.",
+     "check": "OK",
+     "check_fp": "16b658aa9e"
+    },
+    {
+     "text": "Implicit flow deprecated in favour of authorization code with PKCE.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message OAuthFlows",
+     "quote": "Deprecated: Use Authorization Code + PKCE instead.",
+     "check": "OK",
+     "check_fp": "4343324648"
+    },
+    {
+     "text": "Agent Card signing uses JWS.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8.4. Agent Card Signing",
+     "quote": "Agent Cards MAY be digitally signed using JSON Web Signature (JWS) as defined in RFC 7515 to ensure authenticity and integrity.",
+     "check": "OK",
+     "check_fp": "6d91a2df41"
+    },
+    {
+     "text": "Canonicalization uses JCS (RFC 8785).",
+     "type": "fact",
+     "source": "spec",
+     "section": "8.4.1. Canonicalization Requirements",
+     "quote": "Before signing, the Agent Card content MUST be canonicalized using the JSON Canonicalization Scheme (JCS) as defined in RFC 8785.",
+     "check": "OK",
+     "check_fp": "0d8605d673"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "None for the calling agent",
+   "answer": "No A2A identifier for the calling agent. The Agent Card identifies the receiving agent (the server) to the caller, not the other way round, and A2A messages carry no client or user identity. Whatever identity the server learns comes from the security scheme it chose (e.g. an API key, an OAuth token's client, or a client certificate), so its form and meaning are left to that scheme.",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "none",
+   "rating_reason": "Red: A2A defines no identifier for the agent side; identity comes only from the external credential scheme. This differs from MCP Authorization (yellow), which requires a client_id from its own registration mechanisms.",
+   "claims": [
+    {
+     "text": "The Agent Card describes the server, not the client.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8.1. Purpose",
+     "quote": "The Agent Card describes the server's identity, capabilities, skills, and interaction requirements.",
+     "check": "OK",
+     "check_fp": "1e240ea90e"
+    },
+    {
+     "text": "A2A payloads carry no user or client identity.",
+     "type": "fact",
+     "source": "ent",
+     "section": "Authentication",
+     "quote": "A2A protocol payloads, such as JSON-RPC messages, don't carry user or client identity information directly.",
+     "check": "OK",
+     "check_fp": "e4a79a473a"
+    },
+    {
+     "text": "Identity is established at the transport layer.",
+     "type": "fact",
+     "source": "ent",
+     "section": "Authentication",
+     "quote": "Identity is established at the transport/HTTP layer.",
+     "check": "OK",
+     "check_fp": "322b384788"
+    },
+    {
+     "text": "Searched Core Concepts, the Message object, Section 7 and the proto for a client or caller identifier. The Message has only a message ID, a role and optional context and task IDs.",
+     "type": "silent",
+     "source": "proto",
+     "section": "message Message; message SendMessageRequest",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. A2A defines no identifier for a specific calling agent instance. The contextId and taskId fields group related messages and track units of work; they identify a conversation or a task, not the agent that sent it, and the server usually generates them. The tenant field routes requests to one of several agents behind a server endpoint, so it names a receiving agent, not a caller.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier for the caller is defined (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "contextId groups related tasks and messages.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.4.1. Context Identifier Semantics",
+     "quote": "A contextId is an identifier that logically groups multiple related Task and Message objects, providing continuity across a series of interactions.",
+     "check": "OK",
+     "check_fp": "8408e21d42"
+    },
+    {
+     "text": "Task IDs are generated by the server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.4.2. Task Identifier Semantics",
+     "quote": "Task IDs are server-generated when a new task is created in response to a Message",
+     "check": "OK",
+     "check_fp": "b0554c6553"
+    },
+    {
+     "text": "tenant routes to a receiving agent behind a shared endpoint.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message AgentInterface",
+     "quote": "An opaque string used for routing requests to a specific agent",
+     "check": "OK",
+     "check_fp": "6a57a1d303"
+    },
+    {
+     "text": "Searched Section 3.4, Section 7 and the proto Message and request objects for an agent instance or session identifier of the caller. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "3.4. Multi-Turn Interactions; 7. Authentication and Authorization",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "No; depends on chosen auth scheme",
+   "answer": "Not by A2A. The client acts on behalf of a user or another system, but A2A messages do not say who that is; the role \"user\" only marks a message as coming from the client side. The server may learn the user from its chosen credential (e.g. an OpenID Connect or OAuth token that represents an end user), and the documentation says authorization should use that identity, which could be a user, a client application, or both.",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "none",
+   "rating_reason": "Red: A2A defines no field naming the principal; it is available only if the external credential scheme carries it (native-only rule, same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "The client acts on behalf of a user or another system.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.2. Core Concepts",
+     "quote": "A2A Client: An application or agent that initiates requests to an A2A Server on behalf of a user or another system.",
+     "check": "OK",
+     "check_fp": "b2cd8dbafa"
+    },
+    {
+     "text": "Payloads carry no user identity.",
+     "type": "fact",
+     "source": "ent",
+     "section": "Authentication",
+     "quote": "A2A protocol payloads, such as JSON-RPC messages, don't carry user or client identity information directly.",
+     "check": "OK",
+     "check_fp": "e4a79a473a"
+    },
+    {
+     "text": "The authenticated identity could be a user, a client application, or both.",
+     "type": "fact",
+     "source": "ent",
+     "section": "Authorization",
+     "quote": "Authorization should be applied based on the authenticated identity, which could represent an end user, a client application, or both.",
+     "check": "OK",
+     "check_fp": "21b575d8e7"
+    },
+    {
+     "text": "The user role only marks the message direction.",
+     "type": "fact",
+     "source": "proto",
+     "section": "enum Role",
+     "quote": "The message is from the client to the server.",
+     "check": "OK",
+     "check_fp": "4cce1ea856"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Server's choice: API key, token, OAuth, OIDC, mTLS",
+   "answer": "Yes, a credential on every request, of a type the server chooses. The Agent Card declares one or more security schemes (API key, HTTP authentication such as a bearer token, OAuth 2.0, OpenID Connect, or mutual TLS); the client sends the credential in headers or gRPC metadata on every request, and the server must authenticate each one. Except for mutual TLS, these are bearer credentials: whoever holds them can use them. For credentials passed in-band during a task, the spec recommends binding them to the requesting agent but defines no mechanism.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a credential declared by the server is presented on every request and must be verified (same as MCP Authorization); the answer notes most schemes are bearer credentials.",
+   "claims": [
+    {
+     "text": "Credentials are sent on every request.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.3. Client Authentication Process",
+     "quote": "The client includes these credentials in protocol-appropriate headers or metadata for every A2A request.",
+     "check": "OK",
+     "check_fp": "bc29cda0b8"
+    },
+    {
+     "text": "The server must authenticate every request.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.4. Server Authentication Responsibilities",
+     "quote": "MUST authenticate every incoming request based on the provided credentials and its declared authentication requirements.",
+     "check": "OK",
+     "check_fp": "63fe9573ec"
+    },
+    {
+     "text": "Five scheme types are defined.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message SecurityScheme",
+     "quote": "This is a discriminated union type based on the OpenAPI 3.2 Security Scheme Object.",
+     "check": "OK",
+     "check_fp": "16b658aa9e"
+    },
+    {
+     "text": "In-band credentials should be bound to the requesting agent, without a defined mechanism.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.6.3 In-Task Authorization Security Considerations",
+     "quote": "Credentials SHOULD be bound to the agent which originated the request, such that only this agent is able to use the credentials.",
+     "check": "OK",
+     "check_fp": "9bb2dde03f"
+    },
+    {
+     "text": "Proof of possession: only the mutual TLS scheme proves possession of a key; API keys and bearer tokens are bearer credentials (inference from the scheme list; A2A defines no DPoP or similar binding).",
+     "type": "inference",
+     "source": "proto",
+     "section": "message HTTPAuthSecurityScheme",
+     "quote": "A hint to the client to identify how the bearer token is formatted (e.g., \"JWT\").",
+     "check": "OK",
+     "check_fp": "c8d0d38263"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Not specified",
+   "answer": "Not specified. A2A sets no lifetime for the credentials sent with requests; that is left to the chosen scheme and its issuer (e.g. an OAuth authorization server). The security considerations only say credentials should be rotated periodically, which concerns replacing long-lived secrets, not how long each credential is accepted.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no lifetime is specified (MCP Authorization and Web Bot Auth at least recommend one, so they are yellow).",
+   "claims": [
+    {
+     "text": "Only periodic rotation is recommended.",
+     "type": "fact",
+     "source": "spec",
+     "section": "13.4. General Security Best Practices",
+     "quote": "Credentials SHOULD be rotated periodically",
+     "check": "OK",
+     "check_fp": "e5e7538ac1"
+    },
+    {
+     "text": "Searched Sections 7, 13 and the security scheme objects for lifetime, expiry, short-lived or freshness rules for request credentials. None is set.",
+     "type": "silent",
+     "source": "spec",
+     "section": "7. Authentication and Authorization; 13. Security Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Must reject invalid; checks left to scheme",
+   "answer": "Partly. The server must reject requests with missing or invalid credentials, but A2A does not say what makes a credential valid: it lists no checks for expiry, audience or signature. Those come from the chosen scheme; with OAuth 2.0 or OpenID Connect the card points to the issuer's metadata, so the server can validate tokens against it, while API keys and HTTP Basic credentials only work after the server has issued them to the client beforehand.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: rejection of invalid credentials is required, but A2A defines no validation steps and some schemes need prior setup with the client; lower of two plausible colours (the calibration examples define their checks and are green).",
+   "claims": [
+    {
+     "text": "Invalid credentials must be rejected.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.3.2. Error Handling",
+     "quote": "Servers MUST reject requests with invalid or missing authentication credentials",
+     "check": "OK",
+     "check_fp": "77b5c41d88"
+    },
+    {
+     "text": "Credentials are obtained outside A2A.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.3. Client Authentication Process",
+     "quote": "The client obtains the necessary credentials through an out-of-band process specific to the required authentication scheme.",
+     "check": "OK",
+     "check_fp": "4aafcef6e2"
+    },
+    {
+     "text": "The OAuth scheme can point to the authorization server's metadata.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message OAuth2SecurityScheme",
+     "quote": "URL to the OAuth2 authorization server metadata",
+     "check": "OK",
+     "check_fp": "002e88a7c5"
+    },
+    {
+     "text": "Searched Sections 3.3.2, 7 and 13 for required checks on expiry, audience, issuer or signature of request credentials. None is listed.",
+     "type": "silent",
+     "source": "spec",
+     "section": "3.3.2. Error Handling; 7. Authentication and Authorization; 13. Security Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Credential check only; scheme decides whose",
+   "answer": "Not of the individual agent, as defined by A2A. The server must authenticate every request, but in A2A this means checking the credential of whichever scheme it declared; the credential is obtained outside A2A, and user sign-in, if any, happens at an OAuth or OpenID Connect provider. A2A defines no per-agent key, so a server learns the individual agent only if its own setup issues one (e.g. a client certificate per agent for mutual TLS).",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "MUST",
+   "rating_reason": "Red: the server checks a credential issued or set up outside A2A and no per-agent proof is defined (same as all three calibration examples), even though A2A requires the check itself.",
+   "claims": [
+    {
+     "text": "The server must authenticate every request against its declared requirements.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.4. Server Authentication Responsibilities",
+     "quote": "MUST authenticate every incoming request based on the provided credentials and its declared authentication requirements.",
+     "check": "OK",
+     "check_fp": "63fe9573ec"
+    },
+    {
+     "text": "Credentials come from an out-of-band process.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.3. Client Authentication Process",
+     "quote": "The client obtains the necessary credentials through an out-of-band process specific to the required authentication scheme.",
+     "check": "OK",
+     "check_fp": "4aafcef6e2"
+    },
+    {
+     "text": "Credentials such as OAuth tokens or API keys come from processes outside A2A.",
+     "type": "fact",
+     "source": "ent",
+     "section": "Authentication",
+     "quote": "The A2A Client obtains the necessary credentials, such as OAuth 2.0 tokens or API keys, through processes external to the A2A protocol itself.",
+     "check": "OK",
+     "check_fp": "5adda5b7ac"
+    },
+    {
+     "text": "The mutual TLS scheme carries only a description, so A2A does not say whose certificate it is (inference).",
+     "type": "inference",
+     "source": "proto",
+     "section": "message MutualTlsSecurityScheme",
+     "quote": "Defines a security scheme using mTLS authentication.",
+     "check": "OK",
+     "check_fp": "bcae30fb0d"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Checks required; scopes optional, per skill",
+   "answer": "Partly. The server must run an authorization check on every request and limit results to what the caller may see, but the authorization model is the agent's own and is not prescribed by A2A. The Agent Card can state required OAuth scopes for the whole agent and for each skill, and the server may use scopes when deciding; this applies only when an OAuth 2.0 or OpenID Connect scheme is used. A2A defines no per-action limits such as amounts.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: scopes are defined but only for OAuth-based schemes and the server only MAY consider them, while the authorization model is left to each agent; MCP Authorization is green because scopes are part of its normal flow.",
+   "claims": [
+    {
+     "text": "Authorization checks are required on every request.",
+     "type": "fact",
+     "source": "spec",
+     "section": "13.1. Data Access and Authorization Scoping",
+     "quote": "Servers MUST implement authorization checks on every A2A Protocol Operations request",
+     "check": "OK",
+     "check_fp": "9e838ec843"
+    },
+    {
+     "text": "The authorization model is not prescribed.",
+     "type": "fact",
+     "source": "spec",
+     "section": "13.1. Data Access and Authorization Scoping",
+     "quote": "Authorization boundaries are defined by each agent's authorization model, not prescribed by the protocol",
+     "check": "OK",
+     "check_fp": "0ade16e8c7"
+    },
+    {
+     "text": "Authorization logic may consider skills and OAuth scopes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.5. Server Authorization Responsibilities",
+     "quote": "Authorization logic is implementation-specific and MAY consider:",
+     "check": "OK",
+     "check_fp": "99fcb522a7"
+    },
+    {
+     "text": "Each skill can declare its own security requirements.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message AgentSkill",
+     "quote": "Security schemes necessary for this skill.",
+     "check": "OK",
+     "check_fp": "2c682f6e86"
+    },
+    {
+     "text": "Security requirements map schemes to required scopes.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message SecurityRequirement",
+     "quote": "A map of security schemes to the required scopes.",
+     "check": "OK",
+     "check_fp": "b4c64037cf"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Optional mid-task request; approval outside A2A",
+   "answer": "Partly. During a task, the server can set the task to TASK_STATE_AUTH_REQUIRED to ask the client to obtain authorization, and the spec gives human approval before a destructive action as an example. The approval itself happens outside A2A: the client may pass the request to a person, another agent or a service, and credentials are delivered out of band. A user approval step in an OAuth flow, if used, also happens outside A2A.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY*",
+   "rating_reason": "Yellow: a defined but optional way for the service to request approval, which may be fulfilled by software rather than a person; MCP Authorization is green because user approval is part of its main flow.",
+   "claims": [
+    {
+     "text": "Human approval is an example of in-task authorization.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.6. In-Task Authorization",
+     "quote": "An agent requiring human approval before a destructive action is taken",
+     "check": "OK",
+     "check_fp": "aa6517fe29"
+    },
+    {
+     "text": "The server can delegate the request to the client through a task state.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.6. In-Task Authorization",
+     "quote": "A2A provides the capability for agents to delegate the fulfillment of this authorization to the client via the TASK_STATE_AUTH_REQUIRED Task state.",
+     "check": "OK",
+     "check_fp": "7dd17ae314"
+    },
+    {
+     "text": "The client may hand the request to another human, agent or service.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.6.2 In-Task Authorization Client Responsibilities",
+     "quote": "Contact another human, agent, or service to fulfill the authorization request",
+     "check": "OK",
+     "check_fp": "1d99262e2e"
+    },
+    {
+     "text": "Credentials arrive out of band unless otherwise negotiated.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.6.1 In-Task Authorization Agent Responsibilities",
+     "quote": "Agents MUST arrange to receive credentials via an out-of-band means, unless an in-band mechanism has been negotiated out-of-band or via an extension.",
+     "check": "OK",
+     "check_fp": "0b6e7e8fe1"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Only the issuer named in OAuth/OIDC schemes",
+   "answer": "Partly. The server chooses its schemes, and for OAuth 2.0 and OpenID Connect the Agent Card points to the issuer, so a valid token means that issuer approved the client. For API keys and HTTP authentication the server is its own issuer, and the mutual TLS scheme names no certificate authority. Signed Agent Cards and registries help the client trust the server, not the server trust the client.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "none",
+   "rating_reason": "Yellow: a vouching party is named only in some schemes; MCP Authorization is green because clients must use tokens from the server's named authorization server.",
+   "claims": [
+    {
+     "text": "The OIDC scheme names the provider's discovery URL.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message OpenIdConnectSecurityScheme",
+     "quote": "The OpenID Connect Discovery URL for the OIDC provider's metadata.",
+     "check": "OK",
+     "check_fp": "4c80f52f6d"
+    },
+    {
+     "text": "The OAuth scheme can name the authorization server's metadata.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message OAuth2SecurityScheme",
+     "quote": "URL to the OAuth2 authorization server metadata",
+     "check": "OK",
+     "check_fp": "002e88a7c5"
+    },
+    {
+     "text": "Agent Card signatures let clients verify the server's card.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8.4. Agent Card Signing",
+     "quote": "Signatures allow clients to verify that an Agent Card has not been tampered with and originates from the claimed provider.",
+     "check": "OK",
+     "check_fp": "b7aaa3fb0f"
+    },
+    {
+     "text": "The mutual TLS scheme object has only a description field and names no trust anchor (searched the proto and Section 7).",
+     "type": "silent",
+     "source": "proto",
+     "section": "message MutualTlsSecurityScheme",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Recommended, not defined",
+   "answer": "Not defined by A2A. The security considerations say agents should implement credential revocation mechanisms, but A2A defines none, so revocation depends on the chosen scheme: the server can delete an API key it issued, or the OAuth authorization server can revoke tokens (e.g. under RFC 7009), with the speed and granularity that scheme allows. The revocation rule for signing keys covers Agent Card signatures, which the client checks, not request credentials.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "SHOULD",
+   "rating_reason": "Red: A2A only recommends (SHOULD) that agents have revocation and defines no mechanism, so coverage is none (same colour as all three calibration examples, which also leave revocation to other parties).",
+   "claims": [
+    {
+     "text": "Revocation mechanisms are recommended.",
+     "type": "fact",
+     "source": "spec",
+     "section": "13.4. General Security Best Practices",
+     "quote": "Agents SHOULD implement credential revocation mechanisms",
+     "check": "OK",
+     "check_fp": "9f4619af68"
+    },
+    {
+     "text": "The only other revocation rule covers Agent Card signing keys, checked by clients.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8.4.3. Signature Verification",
+     "quote": "Expired or revoked keys MUST NOT be used for verification",
+     "check": "OK",
+     "check_fp": "e87a99ee8e"
+    },
+    {
+     "text": "Searched Sections 7, 13 and the proto for a revocation endpoint, status list or signal. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "7. Authentication and Authorization; 13. Security Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No for callers",
+   "answer": "No. The Agent Card names the provider organization and a URL, but that card describes the receiving agent and is read by the caller; the calling agent sends no card or contact details to the server. A2A defines no contact, abuse or security channel for whoever operates a calling agent.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact for the caller is defined (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Provider details are part of the server's Agent Card.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message AgentProvider",
+     "quote": "A URL for the agent provider's website or relevant documentation.",
+     "check": "OK",
+     "check_fp": "3183e485eb"
+    },
+    {
+     "text": "The Agent Card describes the server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8.1. Purpose",
+     "quote": "The Agent Card describes the server's identity, capabilities, skills, and interaction requirements.",
+     "check": "OK",
+     "check_fp": "1e240ea90e"
+    },
+    {
+     "text": "Searched the request objects, Section 7 and Section 13 for a caller contact, abuse or security field. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "7. Authentication and Authorization; 13. Security Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. A2A asks agents to log security events, watch for unusual patterns and rate-limit callers, but these are local measures. It defines no way for one agent to warn other agents, registries or credential issuers about a misbehaving caller.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Security event logging is local.",
+     "type": "fact",
+     "source": "spec",
+     "section": "13.4. General Security Best Practices",
+     "quote": "Agents SHOULD log security-relevant events (authentication failures, authorization denials, suspicious requests)",
+     "check": "OK",
+     "check_fp": "dbd4304139"
+    },
+    {
+     "text": "Searched Section 13, the discovery guide and the extension list for shared signals, reputation or abuse reporting. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "13. Security Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. A2A says nothing about which AI model is behind the calling agent. The Agent Card's version field gives the version of the receiving agent, not a model, and the calling agent sends no card. Agents are treated as opaque by design.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no model identity (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "The version field names the agent's version.",
+     "type": "fact",
+     "source": "proto",
+     "section": "message AgentCard",
+     "quote": "The version of the agent.",
+     "check": "OK",
+     "check_fp": "cfbc76f3fd"
+    },
+    {
+     "text": "Agents are opaque by design.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1.2. Guiding Principles",
+     "quote": "Agents collaborate based on declared capabilities and exchanged information, without needing to share their internal thoughts, plans, or tool implementations.",
+     "check": "OK",
+     "check_fp": "b64cf84ace"
+    },
+    {
+     "text": "Searched the proto and the specification for model, attestation or provenance fields. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "4. Protocol Data Model; 8. Agent Discovery: The Agent Card",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The receiving agent must authenticate and authorize every request with the scheme it declared, and can require OAuth scopes per skill, but what is checked and how finely is left to each agent and to the external credential issuer.",
+  "incident_response": "A2A defines no revocation; a misbehaving caller can be cut off only through the credential scheme (e.g. deleting its API key or revoking its OAuth grant), at the granularity that scheme gives, which is usually a client or user, not an agent instance.",
+  "accountability": "An action can be traced only to whatever identity the credential carries (a key holder, an OAuth client, a user or a certificate subject); A2A messages add no caller, user or model identity."
+ },
+ "notes": [
+  "A2A is analysed from the side of the A2A server (the receiving agent). Many A2A identity features, such as the Agent Card and its signatures, help the calling agent trust the server, not the reverse; the rows say so where relevant.",
+  "A2A uses RFC 2119 keywords. The human approval row rests on lowercase wording (\"provides the capability\", \"may\"), so its requirement is marked MAY*.",
+  "Two rows also cite the A2A documentation page Enterprise Implementation of A2A, which is non-normative; it is used only where it repeats or explains the specification (e.g. that A2A payloads carry no user or client identity).",
+  "The specification file at the v1.0.1 tag still shows \"Latest Released Version 1.0.0\" in its header; the changelog dates v1.0.1 to 2026-05-26 and the git tag to 2026-05-28.",
+  "A Secure Passport extension is listed among example extensions in the A2A documentation; it lives in the samples repository, is not part of the specification and was not counted.",
+  "The Microsoft Learn page could not be checked by the script; its quote was checked with a web tool."
+ ],
+ "open_questions": [
+  "Section 7.4 requires the server to authenticate every request. Does the project intend this to identify the calling agent, or only to validate the credential of the declared scheme?",
+  "The mutual TLS scheme object carries only a description. How is a server expected to tell clients which certificate authorities or certificates it accepts?",
+  "The v1.0.1 sample Agent Card uses a \"security\" field while the normative proto names it security_requirements (the v1.1.0 release candidate updates the sample). Implementations may differ on this.",
+  "Section 7.6.3 recommends binding in-band credentials to the requesting agent but gives no mechanism. Is an official extension planned for this?"
+ ]
+}</script></body></html>

@@ -1,0 +1,1034 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ANS: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>ANS<small>Agent Name Service v2</small></h1><ul class="facts"><li><b>Specification:</b> ans-registry specifications ANS-0 to ANS-6 at commit 9284c7e (2026-11-16); IETF draft-narajala-courtney-ansv2-01 (2026-04-13)</li><li><b>Date:</b> 2026-11-16</li><li><b>Maintainer:</b> Agent Name Service project, a Series of LF Projects, LLC (originated at GoDaddy and OWASP); IETF draft authors from GoDaddy, OWASP, DistributedApps.ai and Cisco</li><li><b>Analysed:</b> 2026-11-18</li><li><b>Version note:</b> The repository has no tagged releases; the analysis is pinned to commit 9284c7e. The IETF draft -01 is older than the repository specifications, which the project calls authoritative; no -02 was found and -01 passed its stated expiry date (15 October 2026).</li></ul><div class=chips><span class="chip"><b>Category:</b> Discovery registry</span><span class="chip"><b>Also:</b> Web bot identity</span><span class="chip"><b>Also:</b> Credentials trust</span><span class="chip"><b>Mechanism:</b> mTLS, X.509 certificate, Proof-of-possession token, Signed metadata</span><span class="chip"><b>Venue:</b> Foundation</span><span class="chip"><b>Maturity:</b> Draft</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>The Agent Name Service (ANS) gives each AI agent a verifiable name tied to a domain name, so that one agent can check that another really belongs to the organisation it claims and is running the software version it registered. It answers questions like whether a supplier&#x27;s invoicing agent is genuine or a look-alike. ANS grew out of an OWASP paper and IETF draft; GoDaddy built and runs a production registry, and the project is now a Linux Foundation series (LF Projects). The specifications in its GitHub repository are marked DRAFT and are newer than the companion IETF draft, an individual submission whose -01 revision dates from April 2026.</p><p>An agent operator registers an agent with a Registration Authority (RA), proving control of its domain. The RA issues certificates, including an Identity Certificate naming the agent and version (ans://v1.0.0.agent.example.com), publishes DNS records and seals every event into a public, append-only Transparency Log. When one agent calls another, the callee checks the caller&#x27;s certificate (by mutual TLS or a per-request DPoP proof) plus a log receipt and a short-lived status token, so revoked agents are refused within about an hour. ANS deliberately covers authentication only: authorization, acting on behalf of users, trust scoring and contact details are left to the service or to other specifications.</p><h2 id="how">How it works</h2><ol class="steps"><li>The agent&#x27;s operator registers the agent at a Registration Authority (RA): it proves control of the agent&#x27;s domain (ACME DNS-01) and submits certificate requests, receiving a Server Certificate and, optionally, an Identity Certificate from the RA&#x27;s private CA that names the agent and version.</li><li>The RA seals an AGENT_REGISTERED event into the Transparency Log (TL), and the operator publishes DNS records, including an _ans-badge record pointing to the agent&#x27;s entry in the log.</li><li>In the background, the calling agent fetches its own log receipt (proof its registration is in the log) and a status token (proof it is currently active, valid for about an hour).</li><li>On each request, the caller proves possession of its Identity Certificate key: in the TLS handshake (Method A, mutual TLS) or with a signed DPoP proof bound to the method, URL and content (Method B), sending the receipt and status token in HTTP headers.</li><li>The callee (the receiving agent) verifies the certificate or proof, the receipt and status token against the TL&#x27;s keys (or queries a trusted TL for the badge), checks that names and fingerprints match and that the agent is not revoked, then applies its own authorization policy.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>ANS</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Domain-anchored, logged identities agents verify</td></tr><tr><td class="prop">Use cases</td><td class="">Agent discovery and agent-to-agent authentication</td></tr><tr><td class="prop">Parties involved</td><td class="">RA, TL, agent host provider, caller, callee, monitors</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">Draft specs; GoDaddy registry, MuleSoft integration</td></tr><tr><td class="prop">Building blocks</td><td class="">DNS, ACME, X.509/mTLS, DPoP, SCITT, COSE</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="green">ANSName: agent host plus version</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="red">No; delegation out of scope</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Agent&#x27;s own certificate, mTLS or DPoP per request</td></tr><tr><td class="prop">Credential lifetime</td><td class="green">Status token 1 hour; DPoP 120 seconds</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, against the log and RA CA</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="green">Yes, the agent&#x27;s own key</td></tr><tr><td class="prop">Scoped authorization</td><td class="red">No; out of scope</td></tr><tr><td class="prop">Human approval</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="green">RA and log, as notaries of domain control</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="green">Yes, per agent version, about one hour</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No; RA collects no contact info</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="yellow">Integrity warnings only; behaviour elsewhere</td></tr><tr><td class="prop">Model identity</td><td class="red">No; software version only</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>ANS gives the receiving agent a strongly authenticated identity for the specific calling agent and version, but no permissions; the receiving agent must apply its own authorization (or OAuth) to that identity.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>A misbehaving agent version can be revoked by its operator or the RA and is refused by verifiers within about one to two hours on the recommended tier; integrity problems can be flagged by independent monitors. There is no contact channel and no way to stop one running copy.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Actions can be traced to a specific agent and version at a verified domain, with a public log history and, if linked, a verified operator identity; not to a user or an AI model.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Acting for (authority):</b> No; delegation out of scope (explicitly out of scope)</li><li><b>Scoped authorization:</b> No; out of scope (explicitly out of scope)</li><li><b>Human approval:</b> No (not addressed by the specification)</li><li><b>Contact and escalation:</b> No; RA collects no contact info (not addressed by the specification)</li><li><b>Model identity:</b> No; software version only (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>ANS</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">A naming and registry system that ties each AI agent&#x27;s identity and software version to a domain name, records it in a public transparency log, and lets a receiving agent authenticate a calling agent per request by its own certificate key plus log evidence that it is currently registered and not revoked.<details><summary>Evidence (3)</summary><div class="claim">ANS v2 anchors every agent identity to a domain name. <i>Source states</i> <a href="https://www.ietf.org/archive/id/draft-narajala-courtney-ansv2-01.html">Agent Name Service v2 (ANS), draft-narajala-courtney-ansv2-01</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“This document defines the Agent Name Service (ANS) v2 protocol, which anchors every agent identity to a DNS domain name.”</blockquote></div><div class="claim">ANS-6 defines per-request authentication between agents. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 1. Scope. <span class="chk">(quote verified against the source)</span><blockquote>“ANS-6 is the verifier-facing layer: it specifies how one agent authenticates another at request time”</blockquote></div><div class="claim">Identity, liveness and possession are all required. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 3.1 The three proofs. <span class="chk">(quote verified against the source)</span><blockquote>“A verifier that checks possession but not liveness accepts a revoked agent. All three are required.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Finding and authenticating agents across organisations (e.g. a payment agent checking a supplier&#x27;s invoicing agent before acting). Identity travels in the TLS handshake (Method A) or in HTTP headers carrying a DPoP proof, log receipt and status token (Method B), plus DNS records and log entries. The receiving agent verifies it itself, with no per-request call to the log in the recommended tier; Method B also works through proxies and gateways that terminate TLS.<details><summary>Evidence (3)</summary><div class="claim">Two possession-proof methods: mTLS and application-layer DPoP. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 1. Scope. <span class="chk">(quote verified against the source)</span><blockquote>“carries an RFC 9449 DPoP proof in an HTTP header, surviving L7 proxies and gateways that terminate TLS.”</blockquote></div><div class="claim">The SCITT tier needs no per-request network calls and is recommended. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 3.2 Verification tiers. <span class="chk">(quote verified against the source)</span><blockquote>“The SCITT tier is RECOMMENDED for new implementations”</blockquote></div><div class="claim">Artifacts travel in HTTP headers. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 4.6 HTTP header transport and refresh. <span class="chk">(quote verified against the source)</span><blockquote>“SCITT-tier artifacts travel as HTTP headers on the requests and responses agents already exchange:”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Registration Authority (RA): verifies domain control, issues certificates through its private CA and seals events, acting as a notary rather than a judge. Transparency Log (TL): append-only log that seals events and serves badges, receipts and status tokens. Agent Hosting Provider (AHP): the operator who registers and revokes agents and publishes DNS records. Caller and callee: the agent sending a request and the agent serving it. Integrity monitors (AIM): external services that report discrepancies. Verifiers and discovery services consume the outputs.<details><summary>Evidence (4)</summary><div class="claim">The RA is a notary. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a>, 1.1 Architectural foundation. <span class="chk">(quote verified against the source)</span><blockquote>“The RA acts as a notary, not a judge: it verifies control and seals events into a Transparency Log; verifiers consume what ANS produces (identities, certificates, log proofs) and make their own trust decisions.”</blockquote></div><div class="claim">Caller and callee. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“Caller / callee: the agent initiating an HTTP request / the agent serving it.”</blockquote></div><div class="claim">The AHP or RA revokes registrations. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-1-registration.md">ANS-1: Registration &amp; Lifecycle (spec/ans-1-registration.md, v0.2.0)</a>, 6.2 AGENT_REVOKED. <span class="chk">(quote verified against the source)</span><blockquote>“Emitted when the AHP or RA revokes a registration.”</blockquote></div><div class="claim">External monitors report but cannot change state. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-5-integrity-monitoring.md">ANS-5: Integrity Monitoring (spec/ans-5-integrity-monitoring.md, v0.1.0)</a>, 7. Integrity reporting principles. <span class="chk">(quote verified against the source)</span><blockquote>“External monitors publish findings. They cannot command state changes.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Draft. The repository specifications are marked DRAFT and are versioned 0.1.0 to 0.3.0, with no tagged release; the project says they, not the IETF draft, are authoritative. The IETF draft is an individual submission (Informational, -01, April 2026). The project is a Linux Foundation series (LF Projects). GoDaddy describes its registry as production, and MuleSoft has integrated GoDaddy&#x27;s ANS into its Agent Scanners.<div class="meta">Why this rating: Still a draft with no released version, although it has named deployments (same as Web Bot Auth); not red because deployments exist.</div><details><summary>Evidence (5)</summary><div class="claim">Specifications are marked DRAFT. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, Header. <span class="chk">(quote verified against the source)</span><blockquote>“Status: DRAFT v1.0”</blockquote></div><div class="claim">The repository specs are authoritative over the IETF draft. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/DESIGN.md">ANS Architecture and Design pointer (DESIGN.md)</a>, ANS Architecture and Design. <span class="chk">(quote verified against the source)</span><blockquote>“The layered specs in this repository are the authoritative source; the IETF draft is updated less frequently and is the venue for cross-organizational standards review.”</blockquote></div><div class="claim">Linux Foundation series. <i>Source states</i> <a href="https://github.com/agentnameservice/governance/blob/eae3640b0836d2b9f04a28ecb58ede6890f72eb5/CHARTER.md">Technical Charter for Agent Name Service, a Series of LF Projects, LLC (governance/CHARTER.md)</a>, Title. <span class="chk">(quote verified against the source)</span><blockquote>“Agent Name Service, a Series of LF Projects, LLC”</blockquote></div><div class="claim">Deployment: GoDaddy built a production registry. <i>Source states</i> <a href="https://www.godaddy.com/resources/news/building-the-agent-name-service-using-a-one-system-approach">GoDaddy, Building the Agent Name Service using a one-system approach</a>, Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“This post describes how we built a production, cryptographically verifiable trust registry for AI agents in a few months”</blockquote></div><div class="claim">Deployment: MuleSoft integrated GoDaddy&#x27;s ANS. <i>Source states</i> <a href="https://blogs.mulesoft.com/?p=75764">MuleSoft blog, Verify Agent Identity With MuleSoft and GoDaddy Agent Name Service (ANS)</a>, Article body. <span class="chk">(quote verified against the source)</span><blockquote>“we integrated GoDaddy’s Agent Name Service (ANS) with Agent Scanners.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">DNS (with optional DNSSEC and DANE TLSA records, and SVCB records per DNS-AID) for publication; ACME DNS-01 for domain control; X.509 certificates, with Identity Certificates from the RA&#x27;s private CA, used in mutual TLS; DPoP (RFC 9449) for application-layer proof of possession; a SCITT-style transparency log with COSE receipts, RFC 9162 Merkle proofs and JCS (RFC 8785) canonicalisation; C2SP signed notes for log keys; optional anchoring to the Hedera Consensus Service.<details><summary>Evidence (4)</summary><div class="claim">Seven layered specifications. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/DESIGN.md">ANS Architecture and Design pointer (DESIGN.md)</a>, ANS Architecture and Design. <span class="chk">(quote verified against the source)</span><blockquote>“Per-identifier-kind detail (fqdn, did:web, did:key, lei, and deferred sketches for did:plc / did:ethr / did:ion) lives in the identity profiles under ANS-0”</blockquote></div><div class="claim">Domain control by ACME DNS-01. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a>, 3.1 The two axes. <span class="chk">(quote verified against the source)</span><blockquote>“ACME DNS-01 (_acme-challenge TXT)”</blockquote></div><div class="claim">Method B uses DPoP. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 7. Authenticating a caller — Method B: application-layer proof of possession. <span class="chk">(quote verified against the source)</span><blockquote>“Method B moves the caller&#x27;s possession proof from the TLS handshake to the application layer as a DPoP proof”</blockquote></div><div class="claim">The TL issues SCITT-style COSE receipts. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-4-transparency.md">ANS-4: Transparency &amp; Receipts (spec/ans-4-transparency.md, v0.2.0)</a>, 5.2 Receipts, status tokens, checkpoints. <span class="chk">(quote verified against the source)</span><blockquote>“A receipt is a COSE_Sign1 (RFC 9052)”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, per agent. Each registered agent has an ANSName, ans://v{version}.{agentHost}, built from its own domain name and software version, which its Identity Certificate carries and the callee extracts. It names one agent (and version) rather than the provider behind several agents; the operator is a separate, optional Verified Identity. All running copies of that agent version share the name, and agents registered without an Identity Certificate cannot present it as callers.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the individual agent and version, not the provider (the calibration examples are yellow because they name the client application or provider); copies of one agent version share it, which is handled under the instance row.</div><details><summary>Evidence (4)</summary><div class="claim">The ANSName is the unique identifier; the FQDN is shared by every version. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-2-versioned-naming.md">ANS-2: Versioned Naming (spec/ans-2-versioned-naming.md, v0.3.0)</a>, 2.2 Registration metadata accompanying the ANSName. <span class="chk">(quote verified against the source)</span><blockquote>“The ANSName is the unique identifier; display names need not be unique, and the FQDN is shared by every version registered under it.”</blockquote></div><div class="claim">The Identity Certificate binds a specific software version. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-2-versioned-naming.md">ANS-2: Versioned Naming (spec/ans-2-versioned-naming.md, v0.3.0)</a>, 3. The Identity Certificate. <span class="chk">(quote verified against the source)</span><blockquote>“Binds the certificate to a specific software version, presentable as a TLS client certificate”</blockquote></div><div class="claim">The callee extracts the ANSName from the URI SAN. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 6.1 Handshake and identity extraction. <span class="chk">(quote verified against the source)</span><blockquote>“Exactly one URI SAN is required.”</blockquote></div><div class="claim">The Identity Certificate is optional at registration. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-1-registration.md">ANS-1: Registration &amp; Lifecycle (spec/ans-1-registration.md, v0.2.0)</a>, 7.2 Registrations without an Identity Certificate. <span class="chk">(quote verified against the source)</span><blockquote>“identityCsrPEM is optional.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ANS identifies a registered agent version, not a running copy of it. The agentId is described as a registration-instance key, meaning one registration, and the Identity Certificate and its fingerprints are per registration. Rotation can add certificates, but nothing assigns one to each running process or session, so a callee cannot tell replicas apart.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier is defined (same as all three calibration examples); agentId identifies a registration.</div><details><summary>Evidence (2)</summary><div class="claim">agentId is a registration-instance key. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-1-registration.md">ANS-1: Registration &amp; Lifecycle (spec/ans-1-registration.md, v0.2.0)</a>, 5. Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“Registration-instance key”</blockquote></div><div class="claim">Searched ANS-1, ANS-2 and ANS-6 for an identifier of a running agent instance, process or session. None is defined; certificates are issued per registration. <i>Not found in</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 2. Terminology; 6. Authenticating a caller.</div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ANS-6 explicitly leaves delegation, meaning an agent acting on behalf of a user or another agent, outside this revision. ANS can optionally link an agent to a Verified Identity of its operator or legal entity (e.g. a DID or a Legal Entity Identifier), which says who runs the agent, not whom a given request is for.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: Acting-for is explicitly out of scope (same as Web Bot Auth); the optional operator identity describes the agent&#x27;s owner, not the principal of a request.</div><details><summary>Evidence (3)</summary><div class="claim">Delegation is out of scope. <i>Out of scope per</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 1. Scope. <span class="chk">(quote verified against the source)</span><blockquote>“an agent acting on behalf of a user or another agent across a call chain. That is a separate, higher-risk concern outside this revision.”</blockquote></div><div class="claim">The who is the operator behind the agent, and it is optional. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a>, 1. Scope. <span class="chk">(quote verified against the source)</span><blockquote>“The who is optional; the what is not.”</blockquote></div><div class="claim">Verified Identity names the operator or legal entity. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“a Verified Identity: the operator/legal entity behind one or more agents.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, proof of possession on every connection or request. With Method A the caller presents its Identity Certificate in mutual TLS; with Method B it sends a DPoP proof signed with that certificate&#x27;s key, bound to the HTTP method, URL and content hash and usable once, plus a log receipt and status token in headers. Both prove the caller holds the private key; a conformant callee implements at least one method.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A defined, verifiable proof-of-possession credential on every connection or request (all three calibration examples are green; unlike MCP Authorization this is not a bearer credential).</div><details><summary>Evidence (4)</summary><div class="claim">Callee must implement at least one method. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 10. Conformance. <span class="chk">(quote verified against the source)</span><blockquote>“Implements at least one caller-authentication method (§6 or §7) and documents which”</blockquote></div><div class="claim">Method B binds each request. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 3.3 Possession-proof methods. <span class="chk">(quote verified against the source)</span><blockquote>“each proof binds one HTTP method + URL + content, single-use”</blockquote></div><div class="claim">Method A presents the Identity Certificate in the handshake. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 6. Authenticating a caller — Method A: mTLS. <span class="chk">(quote verified against the source)</span><blockquote>“The caller presents its Identity Certificate in the TLS handshake”</blockquote></div><div class="claim">The content digest is required in Method B proofs. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 7.2 Proof format. <span class="chk">(quote verified against the source)</span><blockquote>“REQUIRED. base64url(SHA-256(content)), without padding”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="green"><span class="badge">Addressed</span><br>Short, and enforced by the verifier. The status token, which says the agent is currently active, has a default lifetime of one hour, and verifiers must reject it after expiry (allowing at most ten minutes of clock skew). Method B proofs must have been created within a freshness window (120 seconds by default) and are single-use. The certificate&#x27;s own validity period, set by the CA, must also contain the current time.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Specific short limits that verifiers must enforce (same as Visa TAP&#x27;s eight-minute rule).</div><details><summary>Evidence (4)</summary><div class="claim">Status token default TTL one hour. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 4.4 Status token. <span class="chk">(quote verified against the source)</span><blockquote>“int64, Unix seconds (default TTL one hour)”</blockquote></div><div class="claim">Verifier asserts expiry. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 4.4 Status token. <span class="chk">(quote verified against the source)</span><blockquote>“Assert now ≤ exp + skew”</blockquote></div><div class="claim">DPoP freshness window. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 7.4 Verification procedure. <span class="chk">(quote verified against the source)</span><blockquote>“within the freshness window: |now − iat| ≤ skew (default 120 seconds).”</blockquote></div><div class="claim">Certificate validity must contain now. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 7.5 Binding to the ANS identity. <span class="chk">(quote verified against the source)</span><blockquote>“Verifiers MUST reject a proof whose x5c[0] validity period does not contain the current time”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The callee checks the caller&#x27;s certificate (chain to the RA&#x27;s private CA under mutual TLS, or the DPoP signature and certificate fingerprint under Method B), the log receipt and status token against the log&#x27;s published keys, or a badge fetched from a log it trusts, and that names, fingerprints and status match. No prior relationship with the caller is needed, only a configured list of trusted logs.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The service validates genuineness, currency and integrity against published keys without a prior relationship with the agent (same as all three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Chain validation to the RA private CA (Method A). <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 6.1 Handshake and identity extraction. <span class="chk">(quote verified against the source)</span><blockquote>“The TLS layer validates the client certificate chain against the RA Private CA trust anchor.”</blockquote></div><div class="claim">Fingerprint must match the status token (Method B). <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 7.5 Binding to the ANS identity. <span class="chk">(quote verified against the source)</span><blockquote>“SHA-256(x5c[0] DER) MUST equal some entry of the status token&#x27;s validIdentityCerts.”</blockquote></div><div class="claim">Trusted-log allowlist before badge fetch. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 4.2 The _ans-badge record and trusted TL domains. <span class="chk">(quote verified against the source)</span><blockquote>“Before fetching any badge URL, the verifier MUST confirm the URL&#x27;s host is a TL the verifier trusts.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, the agent itself. The callee verifies that the caller holds the private key of its own Identity Certificate, issued for that specific agent and version, and that this certificate is the one the log currently vouches for. This is per agent, not per provider, though all running copies of an agent version may share the key. Users are not authenticated; ANS covers agents only.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The service verifies on each connection or request a proof belonging to the individual agent (all three calibration examples are red because they check a token issued elsewhere or a provider key).</div><details><summary>Evidence (3)</summary><div class="claim">Authentication is verification plus possession proof. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“Authentication: verification plus a possession proof”</blockquote></div><div class="claim">Step 11 ties the key to a live registered agent. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 7.4 Verification procedure. <span class="chk">(quote verified against the source)</span><blockquote>“Step 11 is what turns &quot;someone holds this key&quot; into &quot;this registered, currently-valid agent holds this key&quot;.”</blockquote></div><div class="claim">The Identity Certificate is issued by the RA&#x27;s private CA. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-2-versioned-naming.md">ANS-2: Versioned Naming (spec/ans-2-versioned-naming.md, v0.3.0)</a>, 3. The Identity Certificate. <span class="chk">(quote verified against the source)</span><blockquote>“Private CA operated by the RA”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No, out of scope by design. ANS establishes who is calling, never what it may do; the callee must apply its own authorization (e.g. an allowlist or role-based rules) to the authenticated identity. Method B can carry an OAuth 2.0 access token bound to the same key when a deployment adds OAuth, but the permissions then come from OAuth, not ANS.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: Authorization is explicitly out of scope (same as Web Bot Auth).</div><details><summary>Evidence (3)</summary><div class="claim">ANS verification never answers what an agent may do. <i>Out of scope per</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 6.5 Authorization placement. <span class="chk">(quote verified against the source)</span><blockquote>“ANS verification answers &quot;is this a validly registered agent?&quot;, never &quot;may it do this?&quot;.”</blockquote></div><div class="claim">The callee applies its own authorization. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 1. Scope. <span class="chk">(quote verified against the source)</span><blockquote>“The callee MUST apply its own authorization to the authenticated identity.”</blockquote></div><div class="claim">OAuth can be layered on top. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 7.8 OAuth 2.0 composition. <span class="chk">(quote verified against the source)</span><blockquote>“ANS proves who; OAuth 2.0 grants what.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ANS authenticates agents to each other and has no step in which a person approves an agent&#x27;s access or action. Registration and revocation are performed by the agent&#x27;s operator through the RA&#x27;s API, which is account administration rather than approval of a request.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as Web Bot Auth and Visa TAP).</div><details><summary>Evidence (2)</summary><div class="claim">ANS-6 covers authentication only. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 10. Conformance. <span class="chk">(quote verified against the source)</span><blockquote>“Treats every procedure&#x27;s result as authentication only, applying authorization separately.”</blockquote></div><div class="claim">Searched ANS-0 to ANS-6 for user consent, approval or step-up for an agent&#x27;s actions. None is defined; step-up authentication appears only as an option for operators linking identities. <i>Not found in</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a>, 6. Identity links.</div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="green"><span class="badge">Addressed</span><br>The Registration Authority and its Transparency Log, as notaries. The RA issues an Identity Certificate only after the operator proves control of the agent&#x27;s domain, and the log publicly records it; verifiers choose which logs to trust through an explicit allowlist. The RA vouches for control and registration, not for good behaviour: it calls itself a notary, not a judge, and trust scoring lives in a separate Trust Index specification.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The protocol names parties that vouch, and only agents they registered are accepted (same as Visa TAP and MCP Authorization), although the vouching covers domain control rather than conduct.</div><details><summary>Evidence (3)</summary><div class="claim">Identities are sealed only after proven control. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a>, 1. Scope. <span class="chk">(quote verified against the source)</span><blockquote>“The Registration Authority (RA) seals an identity attestation only after control of the identifier is proven”</blockquote></div><div class="claim">Verifiers maintain an allowlist of trusted logs. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 4.2 The _ans-badge record and trusted TL domains. <span class="chk">(quote verified against the source)</span><blockquote>“Verifiers maintain an explicit allowlist of trusted TL domains.”</blockquote></div><div class="claim">Trust scoring is out of scope. <i>Out of scope per</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 1. Scope. <span class="chk">(quote verified against the source)</span><blockquote>“Out of scope for ANS; lives in the separate ti-* layer set.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The operator or the RA can revoke an agent version&#x27;s registration; the RA revokes its Identity Certificates, seals an AGENT_REVOKED event with a reason, and the operator removes its DNS records. The log then refuses fresh status tokens and badges show REVOKED, and verifiers must treat a missing fresh token as revocation, so it reaches callees within the token lifetime (worst case about two hours with defaults). On the badge tier the delay depends on each deployment&#x27;s cache settings.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Revocation is defined at agent-version granularity and reaches verifiers within a bounded time (all three calibration examples are red because they define none); badge-tier latency is deployment-configured, noted in the answer.</div><details><summary>Evidence (4)</summary><div class="claim">AGENT_REVOKED event with reason. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-1-registration.md">ANS-1: Registration &amp; Lifecycle (spec/ans-1-registration.md, v0.2.0)</a>, 6.2 AGENT_REVOKED. <span class="chk">(quote verified against the source)</span><blockquote>“Emitted when the AHP or RA revokes a registration.”</blockquote></div><div class="claim">Missing fresh status token equals revocation. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 4.4 Status token. <span class="chk">(quote verified against the source)</span><blockquote>“Verifiers MUST treat the inability to obtain a fresh status token as equivalent to revocation, subject to the failure policy in §9.”</blockquote></div><div class="claim">Revocation latency bound. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 11.1 Revocation latency. <span class="chk">(quote verified against the source)</span><blockquote>“On the SCITT tier the worst case is status-token TTL + clock skew + grace: one hour by default”</blockquote></div><div class="claim">Badge-tier bounds are deployment configuration. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a>, 11.1 Revocation latency. <span class="chk">(quote verified against the source)</span><blockquote>“both deployment configuration rather than spec-bounded”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ANS defines no contact or abuse channel for an agent&#x27;s operator; the specification notes that the RA collects no contact information. A callee can see the agent&#x27;s domain name and, if linked, a Verified Identity of the operator (e.g. a Legal Entity Identifier), which helps to find the responsible party outside ANS.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact channel is defined (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">The RA collects no contact info. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a>, 6. Identity links. <span class="chk">(quote verified against the source)</span><blockquote>“The RA pushes nothing (it collects no contact info, and the account it could notify is the one whose credential performed the link).”</blockquote></div><div class="claim">Verified Identities can name a legal entity, e.g. an LEI. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“Identifier — a public, stable string an operator controls: an FQDN, a DID, an LEI.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Independent integrity monitors can report discrepancies (e.g. live DNS records or certificates that differ from what was sealed); after corroboration the RA can seal a warning that every verifier can read, and consumers decide how to react. These signals cover infrastructure integrity only: the RA does not judge behaviour, and behaviour-based reputation lives in the separate Trust Index specification, not in ANS.<div class="meta">Optional in the specification</div><div class="meta">Why this rating: A defined cross-party channel exists but is limited to infrastructure integrity, and how findings reach the registry is implementation-defined; behavioural signalling is in a companion specification.</div><details><summary>Evidence (4)</summary><div class="claim">Quorum before the RA acts; findings are verifiable. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-5-integrity-monitoring.md">ANS-5: Integrity Monitoring (spec/ans-5-integrity-monitoring.md, v0.1.0)</a>, 7. Integrity reporting principles. <span class="chk">(quote verified against the source)</span><blockquote>“The RA MUST NOT act on an unconfirmed finding.”</blockquote></div><div class="claim">Consumers act on confirmed findings. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-5-integrity-monitoring.md">ANS-5: Integrity Monitoring (spec/ans-5-integrity-monitoring.md, v0.1.0)</a>, 7.1 Warning, not state change. <span class="chk">(quote verified against the source)</span><blockquote>“When a finding meets the quorum requirement, consumers of the finding take action per their own policy.”</blockquote></div><div class="claim">The RA does not evaluate behaviour. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-5-integrity-monitoring.md">ANS-5: Integrity Monitoring (spec/ans-5-integrity-monitoring.md, v0.1.0)</a>, 7. Integrity reporting principles. <span class="chk">(quote verified against the source)</span><blockquote>“The RA does not evaluate an agent&#x27;s behavior or quality.”</blockquote></div><div class="claim">Integration of findings is implementation-defined. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-5-integrity-monitoring.md">ANS-5: Integrity Monitoring (spec/ans-5-integrity-monitoring.md, v0.1.0)</a>, 7.1 Warning, not state change. <span class="chk">(quote verified against the source)</span><blockquote>“The registry ingests these findings through an implementation-defined integration.”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ANS records which software version of an agent is registered, as a semantic version in its name and certificate, and new code means a new version and certificate; it can also seal hashes of the agent&#x27;s metadata card. The version number is declared by the operator and nothing identifies the AI model behind the agent.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No model identity; the declared software version is not counted as model identity (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">The certificate binds a software version. <i>Source states</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-2-versioned-naming.md">ANS-2: Versioned Naming (spec/ans-2-versioned-naming.md, v0.3.0)</a>, 3. The Identity Certificate. <span class="chk">(quote verified against the source)</span><blockquote>“Binds the certificate to a specific software version, presentable as a TLS client certificate”</blockquote></div><div class="claim">Searched ANS-0 to ANS-6 for model, provider of the model, or runtime attestation fields. None is defined. <i>Not found in</i> <a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-1-registration.md">ANS-1: Registration &amp; Lifecycle (spec/ans-1-registration.md, v0.2.0)</a>, 6. Event set.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md">ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)</a> (ANS-6 v0.2.0 (commit 9284c7e), 2026-11-03)</li><li><a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md">ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)</a> (ANS-0 v0.2.0 (commit 9284c7e), 2026-06-23)</li><li><a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-1-registration.md">ANS-1: Registration &amp; Lifecycle (spec/ans-1-registration.md, v0.2.0)</a> (ANS-1 v0.2.0 (commit 9284c7e), 2026-07-02)</li><li><a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-2-versioned-naming.md">ANS-2: Versioned Naming (spec/ans-2-versioned-naming.md, v0.3.0)</a> (ANS-2 v0.3.0 (commit 9284c7e), 2026-11-03)</li><li><a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-4-transparency.md">ANS-4: Transparency &amp; Receipts (spec/ans-4-transparency.md, v0.2.0)</a> (ANS-4 v0.2.0 (commit 9284c7e), 2026-07-18)</li><li><a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-5-integrity-monitoring.md">ANS-5: Integrity Monitoring (spec/ans-5-integrity-monitoring.md, v0.1.0)</a> (ANS-5 v0.1.0 (commit 9284c7e), 2026-05-17)</li><li><a href="https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/DESIGN.md">ANS Architecture and Design pointer (DESIGN.md)</a> (commit 9284c7e, 2026-11-16)</li><li><a href="https://github.com/agentnameservice/governance/blob/eae3640b0836d2b9f04a28ecb58ede6890f72eb5/CHARTER.md">Technical Charter for Agent Name Service, a Series of LF Projects, LLC (governance/CHARTER.md)</a> (commit eae3640, 2026-11-05)</li><li><a href="https://www.ietf.org/archive/id/draft-narajala-courtney-ansv2-01.html">Agent Name Service v2 (ANS), draft-narajala-courtney-ansv2-01</a> (-01, 2026-04-13)</li><li><a href="https://www.godaddy.com/resources/news/building-the-agent-name-service-using-a-one-system-approach">GoDaddy, Building the Agent Name Service using a one-system approach</a> (2026-01-12)</li><li><a href="https://blogs.mulesoft.com/?p=75764">MuleSoft blog, Verify Agent Identity With MuleSoft and GoDaddy Agent Name Service (ANS)</a> (2026-04-20)</li></ul><h2>Notes</h2><ul class="plain"><li>Name collisions: draft-song-anp-ans (&quot;Agent Name System&quot;, ANP suite), draft-hood-agtp-discovery (AGTP Agent Discovery and Name Service) and the replaced draft-narajala-ans-00 (ANS v1) are different documents. The Trust Index specification is a separate project, explicitly not an ANS layer.</li><li>The analysis is from the side of the callee (the receiving agent) authenticating a calling agent under ANS-6. Callee authentication by the caller (Section 5) is also defined but is not what this framework rates.</li><li>The repository specifications (pinned commit 9284c7e) are rated, because the project&#x27;s DESIGN.md calls them authoritative. They are newer than IETF draft -01 and differ from it (e.g. ANS-6&#x27;s badge and SCITT tiers and Methods A and B versus the draft&#x27;s Bronze, Silver and Gold tiers).</li><li>Quotes from the IETF archive, GoDaddy and MuleSoft pages could not be downloaded by the script and were checked with a web tool.</li><li>The GoDaddy and MuleSoft deployments are documented for GoDaddy&#x27;s registry; the sources do not say which ANS specification version they implement.</li></ul><h2>Open questions</h2><ul class="plain"><li>ANS-5 says ANS-1 specifies the INTEGRITY_WARNING event, but ANS-1&#x27;s event set lists only AGENT_REGISTERED, AGENT_REVOKED and reserved types. Is INTEGRITY_WARNING part of the wire contract?</li><li>Identity Certificates are optional at registration. How common are registrations that can only be authenticated as callees (Server Certificate) and not as callers?</li><li>Should multiple running copies of an agent share one Identity Certificate key, or may each have its own (rotation is additive)? The specifications do not say.</li><li>Will the IETF draft be revised (-02) to match the repository specifications, given that -01 has passed its expiry date?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (59 of 59 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-18. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-18",
+ "protocol": {
+  "name": "ANS",
+  "full_name": "Agent Name Service v2",
+  "spec_version": "ans-registry specifications ANS-0 to ANS-6 at commit 9284c7e (2026-11-16); IETF draft-narajala-courtney-ansv2-01 (2026-04-13)",
+  "spec_date": "2026-11-16",
+  "maintainer": "Agent Name Service project, a Series of LF Projects, LLC (originated at GoDaddy and OWASP); IETF draft authors from GoDaddy, OWASP, DistributedApps.ai and Cisco",
+  "newer_version_note": "The repository has no tagged releases; the analysis is pinned to commit 9284c7e. The IETF draft -01 is older than the repository specifications, which the project calls authoritative; no -02 was found and -01 passed its stated expiry date (15 October 2026)."
+ },
+ "profile": {
+  "id": "ans",
+  "category": "discovery-registry",
+  "secondary_categories": [
+   "web-bot-identity",
+   "credentials-trust"
+  ],
+  "mechanisms": [
+   "mtls",
+   "x509-certificate",
+   "pop-token",
+   "signed-metadata"
+  ],
+  "venue": "foundation",
+  "maturity": "draft",
+  "openness": "open-specification",
+  "layers": [
+   "transport",
+   "http-header",
+   "metadata-document",
+   "other"
+  ],
+  "building_blocks": [
+   "DNS",
+   "ACME (RFC 8555)",
+   "X.509",
+   "mTLS",
+   "RFC 9449",
+   "SCITT",
+   "COSE (RFC 9052)",
+   "RFC 9162",
+   "RFC 8785",
+   "DANE (RFC 6698)",
+   "RFC 9460",
+   "C2SP signed-note"
+  ],
+  "website": "https://github.com/agentnameservice/ans-registry",
+  "first_published": "2025-05"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "The Agent Name Service (ANS) gives each AI agent a verifiable name tied to a domain name, so that one agent can check that another really belongs to the organisation it claims and is running the software version it registered. It answers questions like whether a supplier's invoicing agent is genuine or a look-alike. ANS grew out of an OWASP paper and IETF draft; GoDaddy built and runs a production registry, and the project is now a Linux Foundation series (LF Projects). The specifications in its GitHub repository are marked DRAFT and are newer than the companion IETF draft, an individual submission whose -01 revision dates from April 2026.",
+  "An agent operator registers an agent with a Registration Authority (RA), proving control of its domain. The RA issues certificates, including an Identity Certificate naming the agent and version (ans://v1.0.0.agent.example.com), publishes DNS records and seals every event into a public, append-only Transparency Log. When one agent calls another, the callee checks the caller's certificate (by mutual TLS or a per-request DPoP proof) plus a log receipt and a short-lived status token, so revoked agents are refused within about an hour. ANS deliberately covers authentication only: authorization, acting on behalf of users, trust scoring and contact details are left to the service or to other specifications."
+ ],
+ "how_it_works": [
+  "The agent's operator registers the agent at a Registration Authority (RA): it proves control of the agent's domain (ACME DNS-01) and submits certificate requests, receiving a Server Certificate and, optionally, an Identity Certificate from the RA's private CA that names the agent and version.",
+  "The RA seals an AGENT_REGISTERED event into the Transparency Log (TL), and the operator publishes DNS records, including an _ans-badge record pointing to the agent's entry in the log.",
+  "In the background, the calling agent fetches its own log receipt (proof its registration is in the log) and a status token (proof it is currently active, valid for about an hour).",
+  "On each request, the caller proves possession of its Identity Certificate key: in the TLS handshake (Method A, mutual TLS) or with a signed DPoP proof bound to the method, URL and content (Method B), sending the receipt and status token in HTTP headers.",
+  "The callee (the receiving agent) verifies the certificate or proof, the receipt and status token against the TL's keys (or queries a trusted TL for the badge), checks that names and fingerprints match and that the agent is not revoked, then applies its own authorization policy."
+ ],
+ "sources": [
+  {
+   "id": "ans6",
+   "title": "ANS-6: Agent-to-Agent Authentication (spec/ans-6-agent-authentication.md, v0.2.0)",
+   "url": "https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentnameservice/ans-registry/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-6-agent-authentication.md",
+   "version": "ANS-6 v0.2.0 (commit 9284c7e)",
+   "date": "2026-11-03",
+   "kind": "primary"
+  },
+  {
+   "id": "ans0",
+   "title": "ANS-0: Identity (spec/ans-0-identity-anchor.md, v0.2.0)",
+   "url": "https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentnameservice/ans-registry/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-0-identity-anchor.md",
+   "version": "ANS-0 v0.2.0 (commit 9284c7e)",
+   "date": "2026-06-23",
+   "kind": "primary"
+  },
+  {
+   "id": "ans1",
+   "title": "ANS-1: Registration & Lifecycle (spec/ans-1-registration.md, v0.2.0)",
+   "url": "https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-1-registration.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentnameservice/ans-registry/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-1-registration.md",
+   "version": "ANS-1 v0.2.0 (commit 9284c7e)",
+   "date": "2026-07-02",
+   "kind": "primary"
+  },
+  {
+   "id": "ans2",
+   "title": "ANS-2: Versioned Naming (spec/ans-2-versioned-naming.md, v0.3.0)",
+   "url": "https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-2-versioned-naming.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentnameservice/ans-registry/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-2-versioned-naming.md",
+   "version": "ANS-2 v0.3.0 (commit 9284c7e)",
+   "date": "2026-11-03",
+   "kind": "primary"
+  },
+  {
+   "id": "ans4",
+   "title": "ANS-4: Transparency & Receipts (spec/ans-4-transparency.md, v0.2.0)",
+   "url": "https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-4-transparency.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentnameservice/ans-registry/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-4-transparency.md",
+   "version": "ANS-4 v0.2.0 (commit 9284c7e)",
+   "date": "2026-07-18",
+   "kind": "primary"
+  },
+  {
+   "id": "ans5",
+   "title": "ANS-5: Integrity Monitoring (spec/ans-5-integrity-monitoring.md, v0.1.0)",
+   "url": "https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-5-integrity-monitoring.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentnameservice/ans-registry/9284c7edd622e80d50eca092339f33e3918bded5/spec/ans-5-integrity-monitoring.md",
+   "version": "ANS-5 v0.1.0 (commit 9284c7e)",
+   "date": "2026-05-17",
+   "kind": "primary"
+  },
+  {
+   "id": "design",
+   "title": "ANS Architecture and Design pointer (DESIGN.md)",
+   "url": "https://github.com/agentnameservice/ans-registry/blob/9284c7edd622e80d50eca092339f33e3918bded5/DESIGN.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentnameservice/ans-registry/9284c7edd622e80d50eca092339f33e3918bded5/DESIGN.md",
+   "version": "commit 9284c7e",
+   "date": "2026-11-16",
+   "kind": "primary"
+  },
+  {
+   "id": "charter",
+   "title": "Technical Charter for Agent Name Service, a Series of LF Projects, LLC (governance/CHARTER.md)",
+   "url": "https://github.com/agentnameservice/governance/blob/eae3640b0836d2b9f04a28ecb58ede6890f72eb5/CHARTER.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentnameservice/governance/eae3640b0836d2b9f04a28ecb58ede6890f72eb5/CHARTER.md",
+   "version": "commit eae3640",
+   "date": "2026-11-05",
+   "kind": "primary"
+  },
+  {
+   "id": "ietf01",
+   "title": "Agent Name Service v2 (ANS), draft-narajala-courtney-ansv2-01",
+   "url": "https://www.ietf.org/archive/id/draft-narajala-courtney-ansv2-01.html",
+   "fetch_url": "https://www.ietf.org/archive/id/draft-narajala-courtney-ansv2-01.html",
+   "version": "-01",
+   "date": "2026-04-13",
+   "kind": "primary"
+  },
+  {
+   "id": "godaddy",
+   "title": "GoDaddy, Building the Agent Name Service using a one-system approach",
+   "url": "https://www.godaddy.com/resources/news/building-the-agent-name-service-using-a-one-system-approach",
+   "fetch_url": "https://www.godaddy.com/resources/news/building-the-agent-name-service-using-a-one-system-approach",
+   "version": "",
+   "date": "2026-01-12",
+   "kind": "primary"
+  },
+  {
+   "id": "mulesoft",
+   "title": "MuleSoft blog, Verify Agent Identity With MuleSoft and GoDaddy Agent Name Service (ANS)",
+   "url": "https://blogs.mulesoft.com/?p=75764",
+   "fetch_url": "https://blogs.mulesoft.com/?p=75764",
+   "version": "",
+   "date": "2026-04-20",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Domain-anchored, logged identities agents verify",
+   "answer": "A naming and registry system that ties each AI agent's identity and software version to a domain name, records it in a public transparency log, and lets a receiving agent authenticate a calling agent per request by its own certificate key plus log evidence that it is currently registered and not revoked.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "ANS v2 anchors every agent identity to a domain name.",
+     "type": "fact",
+     "source": "ietf01",
+     "section": "Abstract",
+     "quote": "This document defines the Agent Name Service (ANS) v2 protocol, which anchors every agent identity to a DNS domain name.",
+     "check": "WEB-OK",
+     "check_fp": "93ae4ce00a"
+    },
+    {
+     "text": "ANS-6 defines per-request authentication between agents.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "1. Scope",
+     "quote": "ANS-6 is the verifier-facing layer: it specifies how one agent authenticates another at request time",
+     "check": "OK",
+     "check_fp": "2c1c9857dd"
+    },
+    {
+     "text": "Identity, liveness and possession are all required.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "3.1 The three proofs",
+     "quote": "A verifier that checks possession but not liveness accepts a revoked agent. All three are required.",
+     "check": "OK",
+     "check_fp": "54349d1957"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agent discovery and agent-to-agent authentication",
+   "answer": "Finding and authenticating agents across organisations (e.g. a payment agent checking a supplier's invoicing agent before acting). Identity travels in the TLS handshake (Method A) or in HTTP headers carrying a DPoP proof, log receipt and status token (Method B), plus DNS records and log entries. The receiving agent verifies it itself, with no per-request call to the log in the recommended tier; Method B also works through proxies and gateways that terminate TLS.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Two possession-proof methods: mTLS and application-layer DPoP.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "1. Scope",
+     "quote": "carries an RFC 9449 DPoP proof in an HTTP header, surviving L7 proxies and gateways that terminate TLS.",
+     "check": "OK",
+     "check_fp": "7d722cbc5d"
+    },
+    {
+     "text": "The SCITT tier needs no per-request network calls and is recommended.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "3.2 Verification tiers",
+     "quote": "The SCITT tier is RECOMMENDED for new implementations",
+     "check": "OK",
+     "check_fp": "38cb587f30"
+    },
+    {
+     "text": "Artifacts travel in HTTP headers.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "4.6 HTTP header transport and refresh",
+     "quote": "SCITT-tier artifacts travel as HTTP headers on the requests and responses agents already exchange:",
+     "check": "OK",
+     "check_fp": "9fefef23b1"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "RA, TL, agent host provider, caller, callee, monitors",
+   "answer": "Registration Authority (RA): verifies domain control, issues certificates through its private CA and seals events, acting as a notary rather than a judge. Transparency Log (TL): append-only log that seals events and serves badges, receipts and status tokens. Agent Hosting Provider (AHP): the operator who registers and revokes agents and publishes DNS records. Caller and callee: the agent sending a request and the agent serving it. Integrity monitors (AIM): external services that report discrepancies. Verifiers and discovery services consume the outputs.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The RA is a notary.",
+     "type": "fact",
+     "source": "ans0",
+     "section": "1.1 Architectural foundation",
+     "quote": "The RA acts as a notary, not a judge: it verifies control and seals events into a Transparency Log; verifiers consume what ANS produces (identities, certificates, log proofs) and make their own trust decisions.",
+     "check": "OK",
+     "check_fp": "8a3fdb12b1"
+    },
+    {
+     "text": "Caller and callee.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "2. Terminology",
+     "quote": "Caller / callee: the agent initiating an HTTP request / the agent serving it.",
+     "check": "OK",
+     "check_fp": "1c95c203e2"
+    },
+    {
+     "text": "The AHP or RA revokes registrations.",
+     "type": "fact",
+     "source": "ans1",
+     "section": "6.2 AGENT_REVOKED",
+     "quote": "Emitted when the AHP or RA revokes a registration.",
+     "check": "OK",
+     "check_fp": "e0fac4e094"
+    },
+    {
+     "text": "External monitors report but cannot change state.",
+     "type": "fact",
+     "source": "ans5",
+     "section": "7. Integrity reporting principles",
+     "quote": "External monitors publish findings. They cannot command state changes.",
+     "check": "OK",
+     "check_fp": "7e6ce664de"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Draft specs; GoDaddy registry, MuleSoft integration",
+   "answer": "Draft. The repository specifications are marked DRAFT and are versioned 0.1.0 to 0.3.0, with no tagged release; the project says they, not the IETF draft, are authoritative. The IETF draft is an individual submission (Informational, -01, April 2026). The project is a Linux Foundation series (LF Projects). GoDaddy describes its registry as production, and MuleSoft has integrated GoDaddy's ANS into its Agent Scanners.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: still a draft with no released version, although it has named deployments (same as Web Bot Auth); not red because deployments exist.",
+   "claims": [
+    {
+     "text": "Specifications are marked DRAFT.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "Header",
+     "quote": "Status: DRAFT v1.0",
+     "check": "OK",
+     "check_fp": "f809f2c6aa"
+    },
+    {
+     "text": "The repository specs are authoritative over the IETF draft.",
+     "type": "fact",
+     "source": "design",
+     "section": "ANS Architecture and Design",
+     "quote": "The layered specs in this repository are the authoritative source; the IETF draft is updated less frequently and is the venue for cross-organizational standards review.",
+     "check": "OK",
+     "check_fp": "78b7aee5d6"
+    },
+    {
+     "text": "Linux Foundation series.",
+     "type": "fact",
+     "source": "charter",
+     "section": "Title",
+     "quote": "Agent Name Service, a Series of LF Projects, LLC",
+     "check": "OK",
+     "check_fp": "6f9785ee48"
+    },
+    {
+     "text": "Deployment: GoDaddy built a production registry.",
+     "type": "fact",
+     "source": "godaddy",
+     "section": "Introduction",
+     "quote": "This post describes how we built a production, cryptographically verifiable trust registry for AI agents in a few months",
+     "check": "WEB-OK",
+     "check_fp": "732c92c17c"
+    },
+    {
+     "text": "Deployment: MuleSoft integrated GoDaddy's ANS.",
+     "type": "fact",
+     "source": "mulesoft",
+     "section": "Article body",
+     "quote": "we integrated GoDaddy’s Agent Name Service (ANS) with Agent Scanners.",
+     "check": "WEB-OK",
+     "check_fp": "301b6c695c"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "DNS, ACME, X.509/mTLS, DPoP, SCITT, COSE",
+   "answer": "DNS (with optional DNSSEC and DANE TLSA records, and SVCB records per DNS-AID) for publication; ACME DNS-01 for domain control; X.509 certificates, with Identity Certificates from the RA's private CA, used in mutual TLS; DPoP (RFC 9449) for application-layer proof of possession; a SCITT-style transparency log with COSE receipts, RFC 9162 Merkle proofs and JCS (RFC 8785) canonicalisation; C2SP signed notes for log keys; optional anchoring to the Hedera Consensus Service.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Seven layered specifications.",
+     "type": "fact",
+     "source": "design",
+     "section": "ANS Architecture and Design",
+     "quote": "Per-identifier-kind detail (fqdn, did:web, did:key, lei, and deferred sketches for did:plc / did:ethr / did:ion) lives in the identity profiles under ANS-0",
+     "check": "OK",
+     "check_fp": "87cc9762c6"
+    },
+    {
+     "text": "Domain control by ACME DNS-01.",
+     "type": "fact",
+     "source": "ans0",
+     "section": "3.1 The two axes",
+     "quote": "ACME DNS-01 (_acme-challenge TXT)",
+     "check": "OK",
+     "check_fp": "94f4c3c405"
+    },
+    {
+     "text": "Method B uses DPoP.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "7. Authenticating a caller — Method B: application-layer proof of possession",
+     "quote": "Method B moves the caller's possession proof from the TLS handshake to the application layer as a DPoP proof",
+     "check": "OK",
+     "check_fp": "ff7dc6bb1f"
+    },
+    {
+     "text": "The TL issues SCITT-style COSE receipts.",
+     "type": "fact",
+     "source": "ans4",
+     "section": "5.2 Receipts, status tokens, checkpoints",
+     "quote": "A receipt is a COSE_Sign1 (RFC 9052)",
+     "check": "OK",
+     "check_fp": "3554f8f605"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "ANSName: agent host plus version",
+   "answer": "Yes, per agent. Each registered agent has an ANSName, ans://v{version}.{agentHost}, built from its own domain name and software version, which its Identity Certificate carries and the callee extracts. It names one agent (and version) rather than the provider behind several agents; the operator is a separate, optional Verified Identity. All running copies of that agent version share the name, and agents registered without an Identity Certificate cannot present it as callers.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: the identifier names the individual agent and version, not the provider (the calibration examples are yellow because they name the client application or provider); copies of one agent version share it, which is handled under the instance row.",
+   "claims": [
+    {
+     "text": "The ANSName is the unique identifier; the FQDN is shared by every version.",
+     "type": "fact",
+     "source": "ans2",
+     "section": "2.2 Registration metadata accompanying the ANSName",
+     "quote": "The ANSName is the unique identifier; display names need not be unique, and the FQDN is shared by every version registered under it.",
+     "check": "OK",
+     "check_fp": "e46e3066ad"
+    },
+    {
+     "text": "The Identity Certificate binds a specific software version.",
+     "type": "fact",
+     "source": "ans2",
+     "section": "3. The Identity Certificate",
+     "quote": "Binds the certificate to a specific software version, presentable as a TLS client certificate",
+     "check": "OK",
+     "check_fp": "be55b747a4"
+    },
+    {
+     "text": "The callee extracts the ANSName from the URI SAN.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "6.1 Handshake and identity extraction",
+     "quote": "Exactly one URI SAN is required.",
+     "check": "OK",
+     "check_fp": "2a27940081"
+    },
+    {
+     "text": "The Identity Certificate is optional at registration.",
+     "type": "fact",
+     "source": "ans1",
+     "section": "7.2 Registrations without an Identity Certificate",
+     "quote": "identityCsrPEM is optional.",
+     "check": "OK",
+     "check_fp": "2df552e535"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. ANS identifies a registered agent version, not a running copy of it. The agentId is described as a registration-instance key, meaning one registration, and the Identity Certificate and its fingerprints are per registration. Rotation can add certificates, but nothing assigns one to each running process or session, so a callee cannot tell replicas apart.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier is defined (same as all three calibration examples); agentId identifies a registration.",
+   "claims": [
+    {
+     "text": "agentId is a registration-instance key.",
+     "type": "fact",
+     "source": "ans1",
+     "section": "5. Identifiers",
+     "quote": "Registration-instance key",
+     "check": "OK",
+     "check_fp": "a724009dd8"
+    },
+    {
+     "text": "Searched ANS-1, ANS-2 and ANS-6 for an identifier of a running agent instance, process or session. None is defined; certificates are issued per registration.",
+     "type": "silent",
+     "source": "ans6",
+     "section": "2. Terminology; 6. Authenticating a caller",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "No; delegation out of scope",
+   "answer": "No. ANS-6 explicitly leaves delegation, meaning an agent acting on behalf of a user or another agent, outside this revision. ANS can optionally link an agent to a Verified Identity of its operator or legal entity (e.g. a DID or a Legal Entity Identifier), which says who runs the agent, not whom a given request is for.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: acting-for is explicitly out of scope (same as Web Bot Auth); the optional operator identity describes the agent's owner, not the principal of a request.",
+   "claims": [
+    {
+     "text": "Delegation is out of scope.",
+     "type": "out_of_scope",
+     "source": "ans6",
+     "section": "1. Scope",
+     "quote": "an agent acting on behalf of a user or another agent across a call chain. That is a separate, higher-risk concern outside this revision.",
+     "check": "OK",
+     "check_fp": "3b9ecfe7b7"
+    },
+    {
+     "text": "The who is the operator behind the agent, and it is optional.",
+     "type": "fact",
+     "source": "ans0",
+     "section": "1. Scope",
+     "quote": "The who is optional; the what is not.",
+     "check": "OK",
+     "check_fp": "ab46344ef9"
+    },
+    {
+     "text": "Verified Identity names the operator or legal entity.",
+     "type": "fact",
+     "source": "ans0",
+     "section": "2. Terminology",
+     "quote": "a Verified Identity: the operator/legal entity behind one or more agents.",
+     "check": "OK",
+     "check_fp": "8dfc4a46b5"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Agent's own certificate, mTLS or DPoP per request",
+   "answer": "Yes, proof of possession on every connection or request. With Method A the caller presents its Identity Certificate in mutual TLS; with Method B it sends a DPoP proof signed with that certificate's key, bound to the HTTP method, URL and content hash and usable once, plus a log receipt and status token in headers. Both prove the caller holds the private key; a conformant callee implements at least one method.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a defined, verifiable proof-of-possession credential on every connection or request (all three calibration examples are green; unlike MCP Authorization this is not a bearer credential).",
+   "claims": [
+    {
+     "text": "Callee must implement at least one method.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "10. Conformance",
+     "quote": "Implements at least one caller-authentication method (§6 or §7) and documents which",
+     "check": "OK",
+     "check_fp": "8908ba9aea"
+    },
+    {
+     "text": "Method B binds each request.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "3.3 Possession-proof methods",
+     "quote": "each proof binds one HTTP method + URL + content, single-use",
+     "check": "OK",
+     "check_fp": "64504dca5f"
+    },
+    {
+     "text": "Method A presents the Identity Certificate in the handshake.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "6. Authenticating a caller — Method A: mTLS",
+     "quote": "The caller presents its Identity Certificate in the TLS handshake",
+     "check": "OK",
+     "check_fp": "04b6aa4c1b"
+    },
+    {
+     "text": "The content digest is required in Method B proofs.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "7.2 Proof format",
+     "quote": "REQUIRED. base64url(SHA-256(content)), without padding",
+     "check": "OK",
+     "check_fp": "96a07ae3a4"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Status token 1 hour; DPoP 120 seconds",
+   "answer": "Short, and enforced by the verifier. The status token, which says the agent is currently active, has a default lifetime of one hour, and verifiers must reject it after expiry (allowing at most ten minutes of clock skew). Method B proofs must have been created within a freshness window (120 seconds by default) and are single-use. The certificate's own validity period, set by the CA, must also contain the current time.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: specific short limits that verifiers must enforce (same as Visa TAP's eight-minute rule).",
+   "claims": [
+    {
+     "text": "Status token default TTL one hour.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "4.4 Status token",
+     "quote": "int64, Unix seconds (default TTL one hour)",
+     "check": "OK",
+     "check_fp": "b9e1161274"
+    },
+    {
+     "text": "Verifier asserts expiry.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "4.4 Status token",
+     "quote": "Assert now ≤ exp + skew",
+     "check": "OK",
+     "check_fp": "d53c230cc6"
+    },
+    {
+     "text": "DPoP freshness window.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "7.4 Verification procedure",
+     "quote": "within the freshness window: |now − iat| ≤ skew (default 120 seconds).",
+     "check": "OK",
+     "check_fp": "e3e5e89fd7"
+    },
+    {
+     "text": "Certificate validity must contain now.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "7.5 Binding to the ANS identity",
+     "quote": "Verifiers MUST reject a proof whose x5c[0] validity period does not contain the current time",
+     "check": "OK",
+     "check_fp": "3868e46b5f"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, against the log and RA CA",
+   "answer": "Yes. The callee checks the caller's certificate (chain to the RA's private CA under mutual TLS, or the DPoP signature and certificate fingerprint under Method B), the log receipt and status token against the log's published keys, or a badge fetched from a log it trusts, and that names, fingerprints and status match. No prior relationship with the caller is needed, only a configured list of trusted logs.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the service validates genuineness, currency and integrity against published keys without a prior relationship with the agent (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Chain validation to the RA private CA (Method A).",
+     "type": "fact",
+     "source": "ans6",
+     "section": "6.1 Handshake and identity extraction",
+     "quote": "The TLS layer validates the client certificate chain against the RA Private CA trust anchor.",
+     "check": "OK",
+     "check_fp": "3518649815"
+    },
+    {
+     "text": "Fingerprint must match the status token (Method B).",
+     "type": "fact",
+     "source": "ans6",
+     "section": "7.5 Binding to the ANS identity",
+     "quote": "SHA-256(x5c[0] DER) MUST equal some entry of the status token's validIdentityCerts.",
+     "check": "OK",
+     "check_fp": "b141845728"
+    },
+    {
+     "text": "Trusted-log allowlist before badge fetch.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "4.2 The _ans-badge record and trusted TL domains",
+     "quote": "Before fetching any badge URL, the verifier MUST confirm the URL's host is a TL the verifier trusts.",
+     "check": "OK",
+     "check_fp": "dbd54f1f66"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Yes, the agent's own key",
+   "answer": "Yes, the agent itself. The callee verifies that the caller holds the private key of its own Identity Certificate, issued for that specific agent and version, and that this certificate is the one the log currently vouches for. This is per agent, not per provider, though all running copies of an agent version may share the key. Users are not authenticated; ANS covers agents only.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the service verifies on each connection or request a proof belonging to the individual agent (all three calibration examples are red because they check a token issued elsewhere or a provider key).",
+   "claims": [
+    {
+     "text": "Authentication is verification plus possession proof.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "2. Terminology",
+     "quote": "Authentication: verification plus a possession proof",
+     "check": "OK",
+     "check_fp": "7a44c1c948"
+    },
+    {
+     "text": "Step 11 ties the key to a live registered agent.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "7.4 Verification procedure",
+     "quote": "Step 11 is what turns \"someone holds this key\" into \"this registered, currently-valid agent holds this key\".",
+     "check": "OK",
+     "check_fp": "20adb0db0a"
+    },
+    {
+     "text": "The Identity Certificate is issued by the RA's private CA.",
+     "type": "fact",
+     "source": "ans2",
+     "section": "3. The Identity Certificate",
+     "quote": "Private CA operated by the RA",
+     "check": "OK",
+     "check_fp": "29046b284d"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "No; out of scope",
+   "answer": "No, out of scope by design. ANS establishes who is calling, never what it may do; the callee must apply its own authorization (e.g. an allowlist or role-based rules) to the authenticated identity. Method B can carry an OAuth 2.0 access token bound to the same key when a deployment adds OAuth, but the permissions then come from OAuth, not ANS.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: authorization is explicitly out of scope (same as Web Bot Auth).",
+   "claims": [
+    {
+     "text": "ANS verification never answers what an agent may do.",
+     "type": "out_of_scope",
+     "source": "ans6",
+     "section": "6.5 Authorization placement",
+     "quote": "ANS verification answers \"is this a validly registered agent?\", never \"may it do this?\".",
+     "check": "OK",
+     "check_fp": "ae0b20c778"
+    },
+    {
+     "text": "The callee applies its own authorization.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "1. Scope",
+     "quote": "The callee MUST apply its own authorization to the authenticated identity.",
+     "check": "OK",
+     "check_fp": "8d99dca14b"
+    },
+    {
+     "text": "OAuth can be layered on top.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "7.8 OAuth 2.0 composition",
+     "quote": "ANS proves who; OAuth 2.0 grants what.",
+     "check": "OK",
+     "check_fp": "ebec698422"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "No",
+   "answer": "No. ANS authenticates agents to each other and has no step in which a person approves an agent's access or action. Registration and revocation are performed by the agent's operator through the RA's API, which is account administration rather than approval of a request.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as Web Bot Auth and Visa TAP).",
+   "claims": [
+    {
+     "text": "ANS-6 covers authentication only.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "10. Conformance",
+     "quote": "Treats every procedure's result as authentication only, applying authorization separately.",
+     "check": "OK",
+     "check_fp": "4bfdc51a25"
+    },
+    {
+     "text": "Searched ANS-0 to ANS-6 for user consent, approval or step-up for an agent's actions. None is defined; step-up authentication appears only as an option for operators linking identities.",
+     "type": "silent",
+     "source": "ans0",
+     "section": "6. Identity links",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "RA and log, as notaries of domain control",
+   "answer": "The Registration Authority and its Transparency Log, as notaries. The RA issues an Identity Certificate only after the operator proves control of the agent's domain, and the log publicly records it; verifiers choose which logs to trust through an explicit allowlist. The RA vouches for control and registration, not for good behaviour: it calls itself a notary, not a judge, and trust scoring lives in a separate Trust Index specification.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the protocol names parties that vouch, and only agents they registered are accepted (same as Visa TAP and MCP Authorization), although the vouching covers domain control rather than conduct.",
+   "claims": [
+    {
+     "text": "Identities are sealed only after proven control.",
+     "type": "fact",
+     "source": "ans0",
+     "section": "1. Scope",
+     "quote": "The Registration Authority (RA) seals an identity attestation only after control of the identifier is proven",
+     "check": "OK",
+     "check_fp": "7344d7b482"
+    },
+    {
+     "text": "Verifiers maintain an allowlist of trusted logs.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "4.2 The _ans-badge record and trusted TL domains",
+     "quote": "Verifiers maintain an explicit allowlist of trusted TL domains.",
+     "check": "OK",
+     "check_fp": "f249dade20"
+    },
+    {
+     "text": "Trust scoring is out of scope.",
+     "type": "out_of_scope",
+     "source": "ans6",
+     "section": "1. Scope",
+     "quote": "Out of scope for ANS; lives in the separate ti-* layer set.",
+     "check": "OK",
+     "check_fp": "5308c26214"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Yes, per agent version, about one hour",
+   "answer": "Yes. The operator or the RA can revoke an agent version's registration; the RA revokes its Identity Certificates, seals an AGENT_REVOKED event with a reason, and the operator removes its DNS records. The log then refuses fresh status tokens and badges show REVOKED, and verifiers must treat a missing fresh token as revocation, so it reaches callees within the token lifetime (worst case about two hours with defaults). On the badge tier the delay depends on each deployment's cache settings.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: revocation is defined at agent-version granularity and reaches verifiers within a bounded time (all three calibration examples are red because they define none); badge-tier latency is deployment-configured, noted in the answer.",
+   "claims": [
+    {
+     "text": "AGENT_REVOKED event with reason.",
+     "type": "fact",
+     "source": "ans1",
+     "section": "6.2 AGENT_REVOKED",
+     "quote": "Emitted when the AHP or RA revokes a registration.",
+     "check": "OK",
+     "check_fp": "e0fac4e094"
+    },
+    {
+     "text": "Missing fresh status token equals revocation.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "4.4 Status token",
+     "quote": "Verifiers MUST treat the inability to obtain a fresh status token as equivalent to revocation, subject to the failure policy in §9.",
+     "check": "OK",
+     "check_fp": "5a39f52e97"
+    },
+    {
+     "text": "Revocation latency bound.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "11.1 Revocation latency",
+     "quote": "On the SCITT tier the worst case is status-token TTL + clock skew + grace: one hour by default",
+     "check": "OK",
+     "check_fp": "729552b883"
+    },
+    {
+     "text": "Badge-tier bounds are deployment configuration.",
+     "type": "fact",
+     "source": "ans6",
+     "section": "11.1 Revocation latency",
+     "quote": "both deployment configuration rather than spec-bounded",
+     "check": "OK",
+     "check_fp": "8b601c5e09"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No; RA collects no contact info",
+   "answer": "No. ANS defines no contact or abuse channel for an agent's operator; the specification notes that the RA collects no contact information. A callee can see the agent's domain name and, if linked, a Verified Identity of the operator (e.g. a Legal Entity Identifier), which helps to find the responsible party outside ANS.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact channel is defined (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "The RA collects no contact info.",
+     "type": "fact",
+     "source": "ans0",
+     "section": "6. Identity links",
+     "quote": "The RA pushes nothing (it collects no contact info, and the account it could notify is the one whose credential performed the link).",
+     "check": "OK",
+     "check_fp": "957971b75c"
+    },
+    {
+     "text": "Verified Identities can name a legal entity, e.g. an LEI.",
+     "type": "fact",
+     "source": "ans0",
+     "section": "2. Terminology",
+     "quote": "Identifier — a public, stable string an operator controls: an FQDN, a DID, an LEI.",
+     "check": "OK",
+     "check_fp": "f8464442c6"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "Integrity warnings only; behaviour elsewhere",
+   "answer": "Partly. Independent integrity monitors can report discrepancies (e.g. live DNS records or certificates that differ from what was sealed); after corroboration the RA can seal a warning that every verifier can read, and consumers decide how to react. These signals cover infrastructure integrity only: the RA does not judge behaviour, and behaviour-based reputation lives in the separate Trust Index specification, not in ANS.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "none",
+   "rating_reason": "Yellow: a defined cross-party channel exists but is limited to infrastructure integrity, and how findings reach the registry is implementation-defined; behavioural signalling is in a companion specification.",
+   "claims": [
+    {
+     "text": "Quorum before the RA acts; findings are verifiable.",
+     "type": "fact",
+     "source": "ans5",
+     "section": "7. Integrity reporting principles",
+     "quote": "The RA MUST NOT act on an unconfirmed finding.",
+     "check": "OK",
+     "check_fp": "a4e3c6ec47"
+    },
+    {
+     "text": "Consumers act on confirmed findings.",
+     "type": "fact",
+     "source": "ans5",
+     "section": "7.1 Warning, not state change",
+     "quote": "When a finding meets the quorum requirement, consumers of the finding take action per their own policy.",
+     "check": "OK",
+     "check_fp": "e576a0e181"
+    },
+    {
+     "text": "The RA does not evaluate behaviour.",
+     "type": "fact",
+     "source": "ans5",
+     "section": "7. Integrity reporting principles",
+     "quote": "The RA does not evaluate an agent's behavior or quality.",
+     "check": "OK",
+     "check_fp": "8afedcd39c"
+    },
+    {
+     "text": "Integration of findings is implementation-defined.",
+     "type": "fact",
+     "source": "ans5",
+     "section": "7.1 Warning, not state change",
+     "quote": "The registry ingests these findings through an implementation-defined integration.",
+     "check": "OK",
+     "check_fp": "134b685541"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No; software version only",
+   "answer": "No. ANS records which software version of an agent is registered, as a semantic version in its name and certificate, and new code means a new version and certificate; it can also seal hashes of the agent's metadata card. The version number is declared by the operator and nothing identifies the AI model behind the agent.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no model identity; the declared software version is not counted as model identity (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "The certificate binds a software version.",
+     "type": "fact",
+     "source": "ans2",
+     "section": "3. The Identity Certificate",
+     "quote": "Binds the certificate to a specific software version, presentable as a TLS client certificate",
+     "check": "OK",
+     "check_fp": "be55b747a4"
+    },
+    {
+     "text": "Searched ANS-0 to ANS-6 for model, provider of the model, or runtime attestation fields. None is defined.",
+     "type": "silent",
+     "source": "ans1",
+     "section": "6. Event set",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "ANS gives the receiving agent a strongly authenticated identity for the specific calling agent and version, but no permissions; the receiving agent must apply its own authorization (or OAuth) to that identity.",
+  "incident_response": "A misbehaving agent version can be revoked by its operator or the RA and is refused by verifiers within about one to two hours on the recommended tier; integrity problems can be flagged by independent monitors. There is no contact channel and no way to stop one running copy.",
+  "accountability": "Actions can be traced to a specific agent and version at a verified domain, with a public log history and, if linked, a verified operator identity; not to a user or an AI model."
+ },
+ "notes": [
+  "Name collisions: draft-song-anp-ans (\"Agent Name System\", ANP suite), draft-hood-agtp-discovery (AGTP Agent Discovery and Name Service) and the replaced draft-narajala-ans-00 (ANS v1) are different documents. The Trust Index specification is a separate project, explicitly not an ANS layer.",
+  "The analysis is from the side of the callee (the receiving agent) authenticating a calling agent under ANS-6. Callee authentication by the caller (Section 5) is also defined but is not what this framework rates.",
+  "The repository specifications (pinned commit 9284c7e) are rated, because the project's DESIGN.md calls them authoritative. They are newer than IETF draft -01 and differ from it (e.g. ANS-6's badge and SCITT tiers and Methods A and B versus the draft's Bronze, Silver and Gold tiers).",
+  "Quotes from the IETF archive, GoDaddy and MuleSoft pages could not be downloaded by the script and were checked with a web tool.",
+  "The GoDaddy and MuleSoft deployments are documented for GoDaddy's registry; the sources do not say which ANS specification version they implement."
+ ],
+ "open_questions": [
+  "ANS-5 says ANS-1 specifies the INTEGRITY_WARNING event, but ANS-1's event set lists only AGENT_REGISTERED, AGENT_REVOKED and reserved types. Is INTEGRITY_WARNING part of the wire contract?",
+  "Identity Certificates are optional at registration. How common are registrations that can only be authenticated as callees (Server Certificate) and not as callers?",
+  "Should multiple running copies of an agent share one Identity Certificate key, or may each have its own (rotation is additive)? The specifications do not say.",
+  "Will the IETF draft be revised (-02) to match the repository specifications, given that -01 has passed its expiry date?"
+ ]
+}</script></body></html>

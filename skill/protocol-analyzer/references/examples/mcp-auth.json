@@ -1,0 +1,861 @@
+{
+  "schema_version": "2.1",
+  "rubric_version": "2.1",
+  "analysed_on": "2026-11-18",
+  "protocol": {
+    "name": "MCP Authorization",
+    "full_name": "Model Context Protocol, Authorization",
+    "spec_version": "MCP specification revision 2026-07-28 (Basic > Authorization)",
+    "spec_date": "2026-07-28",
+    "maintainer": "Model Context Protocol project (lead maintainers), under the Agentic AI Foundation",
+    "newer_version_note": "2026-07-28 is the current revision. A draft revision exists in the same repository and was not analysed."
+  },
+  "profile": {
+    "id": "mcp-authorization",
+    "category": "agent-authorization",
+    "secondary_categories": [],
+    "mechanisms": [
+      "bearer-token"
+    ],
+    "venue": "foundation",
+    "maturity": "stable",
+    "openness": "open-specification",
+    "layers": [
+      "http-header",
+      "token"
+    ],
+    "building_blocks": [
+      "OAuth 2.1",
+      "RFC 6750",
+      "RFC 8414",
+      "RFC 9728",
+      "RFC 8707",
+      "PKCE",
+      "Client ID Metadata Documents"
+    ],
+    "website": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization",
+    "first_published": "2025-03"
+  },
+  "review": {
+    "status": "draft",
+    "reviewed_by": "",
+    "reviewed_on": ""
+  },
+  "summary": [
+    "MCP Authorization is the security layer of the Model Context Protocol (MCP), an open protocol that lets AI applications connect to outside tools and data through MCP servers. It answers one question for a remote MCP server: is this application allowed to call me on behalf of this user, and for what? Authorization is optional in MCP and covers only servers reached over HTTP, not local servers. The current version is the dated revision 2026-07-28, maintained by the MCP project, and it is supported by AI applications such as Claude's connectors.",
+    "It is a profile of OAuth 2.1, the widely used standard for delegated access on the web. The MCP server names its authorization server; the AI application sends the user there to sign in and approve access, and receives an access token that only works at that one server and only for the approved scopes (permissions). The token is sent with every request and the server checks it. The server therefore learns that the request is approved, but not which agent instance or AI model is behind it. MCP itself defines no way to revoke access or to contact the application's operator, and the token is a bearer token, so whoever holds it can use it."
+  ],
+  "how_it_works": [
+    "The AI application (the MCP client) calls the MCP server without a token and receives a 401 response that points to the server's protected resource metadata (RFC 9728).",
+    "From that metadata the client finds the server's authorization server and identifies itself with a client ID, ideally an HTTPS URL to a Client ID Metadata Document describing the application.",
+    "The client opens the authorization server in the user's browser. The user signs in and approves the requested scopes; PKCE protects this exchange.",
+    "The authorization server issues an access token for that specific MCP server (using a resource indicator, RFC 8707).",
+    "The client sends the token as a bearer token on every request. The MCP server checks that it is valid, unexpired and issued for it, and answers 401 (invalid token) or 403 (missing scope) otherwise."
+  ],
+  "sources": [
+    {
+      "id": "mcp-auth",
+      "title": "MCP specification 2026-07-28, Authorization (Overview)",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization",
+      "fetch_url": "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/d4b317231161ee96d3eefb2448bda4230c76f4c6/docs/specification/2026-07-28/basic/authorization/index.mdx",
+      "version": "2026-07-28 (repository commit d4b3172)",
+      "date": "2026-07-28",
+      "kind": "primary"
+    },
+    {
+      "id": "mcp-sec",
+      "title": "MCP specification 2026-07-28, Authorization Security Considerations",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations",
+      "fetch_url": "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/d4b317231161ee96d3eefb2448bda4230c76f4c6/docs/specification/2026-07-28/basic/authorization/security-considerations.mdx",
+      "version": "2026-07-28 (repository commit d4b3172)",
+      "date": "2026-07-28",
+      "kind": "primary"
+    },
+    {
+      "id": "mcp-reg",
+      "title": "MCP specification 2026-07-28, Client Registration",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration",
+      "fetch_url": "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/d4b317231161ee96d3eefb2448bda4230c76f4c6/docs/specification/2026-07-28/basic/authorization/client-registration.mdx",
+      "version": "2026-07-28 (repository commit d4b3172)",
+      "date": "2026-07-28",
+      "kind": "primary"
+    },
+    {
+      "id": "mcp-base",
+      "title": "MCP specification 2026-07-28, Base Protocol Overview",
+      "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic",
+      "fetch_url": "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/d4b317231161ee96d3eefb2448bda4230c76f4c6/docs/specification/2026-07-28/basic/index.mdx",
+      "version": "2026-07-28 (repository commit d4b3172)",
+      "date": "2026-07-28",
+      "kind": "primary"
+    },
+    {
+      "id": "mcp-ver",
+      "title": "MCP documentation, Versioning",
+      "url": "https://modelcontextprotocol.io/docs/learn/versioning",
+      "fetch_url": "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/d4b317231161ee96d3eefb2448bda4230c76f4c6/docs/docs/2026-07-28/learn/versioning.mdx",
+      "version": "repository commit d4b3172",
+      "date": "2026-11-17",
+      "kind": "primary"
+    },
+    {
+      "id": "rfc7662",
+      "title": "RFC 7662, OAuth 2.0 Token Introspection",
+      "url": "https://www.rfc-editor.org/rfc/rfc7662",
+      "fetch_url": "https://www.rfc-editor.org/rfc/rfc7662.txt",
+      "version": "RFC 7662",
+      "date": "2015-10",
+      "kind": "primary"
+    },
+    {
+      "id": "rfc7009",
+      "title": "RFC 7009, OAuth 2.0 Token Revocation",
+      "url": "https://www.rfc-editor.org/rfc/rfc7009",
+      "fetch_url": "https://www.rfc-editor.org/rfc/rfc7009.txt",
+      "version": "RFC 7009",
+      "date": "2013-08",
+      "kind": "primary"
+    },
+    {
+      "id": "claude-auth",
+      "title": "Anthropic, Authentication for connectors (Claude docs)",
+      "url": "https://claude.com/docs/connectors/building/authentication",
+      "fetch_url": "https://claude.com/docs/connectors/building/authentication.md",
+      "version": "",
+      "date": "accessed 2026-11-18",
+      "kind": "primary"
+    }
+  ],
+  "rows": [
+    {
+      "id": "summary",
+      "group": "What is it?",
+      "property": "Summary",
+      "short": "User-approved, server-specific access to an MCP server",
+      "answer": "An OAuth 2.1 profile that lets an AI client get a user-approved, server-specific access token to call a protected MCP server's tools and data.",
+      "rating": "n/a",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "",
+      "claims": [
+        {
+          "text": "Purpose of MCP Authorization: clients call restricted servers on behalf of resource owners.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Purpose and Scope",
+          "quote": "enabling MCP clients to make requests to restricted MCP servers on behalf of resource owners",
+          "check": "OK",
+          "check_fp": "9f0218cac9"
+        },
+        {
+          "text": "The access token is bound to one MCP server.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Resource Parameter Implementation",
+          "quote": "MUST identify the MCP server that the client intends to use the token with.",
+          "check": "OK",
+          "check_fp": "cc2dbb334f"
+        }
+      ]
+    },
+    {
+      "id": "use_cases",
+      "group": "What is it?",
+      "property": "Use cases",
+      "short": "AI apps calling tools and data",
+      "answer": "Connecting AI applications to outside tools and data. An AI application (the MCP client) calls a remote MCP server's tools and resources over HTTP, and authorization happens at that HTTP transport layer. The authorization server can be run with the MCP server or be a separate service, such as an existing identity provider (e.g. Okta, Entra ID, Auth0). Local servers reached over standard input/output (STDIO) are not covered; they take credentials from their environment.",
+      "rating": "n/a",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "",
+      "claims": [
+        {
+          "text": "Authorization sits at the transport level and covers HTTP transports only.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Purpose and Scope",
+          "quote": "This specification defines the authorization flow for HTTP-based transports.",
+          "check": "OK",
+          "check_fp": "b47cde3536"
+        },
+        {
+          "text": "Local stdio servers are not covered; they take credentials from the environment.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Protocol Requirements",
+          "quote": "Implementations using an STDIO transport SHOULD NOT follow this specification, and instead retrieve credentials from the environment.",
+          "check": "OK",
+          "check_fp": "c8267bf7ac"
+        },
+        {
+          "text": "The authorization server can be a separate entity, so an existing identity provider can play this role (inference).",
+          "type": "inference",
+          "source": "mcp-auth",
+          "section": "Roles",
+          "quote": "It may be hosted with the resource server or a separate entity.",
+          "check": "OK",
+          "check_fp": "bc4044d0bb"
+        }
+      ]
+    },
+    {
+      "id": "actors",
+      "group": "What is it?",
+      "property": "Parties involved",
+      "short": "Client, MCP server, authorization server, user",
+      "answer": "MCP client: the AI application, acting as an OAuth 2.1 client on behalf of a resource owner (the user). MCP server: the protected service, acting as an OAuth 2.1 resource server that accepts and checks access tokens. Authorization server: issues access tokens and interacts with the user; it may be hosted with the MCP server or separately. User (resource owner): appears only when signing in and approving access at the authorization server.",
+      "rating": "n/a",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "",
+      "claims": [
+        {
+          "text": "MCP server role.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Roles",
+          "quote": "A protected MCP server acts as an OAuth 2.1 resource server",
+          "check": "OK",
+          "check_fp": "1c13a56459"
+        },
+        {
+          "text": "MCP client role.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Roles",
+          "quote": "An MCP client acts as an OAuth 2.1 client, making protected resource requests on behalf of a resource owner.",
+          "check": "OK",
+          "check_fp": "f749cfaca8"
+        },
+        {
+          "text": "Authorization server role, including user interaction.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Roles",
+          "quote": "The authorization server is responsible for interacting with the user (if necessary) and issuing access tokens for use at the MCP server.",
+          "check": "OK",
+          "check_fp": "78ca6c2a4e"
+        },
+        {
+          "text": "The authorization server may be separate from the MCP server.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Roles",
+          "quote": "It may be hosted with the resource server or a separate entity.",
+          "check": "OK",
+          "check_fp": "bc4044d0bb"
+        }
+      ]
+    },
+    {
+      "id": "status_adoption",
+      "group": "What is it?",
+      "property": "Status and adoption",
+      "short": "Stable version exists",
+      "answer": "Released. 2026-07-28 is the current dated revision of MCP, maintained by the MCP project. Authorization itself is optional for MCP implementations. It builds on OAuth 2.1 and Client ID Metadata Documents, which are still IETF drafts. Claude's connectors support it for remote MCP servers.",
+      "rating": "green",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "Green: a released revision its maintainers mark as current, with a named deployment (Claude).",
+      "claims": [
+        {
+          "text": "2026-07-28 is the current revision.",
+          "type": "fact",
+          "source": "mcp-ver",
+          "section": "Revisions",
+          "quote": "The current protocol version is 2026-07-28.",
+          "check": "OK",
+          "check_fp": "6b3fcc46b4"
+        },
+        {
+          "text": "Authorization is optional in MCP.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Protocol Requirements",
+          "quote": "Authorization is OPTIONAL for MCP implementations.",
+          "check": "OK",
+          "check_fp": "a5dda9810c"
+        },
+        {
+          "text": "Depends on drafts: OAuth 2.1 and CIMD.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Standards Compliance",
+          "quote": "OAuth Client ID Metadata Documents (draft-ietf-oauth-client-id-metadata-document-00)",
+          "check": "OK",
+          "check_fp": "f043f8396b"
+        },
+        {
+          "text": "Deployment: Claude supports MCP authorization for remote servers.",
+          "type": "fact",
+          "source": "claude-auth",
+          "section": "Supported authentication types",
+          "quote": "Claude supports the following authentication types for remote MCP servers.",
+          "check": "WEB-OK",
+          "check_fp": "4d94a06399"
+        }
+      ]
+    },
+    {
+      "id": "building_blocks",
+      "group": "What is it?",
+      "property": "Building blocks",
+      "short": "OAuth 2.1, RFC 9728, RFC 8414, RFC 8707, PKCE, CIMD",
+      "answer": "OAuth 2.1 for the core flow; Bearer Token Usage (RFC 6750); Authorization Server Metadata (RFC 8414) and Protected Resource Metadata (RFC 9728) for discovery; PKCE to protect the sign-in exchange; Client ID Metadata Documents (CIMD) for client identity; and Resource Indicators (RFC 8707) to bind each token to one server. Dynamic Client Registration (RFC 7591) is deprecated in this revision.",
+      "rating": "n/a",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "",
+      "claims": [
+        {
+          "text": "Protected Resource Metadata is a listed building block.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Standards Compliance",
+          "quote": "OAuth 2.0 Protected Resource Metadata (RFC9728)",
+          "check": "OK",
+          "check_fp": "35d3d859de"
+        },
+        {
+          "text": "PKCE is required for clients.",
+          "type": "fact",
+          "source": "mcp-sec",
+          "section": "Authorization Code Protection",
+          "quote": "MCP clients MUST implement PKCE according to OAuth 2.1 Section 7.5.2",
+          "check": "OK",
+          "check_fp": "ca7b11367d"
+        },
+        {
+          "text": "DCR is deprecated in favour of CIMD.",
+          "type": "fact",
+          "source": "mcp-reg",
+          "section": "Dynamic Client Registration",
+          "quote": "Dynamic Client Registration is deprecated. New implementations should use Client ID Metadata Documents instead.",
+          "check": "OK",
+          "check_fp": "0dd384f7e4"
+        },
+        {
+          "text": "Tokens are bound to one MCP server via the resource parameter.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Resource Parameter Implementation",
+          "quote": "MUST identify the MCP server that the client intends to use the token with.",
+          "check": "OK",
+          "check_fp": "cc2dbb334f"
+        }
+      ]
+    },
+    {
+      "id": "identifier",
+      "group": "Who is being identified?",
+      "property": "Identifier",
+      "short": "Client application ID (client_id)",
+      "answer": "Partly. The agent side is identified by a client ID, which names the client application (e.g. a particular AI app), not the agent itself. With Client ID Metadata Documents, the client ID is an HTTPS URL pointing to a JSON document that describes the application. Because the MCP server only receives the access token, whether it sees the client ID at all depends on the token format the authorization server uses.",
+      "rating": "yellow",
+      "coverage": "required",
+      "requirement": "MUST",
+      "rating_reason": "Yellow: the identifier names the client application, shared by all its instances (same as Web Bot Auth and TAP, which name the provider).",
+      "claims": [
+        {
+          "text": "Every client needs a client ID.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Client Registration",
+          "quote": "MCP clients MUST obtain a client ID through one of three registration mechanisms",
+          "check": "OK",
+          "check_fp": "15e44fde14"
+        },
+        {
+          "text": "With CIMD the client_id is an HTTPS URL to the client's metadata.",
+          "type": "fact",
+          "source": "mcp-reg",
+          "section": "Client ID Metadata Documents",
+          "quote": "This approach enables clients to use HTTPS URLs as client identifiers, where the URL points to a JSON document containing client metadata.",
+          "check": "OK",
+          "check_fp": "2e02c3652f"
+        },
+        {
+          "text": "MCP does not require the token to expose the client_id to the MCP server; the server is only told to validate the token (inference from the Token Handling rules).",
+          "type": "inference",
+          "source": "mcp-auth",
+          "section": "Token Handling",
+          "quote": "MCP servers MUST only accept tokens that are valid for use with their own resources.",
+          "check": "OK",
+          "check_fp": "2bde387567"
+        }
+      ]
+    },
+    {
+      "id": "instance_identifier",
+      "group": "Who is being identified?",
+      "property": "Agent instance identifier",
+      "short": "No",
+      "answer": "No. The client ID and its metadata (name, redirect addresses) describe the application, and every running copy of it shares them. MCP defines no identifier for a specific agent instance, session or sub-agent.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: no per-instance identifier is defined (same as Web Bot Auth and TAP).",
+      "claims": [
+        {
+          "text": "The required metadata is application-level.",
+          "type": "fact",
+          "source": "mcp-reg",
+          "section": "Implementation Requirements",
+          "quote": "The metadata document MUST include at least the following properties: client_id, client_name, redirect_uris",
+          "check": "OK",
+          "check_fp": "a43ec15580"
+        },
+        {
+          "text": "Searched Roles, Client Registration, Access Token Usage and the security considerations for an instance, session or agent identifier. None is defined.",
+          "type": "silent",
+          "source": "mcp-auth",
+          "section": "Roles; Client Registration; Access Token Usage",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "acting_for",
+      "group": "Who is being identified?",
+      "property": "Acting for (authority)",
+      "short": "No by default",
+      "answer": "No by default. The client acts on behalf of a resource owner (the user), and the authorization server knows who that is, but MCP does not define how the MCP server learns it. An authorization server could expose it, e.g. through token introspection (RFC 7662), where an optional username field names the resource owner. That depends on the authorization server, not on MCP.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: MCP does not define it; it is possible only through another building block the authorization server may choose (native-only rule).",
+      "claims": [
+        {
+          "text": "The client acts for a resource owner.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Roles",
+          "quote": "making protected resource requests on behalf of a resource owner",
+          "check": "OK",
+          "check_fp": "d2ddf970cb"
+        },
+        {
+          "text": "Searched Access Token Usage, Token Handling and the security considerations for a claim or field that names the user to the MCP server. None is required.",
+          "type": "silent",
+          "source": "mcp-auth",
+          "section": "Access Token Usage; Token Handling",
+          "quote": ""
+        },
+        {
+          "text": "Introspection can return the resource owner's name, but it is optional and outside MCP.",
+          "type": "fact",
+          "source": "rfc7662",
+          "section": "2.2",
+          "quote": "OPTIONAL. Human-readable identifier for the resource owner who authorized this token.",
+          "check": "WEB-OK",
+          "check_fp": "00ce69a604"
+        }
+      ]
+    },
+    {
+      "id": "credential_type",
+      "group": "Credential and validity",
+      "property": "Credential type",
+      "short": "OAuth access token",
+      "answer": "An OAuth access token, sent as a bearer token in the Authorization header of every HTTP request. It is issued by the server's authorization server for that specific MCP server, and can be a signed JWT or an opaque string, as the authorization server decides. A bearer token is not bound to the client, so anyone who obtains it can use it. Proof-of-possession binding (e.g. DPoP or mTLS) is not part of the specification.",
+      "rating": "green",
+      "coverage": "required",
+      "requirement": "MUST",
+      "rating_reason": "Green: a defined credential on every request that the server can verify. The answer notes it is a bearer token, not proof of possession.",
+      "claims": [
+        {
+          "text": "Token sent in the Authorization header on every request.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Token Requirements",
+          "quote": "Note that authorization MUST be included in every HTTP request from client to server.",
+          "check": "OK",
+          "check_fp": "3ebc165ac1"
+        },
+        {
+          "text": "Bearer scheme.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Token Requirements",
+          "quote": "Authorization: Bearer <access-token>",
+          "check": "OK",
+          "check_fp": "7d619411ea"
+        },
+        {
+          "text": "A stolen token works for whoever holds it (no proof of possession).",
+          "type": "fact",
+          "source": "mcp-sec",
+          "section": "Token Theft",
+          "quote": "Attackers who obtain tokens stored by the client, or tokens cached or logged on the server can access protected resources with requests that appear legitimate to resource servers.",
+          "check": "OK",
+          "check_fp": "b60f7d9adf"
+        },
+        {
+          "text": "Searched the 2026-07-28 specification for DPoP, mTLS, sender-constrained and proof-of-possession tokens. None is mentioned.",
+          "type": "silent",
+          "source": "mcp-auth",
+          "section": "Authorization (all pages)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "credential_lifetime",
+      "group": "Credential and validity",
+      "property": "Credential lifetime",
+      "short": "Short, recommended",
+      "answer": "Short, but no number is set. The authorization server decides how long access tokens last, and the specification says it SHOULD issue short-lived tokens to limit the damage from leaked tokens. Refresh tokens are allowed; for public clients (e.g. desktop or mobile apps) they must be rotated.",
+      "rating": "yellow",
+      "coverage": "optional",
+      "requirement": "SHOULD",
+      "rating_reason": "Yellow: recommended only, with no specific limit (same as Web Bot Auth).",
+      "claims": [
+        {
+          "text": "Short-lived tokens are recommended.",
+          "type": "fact",
+          "source": "mcp-sec",
+          "section": "Token Theft",
+          "quote": "Authorization servers SHOULD issue short-lived access tokens to reduce the impact of leaked tokens.",
+          "check": "OK",
+          "check_fp": "2d4a2aef98"
+        },
+        {
+          "text": "Refresh token rotation for public clients.",
+          "type": "fact",
+          "source": "mcp-sec",
+          "section": "Token Theft",
+          "quote": "For public clients, authorization servers MUST rotate refresh tokens as described in OAuth 2.1 Section 4.3.1",
+          "check": "OK",
+          "check_fp": "0c5d216941"
+        }
+      ]
+    },
+    {
+      "id": "validity",
+      "group": "Credential and validity",
+      "property": "Validity (credential validation)",
+      "short": "Yes",
+      "answer": "Yes. The MCP server must validate every access token: that it is genuine, unexpired and issued specifically for this server (the audience). Invalid or expired tokens are rejected with HTTP 401. Clients may only send tokens issued by the server's own authorization server, which the server can check without any prior relationship with the client. PKCE, which clients must implement, protects the sign-in exchange before the token is issued.",
+      "rating": "green",
+      "coverage": "required",
+      "requirement": "MUST",
+      "rating_reason": "Green: the server can validate the token through its own authorization server without a prior relationship with the client (same as Web Bot Auth and TAP).",
+      "claims": [
+        {
+          "text": "Servers must validate tokens.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Token Handling",
+          "quote": "MCP servers, acting in their role as an OAuth 2.1 resource server, MUST validate access tokens",
+          "check": "OK",
+          "check_fp": "205f78b333"
+        },
+        {
+          "text": "Audience check.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Token Handling",
+          "quote": "MCP servers MUST validate that access tokens were issued specifically for them as the intended audience",
+          "check": "OK",
+          "check_fp": "3d1e2da629"
+        },
+        {
+          "text": "Expired tokens are rejected.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Token Handling",
+          "quote": "Invalid or expired tokens MUST receive a HTTP 401 response.",
+          "check": "OK",
+          "check_fp": "96663e0d41"
+        },
+        {
+          "text": "Clients may only send tokens from the server's own authorization server.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Token Handling",
+          "quote": "MCP clients MUST NOT send tokens to the MCP server other than ones issued by the MCP server's authorization server.",
+          "check": "OK",
+          "check_fp": "21ab3590a7"
+        },
+        {
+          "text": "PKCE is required.",
+          "type": "fact",
+          "source": "mcp-sec",
+          "section": "Authorization Code Protection",
+          "quote": "MCP clients MUST implement PKCE according to OAuth 2.1 Section 7.5.2",
+          "check": "OK",
+          "check_fp": "ca7b11367d"
+        }
+      ]
+    },
+    {
+      "id": "authentication",
+      "group": "Authentication and authorization",
+      "property": "Authentication of the agent or user",
+      "short": "No, only checks the token",
+      "answer": "No. The MCP server does not authenticate the agent or the user itself. The user signs in at the authorization server, which then issues a token; the MCP server only checks that the token is valid and was issued for it. Because it is a bearer token, a valid token shows that someone holds an approved grant, not who is sending the request.",
+      "rating": "red",
+      "coverage": "outside",
+      "requirement": "none",
+      "rating_reason": "Red: the server only checks a token issued elsewhere; user login happens at the authorization server (same as Web Bot Auth and TAP checking a provider key).",
+      "claims": [
+        {
+          "text": "The authorization server, not the MCP server, interacts with the user.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Roles",
+          "quote": "The authorization server is responsible for interacting with the user (if necessary) and issuing access tokens for use at the MCP server.",
+          "check": "OK",
+          "check_fp": "78ca6c2a4e"
+        },
+        {
+          "text": "The server's job is token validation.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Token Handling",
+          "quote": "MCP servers, acting in their role as an OAuth 2.1 resource server, MUST validate access tokens",
+          "check": "OK",
+          "check_fp": "205f78b333"
+        }
+      ]
+    },
+    {
+      "id": "authorization",
+      "group": "Authentication and authorization",
+      "property": "Scoped authorization",
+      "short": "Yes",
+      "answer": "Yes. Access is limited by OAuth scopes (named permissions) that the user approves at the authorization server, and the MCP server can say which scopes it needs. If a token lacks a needed scope, the server answers 403 with insufficient_scope, and the client can ask the user for more access (step-up authorization). Scopes are defined by each server; MCP defines no per-action limits such as amounts.",
+      "rating": "green",
+      "coverage": "default",
+      "requirement": "SHOULD",
+      "rating_reason": "Green: scoped permissions are part of the normal flow and enforced by the server.",
+      "claims": [
+        {
+          "text": "Servers signal required scopes.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Scope Selection Strategy",
+          "quote": "MCP servers SHOULD include a scope parameter in the WWW-Authenticate header",
+          "check": "OK",
+          "check_fp": "967ae816ad"
+        },
+        {
+          "text": "Insufficient scope at runtime.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Runtime Insufficient Scope Errors",
+          "quote": "When a client makes a request with an access token with insufficient scope during runtime operations, the server SHOULD respond with:",
+          "check": "OK",
+          "check_fp": "20534281c6"
+        },
+        {
+          "text": "Searched Scope Selection Strategy, Scope Challenge Handling and the security considerations for per-action or value limits. None is defined; scopes are server-defined.",
+          "type": "silent",
+          "source": "mcp-auth",
+          "section": "Scope Selection Strategy; Scope Challenge Handling",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "human_approval",
+      "group": "Authentication and authorization",
+      "property": "Human approval",
+      "short": "Yes",
+      "answer": "Yes. Before a token is issued, the user is sent to the authorization server in a browser to sign in and approve the requested access. When more scopes are needed, clients acting for a user SHOULD repeat this approval (step-up). The authorization server runs this step, so the MCP server relies on it rather than asking the user directly. Clients acting on their own behalf (client_credentials) work without a user.",
+      "rating": "green",
+      "coverage": "default",
+      "requirement": "SHOULD",
+      "rating_reason": "Green: a user approval step is part of the defined authorization code flow.",
+      "claims": [
+        {
+          "text": "User authorization is a step in the flow.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Authorization Flow Steps",
+          "quote": "Note over A: User authorizes",
+          "check": "OK",
+          "check_fp": "e6f2b11a67"
+        },
+        {
+          "text": "Step-up for clients acting for a user.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Step-Up Authorization Flow",
+          "quote": "Clients acting on behalf of a user SHOULD attempt the step-up authorization flow.",
+          "check": "OK",
+          "check_fp": "cf476d6c68"
+        },
+        {
+          "text": "Clients acting on their own behalf exist and need no user.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Step-Up Authorization Flow",
+          "quote": "Clients acting on their own behalf (client_credentials clients) MAY attempt the step-up authorization flow or abort the request immediately.",
+          "check": "OK",
+          "check_fp": "2a3f6b8b14"
+        }
+      ]
+    },
+    {
+      "id": "trust",
+      "group": "Trust",
+      "property": "Trust (who vouches for the agent)",
+      "short": "Server's authorization server and user consent",
+      "answer": "The authorization server named by the MCP server, together with the user's consent. The MCP server publishes which authorization servers it uses, and clients may only send tokens issued by them, so a valid token means that authorization server approved this client for this user. Authorization servers MAY add their own policies on which client metadata domains to accept. MCP defines no shared registry of trusted clients or agents.",
+      "rating": "green",
+      "coverage": "default",
+      "requirement": "MUST",
+      "rating_reason": "Green: the protocol names a party (the server's authorization server) whose tokens the server relies on.",
+      "claims": [
+        {
+          "text": "The server names its authorization server.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Authorization Server Discovery",
+          "quote": "MCP servers advertise their associated authorization servers through OAuth 2.0 Protected Resource Metadata",
+          "check": "OK",
+          "check_fp": "e267bc825a"
+        },
+        {
+          "text": "Only tokens from that authorization server are used.",
+          "type": "fact",
+          "source": "mcp-auth",
+          "section": "Token Handling",
+          "quote": "MCP clients MUST NOT send tokens to the MCP server other than ones issued by the MCP server's authorization server.",
+          "check": "OK",
+          "check_fp": "21ab3590a7"
+        },
+        {
+          "text": "Optional trust policies at the authorization server.",
+          "type": "fact",
+          "source": "mcp-sec",
+          "section": "Trust Policies",
+          "quote": "Authorization servers MAY implement domain-based trust policies for accepting Client ID Metadata Documents",
+          "check": "OK",
+          "check_fp": "c1b0178584"
+        },
+        {
+          "text": "Searched the authorization pages for a registry or list of trusted clients or agents. None is defined.",
+          "type": "silent",
+          "source": "mcp-auth",
+          "section": "Authorization (all pages)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "revocation",
+      "group": "Response and accountability",
+      "property": "Revocation",
+      "short": "Not defined by MCP",
+      "answer": "Not defined by MCP. The authorization server can revoke tokens under OAuth Token Revocation (RFC 7009), but how fast this reaches the MCP server depends on the token type. If the server checks each opaque token with the authorization server, a revoked token stops working at once; a self-contained token such as a JWT is checked by the server on its own, so it keeps working until it expires. Access can be cut off per user or client, not per agent instance.",
+      "rating": "red",
+      "coverage": "outside",
+      "requirement": "none",
+      "rating_reason": "Red: MCP does not define revocation; RFC 7009 at the authorization server is outside the protocol (same as Web Bot Auth and TAP).",
+      "claims": [
+        {
+          "text": "Searched the Authorization overview, Client Registration and Security Considerations for revocation. MCP does not define or reference it.",
+          "type": "silent",
+          "source": "mcp-auth",
+          "section": "Authorization (all pages)",
+          "quote": ""
+        },
+        {
+          "text": "Self-contained tokens need no call back to the authorization server, so revocation does not reach the server until expiry unless extra, non-standard work is done.",
+          "type": "fact",
+          "source": "rfc7009",
+          "section": "3. Implementation Note",
+          "quote": "The access tokens may be self-contained so that a resource server needs no further interaction with",
+          "check": "WEB-OK",
+          "check_fp": "df2f2886d3"
+        }
+      ]
+    },
+    {
+      "id": "contact_escalation",
+      "group": "Response and accountability",
+      "property": "Contact and escalation",
+      "short": "No",
+      "answer": "No by default. MCP defines no contact or escalation channel for the operator of a client. A Client ID Metadata Document only has to include client_id, client_name and redirect_uris, so a server cannot rely on finding contact details there.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: no contact field is required or defined by MCP (same as Web Bot Auth and TAP).",
+      "claims": [
+        {
+          "text": "Required CIMD fields do not include contacts.",
+          "type": "fact",
+          "source": "mcp-reg",
+          "section": "Implementation Requirements",
+          "quote": "The metadata document MUST include at least the following properties: client_id, client_name, redirect_uris",
+          "check": "OK",
+          "check_fp": "a43ec15580"
+        },
+        {
+          "text": "Searched the authorization pages for contact, support or abuse fields. None is defined.",
+          "type": "silent",
+          "source": "mcp-auth",
+          "section": "Authorization (all pages)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "cross_party_signalling",
+      "group": "Monitoring and provenance",
+      "property": "Cross-party signalling",
+      "short": "No",
+      "answer": "No. MCP Authorization defines no way for one server to warn other servers or authorization servers about a misbehaving client or agent.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: not addressed (same as Web Bot Auth and TAP).",
+      "claims": [
+        {
+          "text": "Searched the authorization pages for shared signals, reputation or reporting. None is defined.",
+          "type": "silent",
+          "source": "mcp-auth",
+          "section": "Authorization (all pages)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "model_identity",
+      "group": "Monitoring and provenance",
+      "property": "Model identity",
+      "short": "No",
+      "answer": "No. Clients SHOULD include clientInfo (the client's name and version) in each request, but this is self-reported and names the client software (e.g. an AI app), not the AI model. MCP defines no model identity or attestation.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: nothing identifies the model; clientInfo names the client software only.",
+      "claims": [
+        {
+          "text": "clientInfo is recommended on every request.",
+          "type": "fact",
+          "source": "mcp-base",
+          "section": "General fields > _meta",
+          "quote": "Clients SHOULD include io.modelcontextprotocol/clientInfo on every request unless specifically configured not to do so.",
+          "check": "OK",
+          "check_fp": "51dc37d858"
+        }
+      ]
+    }
+  ],
+  "goals_reading": {
+    "access_control": "The server receives a grant the user approved, limited by scopes and bound to that server, and can ask for more scopes through step-up authorization.",
+    "incident_response": "Access can be cut off at the authorization server, per user or per client: at once for opaque tokens checked with the authorization server, and only at expiry for self-contained tokens. There is no way to cut off one specific agent instance.",
+    "accountability": "An action can be traced to the client application, and to the user only if the authorization server exposes the user to the server."
+  },
+  "notes": [
+    "Calibration example for the protocol-analyzer skill (MCP specification revision 2026-07-28).",
+    "Quotes from RFCs and Claude's documentation were checked with a web tool (WEB-OK) because those sites block scripted downloads.",
+    "A DPoP extension for MCP had been proposed but is not part of the 2026-07-28 revision."
+  ],
+  "open_questions": [
+    "How many authorization servers expose the user to MCP servers (via introspection or JWT claims) in practice?"
+  ]
+}

@@ -1,0 +1,983 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ID-JAG (Cross App Access): protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>ID-JAG (Cross App Access)<small>Identity Assertion JWT Authorization Grant</small></h1><ul class="facts"><li><b>Specification:</b> draft-ietf-oauth-identity-assertion-authz-grant-06</li><li><b>Date:</b> 2026-10-31</li><li><b>Maintainer:</b> IETF OAuth working group (editors A. Parecki, Okta; K. McGuinness; B. Campbell, Ping Identity)</li><li><b>Analysed:</b> 2026-11-18</li><li><b>Version note:</b> -06 is the latest published draft. The editors&#x27; main branch has one editorial fix after -06 (commit e47d778, 2026-11-09), which was not analysed.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent authorization</span><span class="chip"><b>Mechanism:</b> Bearer token, Proof-of-possession token</span><span class="chip"><b>Venue:</b> IETF working group</span><span class="chip"><b>Maturity:</b> Draft</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>The Identity Assertion JWT Authorization Grant (ID-JAG), informally called Cross-App Access (XAA), lets an application, such as an AI agent, get an access token for another company&#x27;s API on behalf of a signed-in user without sending the user through a separate OAuth consent screen. It relies on an identity provider (IdP), e.g. an enterprise single sign-on service, that both applications already trust, so the organisation that runs the IdP decides centrally which applications may reach which other applications for its users. It is an IETF OAuth working group draft (-06, October 2026), edited by authors from Okta and Ping Identity, and still expected to change. Okta implements it.</p><p>The application exchanges the user&#x27;s sign-in assertion at the IdP for an ID-JAG: a short signed token naming the user, the application&#x27;s client ID at the target, the target authorization server and the granted scopes or resources. The target&#x27;s authorization server checks the signature, issuer, audience, client and expiry, applies its own policy and issues its own access token; the ID-JAG can optionally be bound to the client&#x27;s key (DPoP or mutual TLS). The receiving service therefore learns the user and the client application, with scoped access approved by IdP policy. It does not learn the individual agent instance or model, the draft has no per-request user approval, and it defines no revocation, contact or signalling mechanism.</p><h2 id="how">How it works</h2><ol class="steps"><li>Setup: the organisation&#x27;s IdP is trusted by both the client application (e.g. an AI agent) and the resource application&#x27;s authorization server for single sign-on, and an administrator allows the client to access that resource application for its users with certain scopes.</li><li>The user signs in to the client through the IdP; the client receives an identity assertion (an OpenID Connect ID Token or SAML assertion) and optionally a refresh token.</li><li>The client sends a Token Exchange request to the IdP with that assertion, naming the target authorization server (audience) and the resource and scopes it wants. The IdP authenticates the client, applies administrator policy and returns a signed ID-JAG, optionally bound to the client&#x27;s DPoP key or certificate.</li><li>The client presents the ID-JAG to the resource authorization server&#x27;s token endpoint (JWT bearer grant), normally with client authentication. The server checks the type, trusted issuer, signature, audience, client_id, expiry, tenant and any key binding, then applies its own policy.</li><li>The resource authorization server issues its own access token, restricted to the granted resources and scopes. The client calls the API (resource server), which validates that token as usual. When the token expires, the client re-presents the ID-JAG or asks the IdP for a new one.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>ID-JAG (Cross App Access)</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">IdP-brokered, scoped tokens for a user&#x27;s apps</td></tr><tr><td class="prop">Use cases</td><td class="">SaaS-to-SaaS and agent-to-tool API access</td></tr><tr><td class="prop">Parties involved</td><td class="">Client, IdP, resource AS, resource server</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">IETF WG draft -06; Okta implements</td></tr><tr><td class="prop">Building blocks</td><td class="">OAuth Token Exchange, JWT grants, DPoP, mTLS</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">Client application ID (client_id)</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No; actor handling out of scope</td></tr><tr><td class="prop">Acting for (authority)</td><td class="green">Yes, the user (sub) is required</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Signed JWT grant, optionally key-bound</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">exp required; no maximum set</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, against the trusted IdP&#x27;s keys</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="red">Client app auth; user signs in at IdP</td></tr><tr><td class="prop">Scoped authorization</td><td class="green">Yes: scopes, resources, RAR details</td></tr><tr><td class="prop">Human approval</td><td class="red">No; replaced by IdP admin policy</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="green">The IdP the service already trusts for SSO</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="red">Not defined; IdP can stop new grants</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The resource application receives an IdP-approved grant naming the user and the client application, limited by scopes, resources and optional structured details, and can narrow it further by its own policy.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>The organisation&#x27;s IdP can stop issuing new grants for a user or client, but grants and access tokens already issued keep working until they expire; no revocation reaches the resource side, and there is no way to stop one agent instance.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Each access can be traced to the user (sub, tenant), the client application (client_id) and the IdP that issued the grant; not to an individual agent instance or model.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Agent instance identifier:</b> No; actor handling out of scope (explicitly out of scope)</li><li><b>Authentication of the agent or user:</b> Client app auth; user signs in at IdP (handled outside the protocol)</li><li><b>Human approval:</b> No; replaced by IdP admin policy (handled outside the protocol)</li><li><b>Revocation:</b> Not defined; IdP can stop new grants (not addressed by the specification)</li><li><b>Contact and escalation:</b> No (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>ID-JAG (Cross App Access)</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An IETF OAuth draft in which an application (e.g. an AI agent) exchanges a user&#x27;s single sign-on assertion at a shared identity provider for a signed grant, which another application&#x27;s authorization server checks and turns into its own scoped access token for that user, without a separate consent screen.<details><summary>Evidence (3)</summary><div class="claim">The pattern is called Cross-App Access. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“This pattern is informally referred to as Cross-App Access (XAA).”</blockquote></div><div class="claim">A grant on behalf of a user without a direct user-approval step. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Identity Assertion JWT Authorization Grant. <span class="chk">(quote verified against the source)</span><blockquote>“grants a client delegated access to a resource, typically in another trust domain, on behalf of a user without a direct user-approval step at the authorization server.”</blockquote></div><div class="claim">The resource authorization server still issues its own access token. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“The Resource Authorization Server determines whether to honor a given ID-JAG, what scopes or authorization details to grant, and what access token to issue, applying its own local policy.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Access between applications that already share a single sign-on identity provider: enterprise SaaS integrations, customer-identity platforms calling developer SaaS components, email clients reaching calendars, and AI agents calling external tools. The ID-JAG travels in the body of an OAuth token request to the resource&#x27;s authorization server, which verifies it; the API itself then only sees the access token that server issues.<details><summary>Evidence (4)</summary><div class="claim">Applies beyond enterprise workforce IdPs. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“Enterprise workforce identity providers are one common example, but the same trust pattern can also arise in customer identity, platform identity, and other federated application ecosystems.”</blockquote></div><div class="claim">AI agents calling external tools is a named use case. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Appendix: AI Agent using External Tools. <span class="chk">(quote verified against the source)</span><blockquote>“AI agents are designed to perform complex tasks on behalf of users, often requiring integration with external tools provided by SaaS applications, internal services, or enterprise data sources.”</blockquote></div><div class="claim">The ID-JAG is presented at the resource authorization server&#x27;s token endpoint. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Access Token Request. <span class="chk">(quote verified against the source)</span><blockquote>“The Client makes an access token request to the Resource Authorization Server&#x27;s token endpoint using the previously obtained Identity Assertion JWT Authorization Grant as a JWT Bearer Assertion”</blockquote></div><div class="claim">The resource server only validates access tokens from its own authorization server. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Roles. <span class="chk">(quote verified against the source)</span><blockquote>“Hosts protected resources and validates access tokens issued by the Resource Authorization Server.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Client: the application that wants an access token to another application&#x27;s API on behalf of a signed-in user. IdP Authorization Server (IdP): the OpenID Connect or SAML identity provider that issues sign-in assertions and ID-JAGs, and that the resource side already trusts. Resource Authorization Server (AS): checks ID-JAGs and issues access tokens. Resource Server (RS): hosts the API and validates those access tokens. The End-User is named in each ID-JAG, and an administrator grants clients permission in the IdP.<details><summary>Evidence (5)</summary><div class="claim">Client role. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Roles. <span class="chk">(quote verified against the source)</span><blockquote>“The application that wants to obtain an OAuth 2.0 access token on behalf of a signed-in user to an external/3rd party application&#x27;s API (Resource Server below).”</blockquote></div><div class="claim">IdP role. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Roles. <span class="chk">(quote verified against the source)</span><blockquote>“In this specification, the IdP is the issuer that the Resource Authorization Server already trusts for SSO and subject resolution for the target user accounts.”</blockquote></div><div class="claim">Resource Authorization Server role. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Roles. <span class="chk">(quote verified against the source)</span><blockquote>“Issues OAuth 2.0 access tokens for protected resources provided by the Resource Server.”</blockquote></div><div class="claim">Resource Server role. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Roles. <span class="chk">(quote verified against the source)</span><blockquote>“Hosts protected resources and validates access tokens issued by the Resource Authorization Server.”</blockquote></div><div class="claim">Administrator permission is a precondition. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Appendix: Enterprise Deployment &gt; Preconditions. <span class="chk">(quote verified against the source)</span><blockquote>“Enterprise has granted the Client permission to act on behalf of users for the Resource Authorization Server with a set of scopes”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Working-group draft. Version -06 was published on 31 October 2026 by the IETF OAuth working group, on the Standards Track, and is expected to change; it replaced the individual draft started in 2024. It depends on other drafts (Identity Chaining, the JWT DPoP grant). Okta documents its implementation as both identity provider and resource authorization server under the name Cross App Access.<div class="meta">Why this rating: Still a working-group draft, even though Okta has a named implementation (same as Web Bot Auth).</div><details><summary>Evidence (3)</summary><div class="claim">Current revision is -06. <i>Source states</i> <a href="https://www.ietf.org/archive/id/draft-ietf-oauth-identity-assertion-authz-grant-06.html">draft-ietf-oauth-identity-assertion-authz-grant-06 (IETF archive copy)</a>, Document header. <span class="chk">(quote verified against the source)</span><blockquote>“draft-ietf-oauth-identity-assertion-authz-grant-06”</blockquote></div><div class="claim">Depends on the Identity Chaining draft. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“Identity Chaining intentionally leaves many details unspecified in order to support multiple use cases.”</blockquote></div><div class="claim">Deployment: Okta issues ID-JAGs according to the connection an administrator allows. <i>Source states</i> <a href="https://developer.okta.com/docs/concepts/xaa">Okta Developer, Cross App Access (concepts)</a>, Cross App Access. <span class="chk">(quote verified against the source)</span><blockquote>“The Okta authorization server issues the ID-JAG only for scoped access allowed in that connection.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">A profile of the Identity Chaining draft, which combines OAuth 2.0 Token Exchange (RFC 8693) and JWT authorization grants (RFC 7523, RFC 7521). It uses JWT (RFC 7519) with explicit typing (RFC 8725), Resource Indicators (RFC 8707), Rich Authorization Requests (RFC 9396), Authorization Server and Protected Resource Metadata (RFC 8414, RFC 9728), and optional key binding with DPoP (RFC 9449) or mutual TLS (RFC 8705) via the cnf claim (RFC 7800). Sign-in uses OpenID Connect or SAML 2.0.<details><summary>Evidence (3)</summary><div class="claim">Profiles Identity Chaining, Token Exchange and JWT grants. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“XAA is built on top of OAuth 2.0 by profiling &quot;Identity Chaining Across Trust Domains&quot;”</blockquote></div><div class="claim">Two sender-constraining mechanisms are defined. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Sender Constraining Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“This specification defines two sender-constraining mechanisms for the ID-JAG:”</blockquote></div><div class="claim">Typed JWT. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims. <span class="chk">(quote verified against the source)</span><blockquote>“Using typed JWTs is a recommendation of the JSON Web Token Best Current Practices as described in”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Every ID-JAG must carry a client_id: the client identifier of the application at the resource authorization server, which the server checks against the client that authenticates. It names the client application (e.g. an AI agent product), not an individual agent; it may differ from the client ID used at the IdP, and can be an HTTPS URL when Client ID Metadata Documents are used. An optional act claim can name an actor, but the draft does not define how it is set.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the client application, shared by all its instances (same as MCP Authorization).</div><details><summary>Evidence (3)</summary><div class="claim">client_id is a required claim naming the client at the resource authorization server. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims. <span class="chk">(quote verified against the source)</span><blockquote>“REQUIRED - The client identifier of the OAuth 2.0 {{RFC6749}} client at the Resource Authorization Server that will act on behalf of the resource owner”</blockquote></div><div class="claim">The server checks client_id against the authenticated client. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Access Token Request). <span class="chk">(quote verified against the source)</span><blockquote>“If the Client authenticates, the Resource Authorization Server MUST reject the request with an invalid_grant error unless the client_id claim identifies the authenticated client.”</blockquote></div><div class="claim">Client ID Metadata Documents give a shared namespace of client IDs. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Client ID Mapping. <span class="chk">(quote verified against the source)</span><blockquote>“this acts as a shared global namespace of Client IDs”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The ID-JAG identifies the user and the client application, not a specific running agent. A client may send an actor_token and the ID-JAG may carry an optional act claim naming an actor, but the draft states that processing the actor_token is out of scope and leaves the act claim to future profiles; it also warns that the client identity is not a substitute for actor identity.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: No per-instance identifier is defined and actor processing is explicitly out of scope (same colour as all three calibration examples); the optional act claim was not counted because its content is undefined.</div><details><summary>Evidence (3)</summary><div class="claim">Processing of an actor_token is out of scope. <i>Out of scope per</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Token Exchange). <span class="chk">(quote verified against the source)</span><blockquote>“If an actor_token is present, any processing of it is outside the scope of this specification.”</blockquote></div><div class="claim">act is an optional claim. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims. <span class="chk">(quote verified against the source)</span><blockquote>“When present, this claim identifies the actor that is acting on behalf of the subject”</blockquote></div><div class="claim">Client identity does not stand in for actor identity. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Actor Delegation Extensions. <span class="chk">(quote verified against the source)</span><blockquote>“The authenticated client identity is also not a substitute for actor identity.”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Every ID-JAG must name the End-User in the sub claim, chosen by the IdP for this resource authorization server, with the IdP as issuer and a tenant claim for multi-tenant IdPs. The resource authorization server uses these, and optionally email, aud_sub or a SAML identifier, to find the matching local account (subject resolution). It can then carry the user into the access tokens it issues.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The principal is defined and sent to the receiving service as a requirement (stronger than all three calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">sub is required and identifies the End-User. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims. <span class="chk">(quote verified against the source)</span><blockquote>“The sub claim identifies the End-User in the subject namespace of the ID-JAG issuer.”</blockquote></div><div class="claim">The same sub for a user at the same resource authorization server. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Subject Identifier Mapping. <span class="chk">(quote verified against the source)</span><blockquote>“The IdP Authorization Server MUST include the same sub value for a given End-User in every ID-JAG it issues for the same Resource Authorization Server”</blockquote></div><div class="claim">Tenant must be included for multi-tenant issuers. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Issuer and Tenant Relationship. <span class="chk">(quote verified against the source)</span><blockquote>“When an IdP Authorization Server issues an ID-JAG, it MUST include the tenant claim if the issuer is multi-tenant.”</blockquote></div><div class="claim">email or aud_sub are recommended for subject resolution. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims. <span class="chk">(quote verified against the source)</span><blockquote>“It is RECOMMENDED that the ID-JAG contain an email {{OpenID.Core}} and/or aud_sub {{OpenID.Enterprise}} claim.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>A signed JWT (the ID-JAG, typed oauth-id-jag+jwt) presented at the resource authorization server&#x27;s token endpoint, normally together with OAuth client authentication; the API then receives that server&#x27;s own access token on each request. By default the ID-JAG and the access token are bearer credentials, usable by whoever holds them. Optionally the IdP binds the ID-JAG to the client&#x27;s DPoP key or mTLS certificate (cnf claim), and the server must then check proof of possession and may bind the access token to the same key.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A defined, verifiable credential is required to obtain access, and each API request carries the resource server&#x27;s own token (same as MCP Authorization); proof of possession is optional.</div><details><summary>Evidence (5)</summary><div class="claim">The ID-JAG is a typed JWT. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims. <span class="chk">(quote verified against the source)</span><blockquote>“The typ of the JWT indicated in the JWT header MUST be oauth-id-jag+jwt.”</blockquote></div><div class="claim">Client authentication or a sender-constrained ID-JAG is required. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Access Token Request. <span class="chk">(quote verified against the source)</span><blockquote>“It MUST reject a request that has neither client authentication nor a sender-constrained ID-JAG”</blockquote></div><div class="claim">Proof of possession is required when the ID-JAG has a cnf claim. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Sender Constraining Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“When an ID-JAG contains a cnf claim, proof of possession of the corresponding private key or X.509 certificate MUST be demonstrated when using the ID-JAG at the Resource Authorization Server.”</blockquote></div><div class="claim">Without a DPoP proof, no binding is added. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, DPoP Key Binding During Token Exchange. <span class="chk">(quote verified against the source)</span><blockquote>“If no DPoP proof is presented, the IdP issues an ID-JAG without a cnf claim.”</blockquote></div><div class="claim">Without key binding, anyone with a copy can present it. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Client Authentication (Security Considerations). <span class="chk">(quote verified against the source)</span><blockquote>“Without the key binding, anyone holding a copy of the ID-JAG could present it.”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Every ID-JAG must carry an expiry time (exp), and the resource authorization server must reject expired ones, but the draft sets no maximum; the examples use five minutes. The server may refuse ID-JAGs whose expiry is longer than its own policy, or accept each only once. The client may re-present an unexpired ID-JAG to get fresh access tokens, so its lifetime also limits how long access can be renewed without the IdP.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Expiry is required but no specific limit is given; the verifier may apply its own maximum (MCP Authorization and Web Bot Auth are yellow for the same reason; Visa TAP&#x27;s eight-minute rule is green).</div><details><summary>Evidence (4)</summary><div class="claim">exp is required. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims. <span class="chk">(quote verified against the source)</span><blockquote>“REQUIRED - as defined in {{Section 4.1.4 of RFC7519}}.”</blockquote></div><div class="claim">The server can reject long expiries or accept each ID-JAG once. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Refresh Token. <span class="chk">(quote verified against the source)</span><blockquote>“the Resource Authorization Server can reject an ID-JAG with an exp longer than its policy allows, or accept each ID-JAG only once by tracking its jti”</blockquote></div><div class="claim">The ID-JAG can be re-submitted to get new access tokens. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Refresh Token. <span class="chk">(quote verified against the source)</span><blockquote>“When the access token has expired, clients MAY re-submit the original Identity Assertion JWT Authorization Grant to obtain a new Access Token.”</blockquote></div><div class="claim">expires_in is only recommended in the response; the example shows 300 seconds. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Response (Token Exchange). <span class="chk">(quote verified against the source)</span><blockquote>“RECOMMENDED - The lifetime in seconds of the authorization grant.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The resource authorization server checks the JWT type, that the issuer is an IdP it trusts, the signature using keys from that issuer&#x27;s published metadata, that the audience is exactly itself, the client_id, the expiry and other JWT grant rules, the tenant, and any key binding. It needs a prior trust relationship with the IdP but none with the individual client beyond its normal OAuth registration.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The service validates the credential against published keys of its trusted issuer, with expiry checks (same as all three calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">Issuer trust and signature checks. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Access Token Request). <span class="chk">(quote verified against the source)</span><blockquote>“The Resource Authorization Server MUST reject the ID-JAG with an invalid_grant error if the iss claim does not identify an IdP Authorization Server it trusts.”</blockquote></div><div class="claim">Keys come from the issuer&#x27;s metadata. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Access Token Request). <span class="chk">(quote verified against the source)</span><blockquote>“It SHOULD obtain that issuer&#x27;s keys from the jwks_uri in the issuer&#x27;s metadata”</blockquote></div><div class="claim">Audience check. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Access Token Request). <span class="chk">(quote verified against the source)</span><blockquote>“The Resource Authorization Server MUST validate the aud (audience) claim of the ID-JAG.”</blockquote></div><div class="claim">Validation covers issuer, signature, audience, expiry and client binding. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Subject Identifier Trust. <span class="chk">(quote verified against the source)</span><blockquote>“The ID-JAG MUST first be validated using the iss claim, signature, audience, expiration, and client binding according to this specification.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="red"><span class="badge">Not addressed</span><br>No, not of the individual agent or the user. The resource authorization server should authenticate the client application with its OAuth client credentials (or rely on a key-bound ID-JAG instead), which proves the application, not one agent instance. The user signs in at the IdP, and the server relies on the IdP&#x27;s assertion in the ID-JAG, optionally with the time and methods of that sign-in (auth_time, amr, acr).<div class="meta">Handled outside the protocol · requirement level: SHOULD</div><div class="meta">Why this rating: The service checks an application-level client credential and a grant issued by the IdP, which signs the user in (same as MCP Authorization).</div><details><summary>Evidence (3)</summary><div class="claim">Client authentication is recommended at the resource authorization server. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Access Token Request. <span class="chk">(quote verified against the source)</span><blockquote>“The Resource Authorization Server SHOULD require client authentication.”</blockquote></div><div class="claim">Without client authentication, the server relies on the IdP. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Client Authentication (Security Considerations). <span class="chk">(quote verified against the source)</span><blockquote>“It then relies on the IdP Authorization Server”</blockquote></div><div class="claim">User authentication is delegated to the IdP. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Overview. <span class="chk">(quote verified against the source)</span><blockquote>“The Resource Authorization Server not only delegates user authentication to that IdP, but also relies on the IdP-issued grant as input to delegated authorization”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The IdP grants scopes, resource identifiers and optionally structured authorization details (Rich Authorization Requests), based on administrator policy, and writes them into the ID-JAG. The resource authorization server must process them, may narrow them by its own policy, and must restrict the access token to the granted resources. The meaning of each scope is defined by the resource side.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: Scoped permissions are part of the normal flow and enforced by the service (same as MCP Authorization).</div><details><summary>Evidence (4)</summary><div class="claim">The IdP evaluates policy for the requested access. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Token Exchange). <span class="chk">(quote verified against the source)</span><blockquote>“The IdP Authorization Server evaluates administrator-defined policy for the token exchange request and determines if the client should be granted access to act on behalf of the subject for the target audience, resources, scopes, and authorization details.”</blockquote></div><div class="claim">The access token is restricted to the granted resources. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Access Token Request). <span class="chk">(quote verified against the source)</span><blockquote>“The access token MUST be restricted to resources in the resource claim”</blockquote></div><div class="claim">The server may grant a subset of scopes. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Access Token Request). <span class="chk">(quote verified against the source)</span><blockquote>“The granted scopes MAY be a subset of the scopes in the ID-JAG issued by the IdP Authorization Server.”</blockquote></div><div class="claim">Structured authorization details are supported. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims. <span class="chk">(quote verified against the source)</span><blockquote>“This claim enables Rich Authorization Requests (RAR) support, allowing structured authorization requests beyond simple scope strings.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No, by design. The ID-JAG replaces the user&#x27;s consent at the resource authorization server with a decision by the IdP based on administrator policy; the resource side does not ask the user again. The user only signs in to the client through the IdP, which may require step-up sign-in. Clients that cannot authenticate to the IdP should fall back to the normal OAuth flow with interactive consent.<div class="meta">Handled outside the protocol</div><div class="meta">Why this rating: No user approval step for the access; approval is an administrator policy at the IdP, outside the request flow (MCP Authorization is green because its flow includes user consent).</div><details><summary>Evidence (3)</summary><div class="claim">No user consent at the token exchange step. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Overview. <span class="chk">(quote verified against the source)</span><blockquote>“The Resource Authorization Server does not need to obtain user consent directly from the resource owner again at the token exchange step.”</blockquote></div><div class="claim">The grant works without a direct user-approval step. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Identity Assertion JWT Authorization Grant. <span class="chk">(quote verified against the source)</span><blockquote>“on behalf of a user without a direct user-approval step at the authorization server.”</blockquote></div><div class="claim">Fallback to interactive consent for clients that cannot authenticate to the IdP. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Client Authentication (Security Considerations). <span class="chk">(quote verified against the source)</span><blockquote>“where the user can interactively consent to the access delegation.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="green"><span class="badge">Addressed</span><br>The identity provider that the resource application already trusts for single sign-on. The resource authorization server must reject ID-JAGs from issuers it does not trust and must be configured for each trusted IdP. The IdP issues an ID-JAG only when its administrator policy allows that client to act for that user at that target, so a valid ID-JAG means the organisation&#x27;s IdP vouched for this client and user.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The protocol names a party that vouches (the trusted IdP), and only grants it approved are accepted (same as MCP Authorization and Visa TAP).</div><details><summary>Evidence (3)</summary><div class="claim">Only trusted issuers are accepted. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Access Token Request). <span class="chk">(quote verified against the source)</span><blockquote>“The Resource Authorization Server MUST reject the ID-JAG with an invalid_grant error if the iss claim does not identify an IdP Authorization Server it trusts.”</blockquote></div><div class="claim">Each trusted issuer must be configured. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Overview. <span class="chk">(quote verified against the source)</span><blockquote>“for each trusted issuer the Resource Authorization Server MUST be configured to recognize that issuer”</blockquote></div><div class="claim">The IdP decides by administrator policy. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Processing Rules (Token Exchange). <span class="chk">(quote verified against the source)</span><blockquote>“The IdP Authorization Server evaluates administrator-defined policy for the token exchange request and determines if the client should be granted access to act on behalf of the subject for the target audience, resources, scopes, and authorization details.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not defined by the draft. Its design gives the IdP a central cut-off: the resource side should not issue refresh tokens, so renewed access needs a fresh or re-presented ID-JAG, and the IdP should be able to revoke refresh tokens and end a user&#x27;s sessions. But an ID-JAG already issued stays usable until it expires, and access tokens already issued last as long as the resource server set (the examples use 24 hours). Granularity is per user or client, not per agent instance.<div class="meta">Not addressed by the specification · requirement level: SHOULD</div><div class="meta">Why this rating: No revocation mechanism reaching the service is defined; the SHOULD-level recommendations only limit renewal at the IdP, so coverage is none (same colour as the calibration examples, which also leave revocation to other parties).</div><details><summary>Evidence (5)</summary><div class="claim">No refresh token from the resource authorization server. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Refresh Token. <span class="chk">(quote verified against the source)</span><blockquote>“The Resource Authorization Server SHOULD NOT return a Refresh Token when an Identity Assertion JWT Authorization Grant is exchanged for an Access Token”</blockquote></div><div class="claim">The IdP should be able to revoke refresh tokens and sessions. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Storage of Subject Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“IdP Authorization Servers SHOULD also provide a mechanism to revoke Refresh Tokens and to invalidate outstanding sessions for a subject”</blockquote></div><div class="claim">The ID-JAG can be re-submitted until it expires. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Refresh Token. <span class="chk">(quote verified against the source)</span><blockquote>“When the access token has expired, clients MAY re-submit the original Identity Assertion JWT Authorization Grant to obtain a new Access Token.”</blockquote></div><div class="claim">The draft&#x27;s access token response examples show a 24-hour lifetime (86400 seconds); the draft sets no limit. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Response (Access Token Request). <span class="chk">(quote verified against the source)</span><blockquote>“&quot;expires_in&quot;: 86400,”</blockquote></div><div class="claim">Searched the draft for a revocation endpoint, status check or event the IdP could send to the resource side for an issued ID-JAG. None is defined. <i>Not found in</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Security Considerations; Privacy Considerations.</div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft defines no contact or escalation channel for the client&#x27;s operator or the user. In practice the resource side has a configured trust relationship with the IdP and an OAuth registration for the client, which give it known parties to contact, but that is outside the protocol.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field is defined (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">The client has an OAuth registration with the resource authorization server (precondition). <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Appendix: Enterprise Deployment &gt; Preconditions. <span class="chk">(quote verified against the source)</span><blockquote>“The Client has a registered OAuth 2.0 Client with the Resource Authorization Server”</blockquote></div><div class="claim">Searched the claims, metadata sections and security considerations for contact, abuse or support fields. None is defined. <i>Not found in</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims; Authorization Server Metadata; Client Metadata.</div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft asks the IdP to record each token exchange so it can spot unusual patterns, such as a client requesting grants for unfamiliar targets, but this is local logging. It defines no way for a resource application to warn the IdP or other services about a misbehaving client.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">IdP-side logging for anomaly detection. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Storage of Subject Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“IdP Authorization Servers SHOULD record the audience, resource, scope, and authenticated client of each Token Exchange request”</blockquote></div><div class="claim">Searched Security and Privacy Considerations and IANA registrations for shared signals or reports between parties. None is defined. <i>Not found in</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Security Considerations; Privacy Considerations; IANA Considerations.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The ID-JAG names the user, the client application and optionally an actor, but nothing about which AI model is behind an agent. The AI agent use case treats the agent as an ordinary OAuth client.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No model identity (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">In the AI agent example, the agent is an OAuth client. <i>Source states</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, Appendix: AI Agent using External Tools &gt; Preconditions. <span class="chk">(quote verified against the source)</span><blockquote>“The AI Agent is an OAuth 2.0 client with client ID”</blockquote></div><div class="claim">Searched the claim list and the AI agent appendix for model, version or attestation information. None is defined. <i>Not found in</i> <a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a>, ID-JAG Claims; Appendix: AI Agent using External Tools.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md">Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)</a> (-06 (git tag, commit 6e1294a), 2026-10-31)</li><li><a href="https://www.ietf.org/archive/id/draft-ietf-oauth-identity-assertion-authz-grant-06.html">draft-ietf-oauth-identity-assertion-authz-grant-06 (IETF archive copy)</a> (-06, 2026-10-31)</li><li><a href="https://developer.okta.com/docs/concepts/xaa">Okta Developer, Cross App Access (concepts)</a> (accessed 2026-11-18)</li></ul><h2>Notes</h2><ul class="plain"><li>The receiving service is taken to be the resource application: its authorization server receives and checks the ID-JAG, and its resource server (API) receives the access tokens that server issues.</li><li>The Markdown source has no section numbers, so claims cite section headings; where a heading appears twice (e.g. Processing Rules), the parent section is given in brackets.</li><li>&quot;Cross App Access&quot; is also Okta&#x27;s product name, and MCP has an enterprise-managed authorization extension built on ID-JAG. This analysis covers only the IETF draft.</li><li>The IETF archive copy and the Okta page could not be downloaded by the quote checker; their quotes were checked with a web tool.</li></ul><h2>Open questions</h2><ul class="plain"><li>The draft sets no maximum lifetime for an ID-JAG, and a client may re-present an unexpired one to get new access tokens. How long will deployments let ID-JAGs live, given that this lifetime also limits how fast an IdP-side cut-off takes effect?</li><li>Future profiles may define actor_token processing and the act claim. Would that give resource applications a per-agent or per-instance identifier?</li><li>The step-up section still contains a TBD note about requesting the ID-JAG during the authorization request; this may change in later drafts.</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (61 of 61 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-18. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-18",
+ "protocol": {
+  "name": "ID-JAG (Cross App Access)",
+  "full_name": "Identity Assertion JWT Authorization Grant",
+  "spec_version": "draft-ietf-oauth-identity-assertion-authz-grant-06",
+  "spec_date": "2026-10-31",
+  "maintainer": "IETF OAuth working group (editors A. Parecki, Okta; K. McGuinness; B. Campbell, Ping Identity)",
+  "newer_version_note": "-06 is the latest published draft. The editors' main branch has one editorial fix after -06 (commit e47d778, 2026-11-09), which was not analysed."
+ },
+ "profile": {
+  "id": "id-jag",
+  "category": "agent-authorization",
+  "secondary_categories": [],
+  "mechanisms": [
+   "bearer-token",
+   "pop-token"
+  ],
+  "venue": "ietf-wg",
+  "maturity": "draft",
+  "openness": "open-standard",
+  "layers": [
+   "token",
+   "http-body"
+  ],
+  "building_blocks": [
+   "OAuth 2.0",
+   "RFC 8693",
+   "RFC 7523",
+   "RFC 7521",
+   "JWT",
+   "RFC 8707",
+   "RFC 9396",
+   "RFC 9449",
+   "RFC 8705",
+   "RFC 7800",
+   "RFC 8414",
+   "RFC 9728",
+   "RFC 9493",
+   "RFC 8725",
+   "OpenID Connect",
+   "SAML 2.0",
+   "draft-ietf-oauth-identity-chaining"
+  ],
+  "website": "https://datatracker.ietf.org/doc/draft-ietf-oauth-identity-assertion-authz-grant/",
+  "first_published": "2024-03"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "The Identity Assertion JWT Authorization Grant (ID-JAG), informally called Cross-App Access (XAA), lets an application, such as an AI agent, get an access token for another company's API on behalf of a signed-in user without sending the user through a separate OAuth consent screen. It relies on an identity provider (IdP), e.g. an enterprise single sign-on service, that both applications already trust, so the organisation that runs the IdP decides centrally which applications may reach which other applications for its users. It is an IETF OAuth working group draft (-06, October 2026), edited by authors from Okta and Ping Identity, and still expected to change. Okta implements it.",
+  "The application exchanges the user's sign-in assertion at the IdP for an ID-JAG: a short signed token naming the user, the application's client ID at the target, the target authorization server and the granted scopes or resources. The target's authorization server checks the signature, issuer, audience, client and expiry, applies its own policy and issues its own access token; the ID-JAG can optionally be bound to the client's key (DPoP or mutual TLS). The receiving service therefore learns the user and the client application, with scoped access approved by IdP policy. It does not learn the individual agent instance or model, the draft has no per-request user approval, and it defines no revocation, contact or signalling mechanism."
+ ],
+ "how_it_works": [
+  "Setup: the organisation's IdP is trusted by both the client application (e.g. an AI agent) and the resource application's authorization server for single sign-on, and an administrator allows the client to access that resource application for its users with certain scopes.",
+  "The user signs in to the client through the IdP; the client receives an identity assertion (an OpenID Connect ID Token or SAML assertion) and optionally a refresh token.",
+  "The client sends a Token Exchange request to the IdP with that assertion, naming the target authorization server (audience) and the resource and scopes it wants. The IdP authenticates the client, applies administrator policy and returns a signed ID-JAG, optionally bound to the client's DPoP key or certificate.",
+  "The client presents the ID-JAG to the resource authorization server's token endpoint (JWT bearer grant), normally with client authentication. The server checks the type, trusted issuer, signature, audience, client_id, expiry, tenant and any key binding, then applies its own policy.",
+  "The resource authorization server issues its own access token, restricted to the granted resources and scopes. The client calls the API (resource server), which validates that token as usual. When the token expires, the client re-presents the ID-JAG or asks the IdP for a new one."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "Identity Assertion JWT Authorization Grant, draft-ietf-oauth-identity-assertion-authz-grant-06 (Markdown source)",
+   "url": "https://github.com/oauth-wg/oauth-identity-assertion-authz-grant/blob/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md",
+   "fetch_url": "https://raw.githubusercontent.com/oauth-wg/oauth-identity-assertion-authz-grant/6e1294a0b14b9f511bac2cf2582e09b039ff4728/draft-ietf-oauth-identity-assertion-authz-grant.md",
+   "version": "-06 (git tag, commit 6e1294a)",
+   "date": "2026-10-31",
+   "kind": "primary"
+  },
+  {
+   "id": "ietf06",
+   "title": "draft-ietf-oauth-identity-assertion-authz-grant-06 (IETF archive copy)",
+   "url": "https://www.ietf.org/archive/id/draft-ietf-oauth-identity-assertion-authz-grant-06.html",
+   "fetch_url": "https://www.ietf.org/archive/id/draft-ietf-oauth-identity-assertion-authz-grant-06.html",
+   "version": "-06",
+   "date": "2026-10-31",
+   "kind": "primary"
+  },
+  {
+   "id": "okta",
+   "title": "Okta Developer, Cross App Access (concepts)",
+   "url": "https://developer.okta.com/docs/concepts/xaa",
+   "fetch_url": "https://developer.okta.com/docs/concepts/xaa",
+   "version": "",
+   "date": "accessed 2026-11-18",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "IdP-brokered, scoped tokens for a user's apps",
+   "answer": "An IETF OAuth draft in which an application (e.g. an AI agent) exchanges a user's single sign-on assertion at a shared identity provider for a signed grant, which another application's authorization server checks and turns into its own scoped access token for that user, without a separate consent screen.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The pattern is called Cross-App Access.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "This pattern is informally referred to as Cross-App Access (XAA).",
+     "check": "OK",
+     "check_fp": "832a8df9cc"
+    },
+    {
+     "text": "A grant on behalf of a user without a direct user-approval step.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Identity Assertion JWT Authorization Grant",
+     "quote": "grants a client delegated access to a resource, typically in another trust domain, on behalf of a user without a direct user-approval step at the authorization server.",
+     "check": "OK",
+     "check_fp": "99facd7b65"
+    },
+    {
+     "text": "The resource authorization server still issues its own access token.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Introduction",
+     "quote": "The Resource Authorization Server determines whether to honor a given ID-JAG, what scopes or authorization details to grant, and what access token to issue, applying its own local policy.",
+     "check": "OK",
+     "check_fp": "2fd88a2f3e"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "SaaS-to-SaaS and agent-to-tool API access",
+   "answer": "Access between applications that already share a single sign-on identity provider: enterprise SaaS integrations, customer-identity platforms calling developer SaaS components, email clients reaching calendars, and AI agents calling external tools. The ID-JAG travels in the body of an OAuth token request to the resource's authorization server, which verifies it; the API itself then only sees the access token that server issues.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Applies beyond enterprise workforce IdPs.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Introduction",
+     "quote": "Enterprise workforce identity providers are one common example, but the same trust pattern can also arise in customer identity, platform identity, and other federated application ecosystems.",
+     "check": "OK",
+     "check_fp": "716f31cdbc"
+    },
+    {
+     "text": "AI agents calling external tools is a named use case.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Appendix: AI Agent using External Tools",
+     "quote": "AI agents are designed to perform complex tasks on behalf of users, often requiring integration with external tools provided by SaaS applications, internal services, or enterprise data sources.",
+     "check": "OK",
+     "check_fp": "0588f7894a"
+    },
+    {
+     "text": "The ID-JAG is presented at the resource authorization server's token endpoint.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Access Token Request",
+     "quote": "The Client makes an access token request to the Resource Authorization Server's token endpoint using the previously obtained Identity Assertion JWT Authorization Grant as a JWT Bearer Assertion",
+     "check": "OK",
+     "check_fp": "ed50449bc7"
+    },
+    {
+     "text": "The resource server only validates access tokens from its own authorization server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Roles",
+     "quote": "Hosts protected resources and validates access tokens issued by the Resource Authorization Server.",
+     "check": "OK",
+     "check_fp": "1ea054c289"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Client, IdP, resource AS, resource server",
+   "answer": "Client: the application that wants an access token to another application's API on behalf of a signed-in user. IdP Authorization Server (IdP): the OpenID Connect or SAML identity provider that issues sign-in assertions and ID-JAGs, and that the resource side already trusts. Resource Authorization Server (AS): checks ID-JAGs and issues access tokens. Resource Server (RS): hosts the API and validates those access tokens. The End-User is named in each ID-JAG, and an administrator grants clients permission in the IdP.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Client role.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Roles",
+     "quote": "The application that wants to obtain an OAuth 2.0 access token on behalf of a signed-in user to an external/3rd party application's API (Resource Server below).",
+     "check": "OK",
+     "check_fp": "b418c059c1"
+    },
+    {
+     "text": "IdP role.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Roles",
+     "quote": "In this specification, the IdP is the issuer that the Resource Authorization Server already trusts for SSO and subject resolution for the target user accounts.",
+     "check": "OK",
+     "check_fp": "77ef8899f6"
+    },
+    {
+     "text": "Resource Authorization Server role.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Roles",
+     "quote": "Issues OAuth 2.0 access tokens for protected resources provided by the Resource Server.",
+     "check": "OK",
+     "check_fp": "308f392fe5"
+    },
+    {
+     "text": "Resource Server role.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Roles",
+     "quote": "Hosts protected resources and validates access tokens issued by the Resource Authorization Server.",
+     "check": "OK",
+     "check_fp": "1ea054c289"
+    },
+    {
+     "text": "Administrator permission is a precondition.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Appendix: Enterprise Deployment > Preconditions",
+     "quote": "Enterprise has granted the Client permission to act on behalf of users for the Resource Authorization Server with a set of scopes",
+     "check": "OK",
+     "check_fp": "8209415211"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "IETF WG draft -06; Okta implements",
+   "answer": "Working-group draft. Version -06 was published on 31 October 2026 by the IETF OAuth working group, on the Standards Track, and is expected to change; it replaced the individual draft started in 2024. It depends on other drafts (Identity Chaining, the JWT DPoP grant). Okta documents its implementation as both identity provider and resource authorization server under the name Cross App Access.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: still a working-group draft, even though Okta has a named implementation (same as Web Bot Auth).",
+   "claims": [
+    {
+     "text": "Current revision is -06.",
+     "type": "fact",
+     "source": "ietf06",
+     "section": "Document header",
+     "quote": "draft-ietf-oauth-identity-assertion-authz-grant-06",
+     "check": "WEB-OK",
+     "check_fp": "e381f83e2d"
+    },
+    {
+     "text": "Depends on the Identity Chaining draft.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Introduction",
+     "quote": "Identity Chaining intentionally leaves many details unspecified in order to support multiple use cases.",
+     "check": "OK",
+     "check_fp": "d378308c22"
+    },
+    {
+     "text": "Deployment: Okta issues ID-JAGs according to the connection an administrator allows.",
+     "type": "fact",
+     "source": "okta",
+     "section": "Cross App Access",
+     "quote": "The Okta authorization server issues the ID-JAG only for scoped access allowed in that connection.",
+     "check": "WEB-OK",
+     "check_fp": "55340a1edb"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "OAuth Token Exchange, JWT grants, DPoP, mTLS",
+   "answer": "A profile of the Identity Chaining draft, which combines OAuth 2.0 Token Exchange (RFC 8693) and JWT authorization grants (RFC 7523, RFC 7521). It uses JWT (RFC 7519) with explicit typing (RFC 8725), Resource Indicators (RFC 8707), Rich Authorization Requests (RFC 9396), Authorization Server and Protected Resource Metadata (RFC 8414, RFC 9728), and optional key binding with DPoP (RFC 9449) or mutual TLS (RFC 8705) via the cnf claim (RFC 7800). Sign-in uses OpenID Connect or SAML 2.0.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Profiles Identity Chaining, Token Exchange and JWT grants.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Introduction",
+     "quote": "XAA is built on top of OAuth 2.0 by profiling \"Identity Chaining Across Trust Domains\"",
+     "check": "OK",
+     "check_fp": "a04a2d333d"
+    },
+    {
+     "text": "Two sender-constraining mechanisms are defined.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Sender Constraining Tokens",
+     "quote": "This specification defines two sender-constraining mechanisms for the ID-JAG:",
+     "check": "OK",
+     "check_fp": "234e134446"
+    },
+    {
+     "text": "Typed JWT.",
+     "type": "fact",
+     "source": "spec",
+     "section": "ID-JAG Claims",
+     "quote": "Using typed JWTs is a recommendation of the JSON Web Token Best Current Practices as described in",
+     "check": "OK",
+     "check_fp": "86a5d57e5e"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Client application ID (client_id)",
+   "answer": "Partly. Every ID-JAG must carry a client_id: the client identifier of the application at the resource authorization server, which the server checks against the client that authenticates. It names the client application (e.g. an AI agent product), not an individual agent; it may differ from the client ID used at the IdP, and can be an HTTPS URL when Client ID Metadata Documents are used. An optional act claim can name an actor, but the draft does not define how it is set.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: the identifier names the client application, shared by all its instances (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "client_id is a required claim naming the client at the resource authorization server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "ID-JAG Claims",
+     "quote": "REQUIRED - The client identifier of the OAuth 2.0 {{RFC6749}} client at the Resource Authorization Server that will act on behalf of the resource owner",
+     "check": "OK",
+     "check_fp": "9f3ca42e46"
+    },
+    {
+     "text": "The server checks client_id against the authenticated client.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Access Token Request)",
+     "quote": "If the Client authenticates, the Resource Authorization Server MUST reject the request with an invalid_grant error unless the client_id claim identifies the authenticated client.",
+     "check": "OK",
+     "check_fp": "564be2745a"
+    },
+    {
+     "text": "Client ID Metadata Documents give a shared namespace of client IDs.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Client ID Mapping",
+     "quote": "this acts as a shared global namespace of Client IDs",
+     "check": "OK",
+     "check_fp": "3417bb715d"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No; actor handling out of scope",
+   "answer": "No. The ID-JAG identifies the user and the client application, not a specific running agent. A client may send an actor_token and the ID-JAG may carry an optional act claim naming an actor, but the draft states that processing the actor_token is out of scope and leaves the act claim to future profiles; it also warns that the client identity is not a substitute for actor identity.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier is defined and actor processing is explicitly out of scope (same colour as all three calibration examples); the optional act claim was not counted because its content is undefined.",
+   "claims": [
+    {
+     "text": "Processing of an actor_token is out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Processing Rules (Token Exchange)",
+     "quote": "If an actor_token is present, any processing of it is outside the scope of this specification.",
+     "check": "OK",
+     "check_fp": "31a89e7845"
+    },
+    {
+     "text": "act is an optional claim.",
+     "type": "fact",
+     "source": "spec",
+     "section": "ID-JAG Claims",
+     "quote": "When present, this claim identifies the actor that is acting on behalf of the subject",
+     "check": "OK",
+     "check_fp": "646296667c"
+    },
+    {
+     "text": "Client identity does not stand in for actor identity.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Actor Delegation Extensions",
+     "quote": "The authenticated client identity is also not a substitute for actor identity.",
+     "check": "OK",
+     "check_fp": "077aebc72f"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Yes, the user (sub) is required",
+   "answer": "Yes. Every ID-JAG must name the End-User in the sub claim, chosen by the IdP for this resource authorization server, with the IdP as issuer and a tenant claim for multi-tenant IdPs. The resource authorization server uses these, and optionally email, aud_sub or a SAML identifier, to find the matching local account (subject resolution). It can then carry the user into the access tokens it issues.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the principal is defined and sent to the receiving service as a requirement (stronger than all three calibration examples).",
+   "claims": [
+    {
+     "text": "sub is required and identifies the End-User.",
+     "type": "fact",
+     "source": "spec",
+     "section": "ID-JAG Claims",
+     "quote": "The sub claim identifies the End-User in the subject namespace of the ID-JAG issuer.",
+     "check": "OK",
+     "check_fp": "183f648430"
+    },
+    {
+     "text": "The same sub for a user at the same resource authorization server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Subject Identifier Mapping",
+     "quote": "The IdP Authorization Server MUST include the same sub value for a given End-User in every ID-JAG it issues for the same Resource Authorization Server",
+     "check": "OK",
+     "check_fp": "613664e575"
+    },
+    {
+     "text": "Tenant must be included for multi-tenant issuers.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Issuer and Tenant Relationship",
+     "quote": "When an IdP Authorization Server issues an ID-JAG, it MUST include the tenant claim if the issuer is multi-tenant.",
+     "check": "OK",
+     "check_fp": "557e9ae2de"
+    },
+    {
+     "text": "email or aud_sub are recommended for subject resolution.",
+     "type": "fact",
+     "source": "spec",
+     "section": "ID-JAG Claims",
+     "quote": "It is RECOMMENDED that the ID-JAG contain an email {{OpenID.Core}} and/or aud_sub {{OpenID.Enterprise}} claim.",
+     "check": "OK",
+     "check_fp": "eddbdfc483"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Signed JWT grant, optionally key-bound",
+   "answer": "A signed JWT (the ID-JAG, typed oauth-id-jag+jwt) presented at the resource authorization server's token endpoint, normally together with OAuth client authentication; the API then receives that server's own access token on each request. By default the ID-JAG and the access token are bearer credentials, usable by whoever holds them. Optionally the IdP binds the ID-JAG to the client's DPoP key or mTLS certificate (cnf claim), and the server must then check proof of possession and may bind the access token to the same key.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a defined, verifiable credential is required to obtain access, and each API request carries the resource server's own token (same as MCP Authorization); proof of possession is optional.",
+   "claims": [
+    {
+     "text": "The ID-JAG is a typed JWT.",
+     "type": "fact",
+     "source": "spec",
+     "section": "ID-JAG Claims",
+     "quote": "The typ of the JWT indicated in the JWT header MUST be oauth-id-jag+jwt.",
+     "check": "OK",
+     "check_fp": "a0bd8f02b0"
+    },
+    {
+     "text": "Client authentication or a sender-constrained ID-JAG is required.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Access Token Request",
+     "quote": "It MUST reject a request that has neither client authentication nor a sender-constrained ID-JAG",
+     "check": "OK",
+     "check_fp": "a5fa5a7edf"
+    },
+    {
+     "text": "Proof of possession is required when the ID-JAG has a cnf claim.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Sender Constraining Tokens",
+     "quote": "When an ID-JAG contains a cnf claim, proof of possession of the corresponding private key or X.509 certificate MUST be demonstrated when using the ID-JAG at the Resource Authorization Server.",
+     "check": "OK",
+     "check_fp": "3031a77fe1"
+    },
+    {
+     "text": "Without a DPoP proof, no binding is added.",
+     "type": "fact",
+     "source": "spec",
+     "section": "DPoP Key Binding During Token Exchange",
+     "quote": "If no DPoP proof is presented, the IdP issues an ID-JAG without a cnf claim.",
+     "check": "OK",
+     "check_fp": "52d3e403c0"
+    },
+    {
+     "text": "Without key binding, anyone with a copy can present it.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Client Authentication (Security Considerations)",
+     "quote": "Without the key binding, anyone holding a copy of the ID-JAG could present it.",
+     "check": "OK",
+     "check_fp": "18ae137e5f"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "exp required; no maximum set",
+   "answer": "Partly. Every ID-JAG must carry an expiry time (exp), and the resource authorization server must reject expired ones, but the draft sets no maximum; the examples use five minutes. The server may refuse ID-JAGs whose expiry is longer than its own policy, or accept each only once. The client may re-present an unexpired ID-JAG to get fresh access tokens, so its lifetime also limits how long access can be renewed without the IdP.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: expiry is required but no specific limit is given; the verifier may apply its own maximum (MCP Authorization and Web Bot Auth are yellow for the same reason; Visa TAP's eight-minute rule is green).",
+   "claims": [
+    {
+     "text": "exp is required.",
+     "type": "fact",
+     "source": "spec",
+     "section": "ID-JAG Claims",
+     "quote": "REQUIRED - as defined in {{Section 4.1.4 of RFC7519}}.",
+     "check": "OK",
+     "check_fp": "f547f29aa9"
+    },
+    {
+     "text": "The server can reject long expiries or accept each ID-JAG once.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Refresh Token",
+     "quote": "the Resource Authorization Server can reject an ID-JAG with an exp longer than its policy allows, or accept each ID-JAG only once by tracking its jti",
+     "check": "OK",
+     "check_fp": "b9517278cb"
+    },
+    {
+     "text": "The ID-JAG can be re-submitted to get new access tokens.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Refresh Token",
+     "quote": "When the access token has expired, clients MAY re-submit the original Identity Assertion JWT Authorization Grant to obtain a new Access Token.",
+     "check": "OK",
+     "check_fp": "a2f318d8a8"
+    },
+    {
+     "text": "expires_in is only recommended in the response; the example shows 300 seconds.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Response (Token Exchange)",
+     "quote": "RECOMMENDED - The lifetime in seconds of the authorization grant.",
+     "check": "OK",
+     "check_fp": "3725909477"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, against the trusted IdP's keys",
+   "answer": "Yes. The resource authorization server checks the JWT type, that the issuer is an IdP it trusts, the signature using keys from that issuer's published metadata, that the audience is exactly itself, the client_id, the expiry and other JWT grant rules, the tenant, and any key binding. It needs a prior trust relationship with the IdP but none with the individual client beyond its normal OAuth registration.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the service validates the credential against published keys of its trusted issuer, with expiry checks (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Issuer trust and signature checks.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Access Token Request)",
+     "quote": "The Resource Authorization Server MUST reject the ID-JAG with an invalid_grant error if the iss claim does not identify an IdP Authorization Server it trusts.",
+     "check": "OK",
+     "check_fp": "c89dbae3b5"
+    },
+    {
+     "text": "Keys come from the issuer's metadata.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Access Token Request)",
+     "quote": "It SHOULD obtain that issuer's keys from the jwks_uri in the issuer's metadata",
+     "check": "OK",
+     "check_fp": "0add9a42b8"
+    },
+    {
+     "text": "Audience check.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Access Token Request)",
+     "quote": "The Resource Authorization Server MUST validate the aud (audience) claim of the ID-JAG.",
+     "check": "OK",
+     "check_fp": "e263989386"
+    },
+    {
+     "text": "Validation covers issuer, signature, audience, expiry and client binding.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Subject Identifier Trust",
+     "quote": "The ID-JAG MUST first be validated using the iss claim, signature, audience, expiration, and client binding according to this specification.",
+     "check": "OK",
+     "check_fp": "d6725b8007"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Client app auth; user signs in at IdP",
+   "answer": "No, not of the individual agent or the user. The resource authorization server should authenticate the client application with its OAuth client credentials (or rely on a key-bound ID-JAG instead), which proves the application, not one agent instance. The user signs in at the IdP, and the server relies on the IdP's assertion in the ID-JAG, optionally with the time and methods of that sign-in (auth_time, amr, acr).",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "SHOULD",
+   "rating_reason": "Red: the service checks an application-level client credential and a grant issued by the IdP, which signs the user in (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Client authentication is recommended at the resource authorization server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Access Token Request",
+     "quote": "The Resource Authorization Server SHOULD require client authentication.",
+     "check": "OK",
+     "check_fp": "9eeb28135b"
+    },
+    {
+     "text": "Without client authentication, the server relies on the IdP.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Client Authentication (Security Considerations)",
+     "quote": "It then relies on the IdP Authorization Server",
+     "check": "OK",
+     "check_fp": "7f03b7a0c1"
+    },
+    {
+     "text": "User authentication is delegated to the IdP.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Overview",
+     "quote": "The Resource Authorization Server not only delegates user authentication to that IdP, but also relies on the IdP-issued grant as input to delegated authorization",
+     "check": "OK",
+     "check_fp": "2ee443b0bc"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Yes: scopes, resources, RAR details",
+   "answer": "Yes. The IdP grants scopes, resource identifiers and optionally structured authorization details (Rich Authorization Requests), based on administrator policy, and writes them into the ID-JAG. The resource authorization server must process them, may narrow them by its own policy, and must restrict the access token to the granted resources. The meaning of each scope is defined by the resource side.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: scoped permissions are part of the normal flow and enforced by the service (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "The IdP evaluates policy for the requested access.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Token Exchange)",
+     "quote": "The IdP Authorization Server evaluates administrator-defined policy for the token exchange request and determines if the client should be granted access to act on behalf of the subject for the target audience, resources, scopes, and authorization details.",
+     "check": "OK",
+     "check_fp": "799387afd7"
+    },
+    {
+     "text": "The access token is restricted to the granted resources.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Access Token Request)",
+     "quote": "The access token MUST be restricted to resources in the resource claim",
+     "check": "OK",
+     "check_fp": "083161c457"
+    },
+    {
+     "text": "The server may grant a subset of scopes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Access Token Request)",
+     "quote": "The granted scopes MAY be a subset of the scopes in the ID-JAG issued by the IdP Authorization Server.",
+     "check": "OK",
+     "check_fp": "afb9e500c7"
+    },
+    {
+     "text": "Structured authorization details are supported.",
+     "type": "fact",
+     "source": "spec",
+     "section": "ID-JAG Claims",
+     "quote": "This claim enables Rich Authorization Requests (RAR) support, allowing structured authorization requests beyond simple scope strings.",
+     "check": "OK",
+     "check_fp": "60f8dcc119"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "No; replaced by IdP admin policy",
+   "answer": "No, by design. The ID-JAG replaces the user's consent at the resource authorization server with a decision by the IdP based on administrator policy; the resource side does not ask the user again. The user only signs in to the client through the IdP, which may require step-up sign-in. Clients that cannot authenticate to the IdP should fall back to the normal OAuth flow with interactive consent.",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "none",
+   "rating_reason": "Red: no user approval step for the access; approval is an administrator policy at the IdP, outside the request flow (MCP Authorization is green because its flow includes user consent).",
+   "claims": [
+    {
+     "text": "No user consent at the token exchange step.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Overview",
+     "quote": "The Resource Authorization Server does not need to obtain user consent directly from the resource owner again at the token exchange step.",
+     "check": "OK",
+     "check_fp": "62fd538e50"
+    },
+    {
+     "text": "The grant works without a direct user-approval step.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Identity Assertion JWT Authorization Grant",
+     "quote": "on behalf of a user without a direct user-approval step at the authorization server.",
+     "check": "OK",
+     "check_fp": "0b53dbff93"
+    },
+    {
+     "text": "Fallback to interactive consent for clients that cannot authenticate to the IdP.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Client Authentication (Security Considerations)",
+     "quote": "where the user can interactively consent to the access delegation.",
+     "check": "OK",
+     "check_fp": "0b9c6b4af6"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "The IdP the service already trusts for SSO",
+   "answer": "The identity provider that the resource application already trusts for single sign-on. The resource authorization server must reject ID-JAGs from issuers it does not trust and must be configured for each trusted IdP. The IdP issues an ID-JAG only when its administrator policy allows that client to act for that user at that target, so a valid ID-JAG means the organisation's IdP vouched for this client and user.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the protocol names a party that vouches (the trusted IdP), and only grants it approved are accepted (same as MCP Authorization and Visa TAP).",
+   "claims": [
+    {
+     "text": "Only trusted issuers are accepted.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Access Token Request)",
+     "quote": "The Resource Authorization Server MUST reject the ID-JAG with an invalid_grant error if the iss claim does not identify an IdP Authorization Server it trusts.",
+     "check": "OK",
+     "check_fp": "c89dbae3b5"
+    },
+    {
+     "text": "Each trusted issuer must be configured.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Overview",
+     "quote": "for each trusted issuer the Resource Authorization Server MUST be configured to recognize that issuer",
+     "check": "OK",
+     "check_fp": "70a603548d"
+    },
+    {
+     "text": "The IdP decides by administrator policy.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Processing Rules (Token Exchange)",
+     "quote": "The IdP Authorization Server evaluates administrator-defined policy for the token exchange request and determines if the client should be granted access to act on behalf of the subject for the target audience, resources, scopes, and authorization details.",
+     "check": "OK",
+     "check_fp": "799387afd7"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Not defined; IdP can stop new grants",
+   "answer": "Not defined by the draft. Its design gives the IdP a central cut-off: the resource side should not issue refresh tokens, so renewed access needs a fresh or re-presented ID-JAG, and the IdP should be able to revoke refresh tokens and end a user's sessions. But an ID-JAG already issued stays usable until it expires, and access tokens already issued last as long as the resource server set (the examples use 24 hours). Granularity is per user or client, not per agent instance.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "SHOULD",
+   "rating_reason": "Red: no revocation mechanism reaching the service is defined; the SHOULD-level recommendations only limit renewal at the IdP, so coverage is none (same colour as the calibration examples, which also leave revocation to other parties).",
+   "claims": [
+    {
+     "text": "No refresh token from the resource authorization server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Refresh Token",
+     "quote": "The Resource Authorization Server SHOULD NOT return a Refresh Token when an Identity Assertion JWT Authorization Grant is exchanged for an Access Token",
+     "check": "OK",
+     "check_fp": "bc69e63b27"
+    },
+    {
+     "text": "The IdP should be able to revoke refresh tokens and sessions.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Storage of Subject Tokens",
+     "quote": "IdP Authorization Servers SHOULD also provide a mechanism to revoke Refresh Tokens and to invalidate outstanding sessions for a subject",
+     "check": "OK",
+     "check_fp": "1f345dd114"
+    },
+    {
+     "text": "The ID-JAG can be re-submitted until it expires.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Refresh Token",
+     "quote": "When the access token has expired, clients MAY re-submit the original Identity Assertion JWT Authorization Grant to obtain a new Access Token.",
+     "check": "OK",
+     "check_fp": "a2f318d8a8"
+    },
+    {
+     "text": "The draft's access token response examples show a 24-hour lifetime (86400 seconds); the draft sets no limit.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Response (Access Token Request)",
+     "quote": "\"expires_in\": 86400,",
+     "check": "OK",
+     "check_fp": "37e91c81d8"
+    },
+    {
+     "text": "Searched the draft for a revocation endpoint, status check or event the IdP could send to the resource side for an issued ID-JAG. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Security Considerations; Privacy Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No. The draft defines no contact or escalation channel for the client's operator or the user. In practice the resource side has a configured trust relationship with the IdP and an OAuth registration for the client, which give it known parties to contact, but that is outside the protocol.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field is defined (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "The client has an OAuth registration with the resource authorization server (precondition).",
+     "type": "fact",
+     "source": "spec",
+     "section": "Appendix: Enterprise Deployment > Preconditions",
+     "quote": "The Client has a registered OAuth 2.0 Client with the Resource Authorization Server",
+     "check": "OK",
+     "check_fp": "0cd1fcf5eb"
+    },
+    {
+     "text": "Searched the claims, metadata sections and security considerations for contact, abuse or support fields. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "ID-JAG Claims; Authorization Server Metadata; Client Metadata",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. The draft asks the IdP to record each token exchange so it can spot unusual patterns, such as a client requesting grants for unfamiliar targets, but this is local logging. It defines no way for a resource application to warn the IdP or other services about a misbehaving client.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "IdP-side logging for anomaly detection.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Storage of Subject Tokens",
+     "quote": "IdP Authorization Servers SHOULD record the audience, resource, scope, and authenticated client of each Token Exchange request",
+     "check": "OK",
+     "check_fp": "6d7b4c16e6"
+    },
+    {
+     "text": "Searched Security and Privacy Considerations and IANA registrations for shared signals or reports between parties. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Security Considerations; Privacy Considerations; IANA Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. The ID-JAG names the user, the client application and optionally an actor, but nothing about which AI model is behind an agent. The AI agent use case treats the agent as an ordinary OAuth client.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no model identity (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "In the AI agent example, the agent is an OAuth client.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Appendix: AI Agent using External Tools > Preconditions",
+     "quote": "The AI Agent is an OAuth 2.0 client with client ID",
+     "check": "OK",
+     "check_fp": "58b52d85fe"
+    },
+    {
+     "text": "Searched the claim list and the AI agent appendix for model, version or attestation information. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "ID-JAG Claims; Appendix: AI Agent using External Tools",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The resource application receives an IdP-approved grant naming the user and the client application, limited by scopes, resources and optional structured details, and can narrow it further by its own policy.",
+  "incident_response": "The organisation's IdP can stop issuing new grants for a user or client, but grants and access tokens already issued keep working until they expire; no revocation reaches the resource side, and there is no way to stop one agent instance.",
+  "accountability": "Each access can be traced to the user (sub, tenant), the client application (client_id) and the IdP that issued the grant; not to an individual agent instance or model."
+ },
+ "notes": [
+  "The receiving service is taken to be the resource application: its authorization server receives and checks the ID-JAG, and its resource server (API) receives the access tokens that server issues.",
+  "The Markdown source has no section numbers, so claims cite section headings; where a heading appears twice (e.g. Processing Rules), the parent section is given in brackets.",
+  "\"Cross App Access\" is also Okta's product name, and MCP has an enterprise-managed authorization extension built on ID-JAG. This analysis covers only the IETF draft.",
+  "The IETF archive copy and the Okta page could not be downloaded by the quote checker; their quotes were checked with a web tool."
+ ],
+ "open_questions": [
+  "The draft sets no maximum lifetime for an ID-JAG, and a client may re-present an unexpired one to get new access tokens. How long will deployments let ID-JAGs live, given that this lifetime also limits how fast an IdP-side cut-off takes effect?",
+  "Future profiles may define actor_token processing and the act claim. Would that give resource applications a per-agent or per-instance identifier?",
+  "The step-up section still contains a TBD note about requesting the ID-JAG during the authorization request; this may change in later drafts."
+ ]
+}</script></body></html>

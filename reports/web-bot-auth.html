@@ -1,0 +1,755 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Web Bot Auth: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>Web Bot Auth<small>HTTP Message Signatures for automated traffic</small></h1><ul class="facts"><li><b>Specification:</b> draft-ietf-webbotauth-httpsig-protocol-00</li><li><b>Date:</b> 2026-09-01</li><li><b>Maintainer:</b> IETF Web Bot Auth (webbotauth) working group; editors T. Meunier (Cloudflare) and S. Major (Google)</li><li><b>Analysed:</b> 2026-11-18</li><li><b>Version note:</b> Revision -01 was published in October 2026 and was not analysed here.</li></ul><div class=chips><span class="chip"><b>Category:</b> Web bot identity</span><span class="chip"><b>Mechanism:</b> HTTP Message Signatures</span><span class="chip"><b>Venue:</b> IETF working group</span><span class="chip"><b>Maturity:</b> Draft</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>Web Bot Auth is a way for bots and AI agents to prove, on every web request, which operator&#x27;s key signed it. It is aimed at automated traffic on the open web (e.g. AI assistants, search indexing, content aggregation and automated testing), where websites today rely on IP address lists and User-Agent strings that are hard to manage or easy to fake. It is an Internet-Draft of the IETF Web Bot Auth working group, at revision -00 (September 2026). It has public implementations but is not yet an RFC.</p><p>The agent&#x27;s operator publishes its public keys in a key directory at an HTTPS URL. The agent names that URL in a Signature-Agent header and signs each request with HTTP Message Signatures (RFC 9421), covering at least the target host and a validity window. A website, or a CDN in front of it, fetches the key and checks the signature without any prior relationship with the agent, and can then allow, rate-limit or block that operator. The draft deliberately leaves out who the user is, what the agent may do, whether the operator should be trusted, and how to revoke keys.</p><h2 id="how">How it works</h2><ol class="steps"><li>The agent&#x27;s operator creates a signing key and publishes the public key in a JSON key directory (JWKS), by default at a well-known URL on its own domain.</li><li>For each request, the agent adds a Signature-Agent header naming that directory and signs the request with an HTTP Message Signature covering the target host, with created and expires times, a keyid and the tag web-bot-auth.</li><li>The website, or a proxy or CDN in front of it, reads the signature headers and, if it does not already have the key, fetches it from the Signature-Agent URL.</li><li>It verifies the signature and checks that the current time is inside the signature&#x27;s validity window.</li><li>It applies its own policy to the identified operator, e.g. allow, rate-limit or block.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Web Bot Auth</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Bots and agents sign every HTTP request with a published key</td></tr><tr><td class="prop">Use cases</td><td class="">Bots and agents on the open web</td></tr><tr><td class="prop">Parties involved</td><td class="">Agent, origin, user (plus key directory)</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">Draft</td></tr><tr><td class="prop">Building blocks</td><td class="">RFC 9421, JWKS, JWK thumbprint, well-known URIs</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">Operator&#x27;s key directory URL and key</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">HTTP Signature</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">24 hours, recommended</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="red">No, only verifies the operator&#x27;s key</td></tr><tr><td class="prop">Scoped authorization</td><td class="red">No, out of scope</td></tr><tr><td class="prop">Human approval</td><td class="red">No, out of scope</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="red">No one, out of scope</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="red">None</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No, out of scope</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The website learns only which operator&#x27;s key signed the request. It can allow, rate-limit or block that operator, but receives no permissions or scopes.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>Each website can block an operator&#x27;s URL or key on its own. There is no revocation, and nothing reaches a specific agent instance.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>An action can be traced to the holder of the operator&#x27;s key, not to a user or an agent instance.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Acting for (authority):</b> No (explicitly out of scope)</li><li><b>Authentication of the agent or user:</b> No, only verifies the operator&#x27;s key (not addressed by the specification)</li><li><b>Scoped authorization:</b> No, out of scope (explicitly out of scope)</li><li><b>Human approval:</b> No, out of scope (explicitly out of scope)</li><li><b>Trust (who vouches for the agent):</b> No one, out of scope (explicitly out of scope)</li><li><b>Revocation:</b> None (explicitly out of scope)</li><li><b>Contact and escalation:</b> No (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No, out of scope (explicitly out of scope)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Web Bot Auth</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An IETF draft where bots and agents sign every HTTP request with a key published at their own URL, so websites can tell who they are without any prior relationship.<details><summary>Evidence (2)</summary><div class="claim">Every request is signed with the provider&#x27;s key. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“It proposes that every request from bots be signed by a private key owned by its provider.”</blockquote></div><div class="claim">No prior relationship is needed. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Objectives and Constraints. <span class="chk">(quote verified against the source)</span><blockquote>“Require no pre-established relationship between the two.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">General web traffic from bots and agents (e.g. AI assistants, search indexing, content aggregation and automated testing) to ordinary websites. It works only at the HTTP layer, as signed HTTP headers, so websites need no special client setup. Verification can be done by the website itself or by a proxy or CDN in front of it, which can share cached keys across many websites.<details><summary>Evidence (4)</summary><div class="claim">Target traffic. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“Agents are increasingly used in business and user workflows, including AI assistants, search indexing, content aggregation, and automated testing.”</blockquote></div><div class="claim">HTTP layer only. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, HTTP Layer Choice. <span class="chk">(quote verified against the source)</span><blockquote>“This protocol operates solely at the HTTP layer.”</blockquote></div><div class="claim">Verification by the origin or a fronting proxy. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Deployment Models. <span class="chk">(quote verified against the source)</span><blockquote>“Signature verification can be performed either directly by origins or delegated to a fronting proxy.”</blockquote></div><div class="claim">Proxies can share cached keys. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Deployment Models. <span class="chk">(quote verified against the source)</span><blockquote>“Proxy verification offloads processing and enables shared caching across multiple origins.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Agent: the bot or AI agent that signs each request with its operator&#x27;s key. Origin: the website that receives signed requests and verifies them, directly or through a fronting proxy or CDN. User: whoever starts the action, a person or another system; the protocol does not identify them. The agent&#x27;s public keys are served from a key directory at an HTTPS URL.<details><summary>Evidence (2)</summary><div class="claim">User definition. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Conventions and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“An entity initiating requests through an agent. May be a human operator or another system.”</blockquote></div><div class="claim">Origin definition. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Conventions and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“An HTTP server receiving signed requests that implements the HTTP protocol and verifies”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Draft. An Internet-Draft adopted by the IETF Web Bot Auth working group (revision -00, September 2026); it is not yet an RFC, and revision -01 followed in October 2026. The draft lists public implementations of both signing and verifying.<div class="meta">Why this rating: Still a draft, even though it has public implementations.</div><details><summary>Evidence (2)</summary><div class="claim">Working group draft. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Front matter. <span class="chk">(quote verified against the source)</span><blockquote>“docname: draft-ietf-webbotauth-httpsig-protocol-latest”</blockquote></div><div class="claim">Public implementations are listed. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Implementations. <span class="chk">(quote verified against the source)</span><blockquote>“This draft has a couple of public implementations.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">HTTP Message Signatures (RFC 9421) for signing requests; JSON Web Key Sets (RFC 7517) for the key directory; JWK thumbprints (RFC 7638) as key IDs; and a well-known URI (RFC 8615) for the default directory location. Client ID Metadata Documents can be used as another way to discover keys.<details><summary>Evidence (2)</summary><div class="claim">The keyid is a JWK thumbprint. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Generating HTTP Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“MUST be a base64url JWK SHA-256 Thumbprint”</blockquote></div><div class="claim">CIMD is one discovery type. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Key Distribution and Discovery. <span class="chk">(quote verified against the source)</span><blockquote>“Resolve the member value as a Client ID Metadata Document”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The agent identifies itself with the HTTPS URL where its operator publishes its keys, sent in the Signature-Agent header. After verification, the website knows a pair: that URL and a key from it. This names the operator&#x27;s key directory, which all of the operator&#x27;s agents share, not an individual agent.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the provider&#x27;s key URL, shared by all its agents (same as TAP).</div><details><summary>Evidence (2)</summary><div class="claim">The URL is the identifier. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, The Signature-Agent URL is the identifier. <span class="chk">(quote verified against the source)</span><blockquote>“An Agent identifies itself with the HTTPS URL it publishes its keys at, carried in Signature-Agent”</blockquote></div><div class="claim">What the verifier ends up with. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, The Signature-Agent URL is the identifier. <span class="chk">(quote verified against the source)</span><blockquote>“What the verifier ends up with is a pair: that URL, and a key the URL provides.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft suggests keys that represent a role, company or automation identity (e.g. a named crawler) rather than a person, to avoid linking traffic to individual users. Nothing in the protocol identifies a specific agent instance.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier (same as MCP Authorization and TAP).</div><details><summary>Evidence (1)</summary><div class="claim">Keys are expected to represent a role or company. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, No Human Correlation. <span class="chk">(quote verified against the source)</span><blockquote>“A key that represents a role, company, or automation identity (e.g., &quot;news-aggregator-bot&quot;, &quot;example-crawler-v1&quot;) avoids this.”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft does not authenticate human users and does not define authorization or delegation, and how a user directs an agent is outside its scope. The website learns nothing about whom the agent is acting for.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: Explicitly out of scope.</div><details><summary>Evidence (2)</summary><div class="claim">Out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Out of Scope. <span class="chk">(quote verified against the source)</span><blockquote>“This protocol does not authenticate human users, does not provide anonymous authentication, and does not define authorization or delegation.”</blockquote></div><div class="claim">How the user directs the agent is outside the draft. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Protocol Overview. <span class="chk">(quote verified against the source)</span><blockquote>“How a User directs an Agent is outside the scope of this document.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>An HTTP Message Signature (RFC 9421) on every request. It must cover the target host (@authority or @target-uri) and include created and expires times, a keyid (a thumbprint of the public key) and the tag web-bot-auth. Covering the method and path is only recommended and no nonce is required, so a signature over the host alone can be reused by anyone who sees it, against the same website, until it expires.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A signature on every request that the site can verify (same as TAP).</div><details><summary>Evidence (5)</summary><div class="claim">Host must be covered. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Generating HTTP Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“Agents MUST include at least one of the following components:”</blockquote></div><div class="claim">Required parameters include created and expires. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Generating HTTP Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“Agents MUST include the following @signature-params”</blockquote></div><div class="claim">Method and path are optional. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Generating HTTP Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“Agents that want to narrow the scope of their signature SHOULD also cover the following components. A signer that omits them remains conformant.”</blockquote></div><div class="claim">No extra nonce requirement. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Replay Protection. <span class="chk">(quote verified against the source)</span><blockquote>“This document defines no additional nonce requirements.”</blockquote></div><div class="claim">A host-only signature can be replayed until it expires. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Generating HTTP Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“anyone who observes one request can reuse it against the same origin until then.”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Recommended, not enforced. Every signature must carry created and expires times, and the draft recommends that expiry be no more than 24 hours, but it sets no rule for verifiers. Because a signature over the host alone can be reused until it expires, a long expiry also widens the window for replay.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: A long limit that is only recommended for the signer (same as MCP Authorization).</div><details><summary>Evidence (3)</summary><div class="claim">24-hour recommendation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Generating HTTP Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“It is RECOMMENDED that expiry be no more than 24 hours.”</blockquote></div><div class="claim">Created and expires are required. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Generating HTTP Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“Agents MUST include the following @signature-params”</blockquote></div><div class="claim">A host-only signature can be replayed until it expires. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Generating HTTP Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“anyone who observes one request can reuse it against the same origin until then.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The website (or its proxy) reads the Signature-Agent header, fetches the operator&#x27;s keys from that URL if it does not already have them, and verifies the signature and its time window. No prior relationship with the agent is needed. Verifiers should cache the key directory and refresh it when it expires, so key changes reach them only after that.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Verifiable against published keys with no prior relationship (same as MCP Authorization and TAP).</div><details><summary>Evidence (3)</summary><div class="claim">Verification algorithm. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Validating Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“Upon receiving an HTTP request, the origin has to verify the signature.”</blockquote></div><div class="claim">Keys are fetched from the Signature-Agent URL. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Validating Message Signature. <span class="chk">(quote verified against the source)</span><blockquote>“if the keyid is not known for that URL, the Origin MAY fetch key material as indicated by the Signature-Agent header”</blockquote></div><div class="claim">Verifiers cache the directory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Key Rotation. <span class="chk">(quote verified against the source)</span><blockquote>“Verifiers SHOULD cache the directory contents and refresh upon expiration”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The signature proves that the request was signed with a key from the operator&#x27;s directory, which all of the operator&#x27;s agents share. The draft states that this says nothing about who operates the agent, whether it is benign, or whether the request is authorized. Human users are not authenticated.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: The site verifies a provider-level key, not the agent or user (same as TAP).</div><details><summary>Evidence (2)</summary><div class="claim">A valid signature says only that a key holder signed. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, The Signature-Agent URL is the identifier. <span class="chk">(quote verified against the source)</span><blockquote>“It says nothing about who operates the Agent, whether the Agent is benign, or whether the request is authorized.”</blockquote></div><div class="claim">Human users are not authenticated. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Out of Scope. <span class="chk">(quote verified against the source)</span><blockquote>“This protocol does not authenticate human users”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No (out of scope). The draft does not define authorization or delegation, so the website learns nothing about what the agent is allowed to do. What it gets is a reliable operator identity to which it can apply its own policy, e.g. allowlisting, denylisting or rate limits per operator.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: Explicitly out of scope.</div><details><summary>Evidence (2)</summary><div class="claim">Out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Out of Scope. <span class="chk">(quote verified against the source)</span><blockquote>“does not define authorization or delegation”</blockquote></div><div class="claim">The motivation is operator-level allowlisting and rate limiting. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Motivation. <span class="chk">(quote verified against the source)</span><blockquote>“support allowlisting/denylisting the traffic in a granular manor, and enable sites to monitor and rate limit per agent operator”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No (out of scope). The protocol has no step where a person approves the agent&#x27;s access, and how a user directs an agent is outside the draft&#x27;s scope.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: Authorization and user direction are out of scope.</div><details><summary>Evidence (1)</summary><div class="claim">Out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Protocol Overview. <span class="chk">(quote verified against the source)</span><blockquote>“How a User directs an Agent is outside the scope of this document.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No one, by design. A valid signature shows that the key came from the URL in the Signature-Agent header, not that the operator of that URL is honest or is who it appears to be. The draft does not define how trust is built, held or shared between websites, so each website decides for itself.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: Trust is explicitly out of scope; registries are outside the protocol.</div><details><summary>Evidence (2)</summary><div class="claim">Trust is out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Out of Scope. <span class="chk">(quote verified against the source)</span><blockquote>“It does not define how trust is accrued, held, or exchanged, and it defines no mechanism for one origin to convey an opinion about an Agent to another.”</blockquote></div><div class="claim">The URL does not vouch for honesty. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, What the URL Endorses. <span class="chk">(quote verified against the source)</span><blockquote>“It does not say that the operator of that URL is honest, or that it is the same party everyone knows about.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="red"><span class="badge">Not addressed</span><br>None. The draft states that it does not define a revocation mechanism. If a key is compromised, the only remedy is to remove it from the directory, and each verifier stops accepting it when its cached copy expires. Websites can still block an operator&#x27;s URL or key on their own.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: The draft states it defines no revocation.</div><details><summary>Evidence (2)</summary><div class="claim">No revocation defined. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Key Rotation. <span class="chk">(quote verified against the source)</span><blockquote>“It is not a revocation mechanism, and this document does not define any.”</blockquote></div><div class="claim">Key removal is the only remedy and waits for caches. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Key Compromise Response. <span class="chk">(quote verified against the source)</span><blockquote>“Removing a compromised key from the directory is the only remedy, and it takes effect at each verifier on its next refresh”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No by default. The draft defines no contact or escalation channel. A separate individual draft (draft-meunier-webbotauth-registry-03) defines a Signature Agent Card whose optional contacts field lists ways to reach the operator, typically email addresses.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: The protocol draft defines no contact; the contacts field is optional and in a separate individual draft.</div><details><summary>Evidence (3)</summary><div class="claim">Searched the protocol draft for contact, abuse or support fields. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Whole document.</div><div class="claim">Optional contacts in the Signature Agent Card (separate draft). <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-meunier-webbotauth-registry/03/">Registry and Signature Agent card for Web bot auth, draft-meunier-webbotauth-registry-03</a>, Signature Agent Card. <span class="chk">(quote verified against the source)</span><blockquote>“An array of URIs providing reliable communication channels, typically email addresses”</blockquote></div><div class="claim">All card parameters are optional. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-meunier-webbotauth-registry/03/">Registry and Signature Agent card for Web bot auth, draft-meunier-webbotauth-registry-03</a>, Signature Agent Card. <span class="chk">(quote verified against the source)</span><blockquote>“Unless otherwise specified, all parameters in this document are OPTIONAL”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No (out of scope). The draft explicitly defines no way for one website to pass its opinion of an agent to another.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: Explicitly out of scope.</div><details><summary>Evidence (1)</summary><div class="claim">Out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Out of Scope. <span class="chk">(quote verified against the source)</span><blockquote>“it defines no mechanism for one origin to convey an opinion about an Agent to another”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The signature identifies the key holder only. An agent may sign extra headers (e.g. one stating its intent), but no field for the AI model is defined.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model.</div><details><summary>Evidence (1)</summary><div class="claim">Optional extra signed headers exist, but none for the model. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a>, Additional Headers. <span class="chk">(quote verified against the source)</span><blockquote>“For example, an agent might include an HTTP header expressing its intent and sign it.”</blockquote></div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/">HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00</a> (-00 (source at git tag draft-ietf-webbotauth-httpsig-protocol-00), 2026-09-01)</li><li><a href="https://datatracker.ietf.org/doc/draft-meunier-webbotauth-registry/03/">Registry and Signature Agent card for Web bot auth, draft-meunier-webbotauth-registry-03</a> (-03 (individual draft, informational), 2026-06-26)</li></ul><h2>Notes</h2><ul class="plain"><li>Calibration example for the protocol-analyzer skill (draft-ietf-webbotauth-httpsig-protocol-00).</li><li>Revision -01 (October 2026) changed some text. Re-check these quotes before reusing them for -01.</li></ul><h2>Open questions</h2><ul class="plain"><li>Will the working group define revocation or a contact channel in later revisions?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (41 of 41 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-18. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-18",
+ "protocol": {
+  "name": "Web Bot Auth",
+  "full_name": "HTTP Message Signatures for automated traffic",
+  "spec_version": "draft-ietf-webbotauth-httpsig-protocol-00",
+  "spec_date": "2026-09-01",
+  "maintainer": "IETF Web Bot Auth (webbotauth) working group; editors T. Meunier (Cloudflare) and S. Major (Google)",
+  "newer_version_note": "Revision -01 was published in October 2026 and was not analysed here."
+ },
+ "profile": {
+  "id": "web-bot-auth",
+  "category": "web-bot-identity",
+  "secondary_categories": [],
+  "mechanisms": [
+   "http-message-signature"
+  ],
+  "venue": "ietf-wg",
+  "maturity": "draft",
+  "openness": "open-standard",
+  "layers": [
+   "http-header",
+   "metadata-document"
+  ],
+  "building_blocks": [
+   "RFC 9421",
+   "RFC 7517",
+   "RFC 7638",
+   "RFC 8615"
+  ],
+  "website": "https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/",
+  "first_published": ""
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "Web Bot Auth is a way for bots and AI agents to prove, on every web request, which operator's key signed it. It is aimed at automated traffic on the open web (e.g. AI assistants, search indexing, content aggregation and automated testing), where websites today rely on IP address lists and User-Agent strings that are hard to manage or easy to fake. It is an Internet-Draft of the IETF Web Bot Auth working group, at revision -00 (September 2026). It has public implementations but is not yet an RFC.",
+  "The agent's operator publishes its public keys in a key directory at an HTTPS URL. The agent names that URL in a Signature-Agent header and signs each request with HTTP Message Signatures (RFC 9421), covering at least the target host and a validity window. A website, or a CDN in front of it, fetches the key and checks the signature without any prior relationship with the agent, and can then allow, rate-limit or block that operator. The draft deliberately leaves out who the user is, what the agent may do, whether the operator should be trusted, and how to revoke keys."
+ ],
+ "how_it_works": [
+  "The agent's operator creates a signing key and publishes the public key in a JSON key directory (JWKS), by default at a well-known URL on its own domain.",
+  "For each request, the agent adds a Signature-Agent header naming that directory and signs the request with an HTTP Message Signature covering the target host, with created and expires times, a keyid and the tag web-bot-auth.",
+  "The website, or a proxy or CDN in front of it, reads the signature headers and, if it does not already have the key, fetches it from the Signature-Agent URL.",
+  "It verifies the signature and checks that the current time is inside the signature's validity window.",
+  "It applies its own policy to the identified operator, e.g. allow, rate-limit or block."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "HTTP Message Signatures for automated traffic, draft-ietf-webbotauth-httpsig-protocol-00",
+   "url": "https://datatracker.ietf.org/doc/draft-ietf-webbotauth-httpsig-protocol/00/",
+   "fetch_url": "https://raw.githubusercontent.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/164910d629a62544c1c6e7c41367c6ca69563b58/draft-ietf-webbotauth-httpsig-protocol.md",
+   "version": "-00 (source at git tag draft-ietf-webbotauth-httpsig-protocol-00)",
+   "date": "2026-09-01",
+   "kind": "primary"
+  },
+  {
+   "id": "registry",
+   "title": "Registry and Signature Agent card for Web bot auth, draft-meunier-webbotauth-registry-03",
+   "url": "https://datatracker.ietf.org/doc/draft-meunier-webbotauth-registry/03/",
+   "fetch_url": "https://raw.githubusercontent.com/webbotauth/draft-ietf-webbotauth-httpsig-protocol/70803d8a87f93b48629fba6a88577f3f7512b98b/draft-meunier-webbotauth-registry.md",
+   "version": "-03 (individual draft, informational)",
+   "date": "2026-06-26",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Bots and agents sign every HTTP request with a published key",
+   "answer": "An IETF draft where bots and agents sign every HTTP request with a key published at their own URL, so websites can tell who they are without any prior relationship.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Every request is signed with the provider's key.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Introduction",
+     "quote": "It proposes that every request from bots be signed by a private key owned by its provider.",
+     "check": "OK",
+     "check_fp": "df49e1835b"
+    },
+    {
+     "text": "No prior relationship is needed.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Objectives and Constraints",
+     "quote": "Require no pre-established relationship between the two.",
+     "check": "OK",
+     "check_fp": "ccc0fd6912"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Bots and agents on the open web",
+   "answer": "General web traffic from bots and agents (e.g. AI assistants, search indexing, content aggregation and automated testing) to ordinary websites. It works only at the HTTP layer, as signed HTTP headers, so websites need no special client setup. Verification can be done by the website itself or by a proxy or CDN in front of it, which can share cached keys across many websites.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Target traffic.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Introduction",
+     "quote": "Agents are increasingly used in business and user workflows, including AI assistants, search indexing, content aggregation, and automated testing.",
+     "check": "OK",
+     "check_fp": "546a7aeaa6"
+    },
+    {
+     "text": "HTTP layer only.",
+     "type": "fact",
+     "source": "spec",
+     "section": "HTTP Layer Choice",
+     "quote": "This protocol operates solely at the HTTP layer.",
+     "check": "OK",
+     "check_fp": "7453122da2"
+    },
+    {
+     "text": "Verification by the origin or a fronting proxy.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Deployment Models",
+     "quote": "Signature verification can be performed either directly by origins or delegated to a fronting proxy.",
+     "check": "OK",
+     "check_fp": "0bd7819752"
+    },
+    {
+     "text": "Proxies can share cached keys.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Deployment Models",
+     "quote": "Proxy verification offloads processing and enables shared caching across multiple origins.",
+     "check": "OK",
+     "check_fp": "28a3bcd7b5"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Agent, origin, user (plus key directory)",
+   "answer": "Agent: the bot or AI agent that signs each request with its operator's key. Origin: the website that receives signed requests and verifies them, directly or through a fronting proxy or CDN. User: whoever starts the action, a person or another system; the protocol does not identify them. The agent's public keys are served from a key directory at an HTTPS URL.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "User definition.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Conventions and Definitions",
+     "quote": "An entity initiating requests through an agent. May be a human operator or another system.",
+     "check": "OK",
+     "check_fp": "138b640cbc"
+    },
+    {
+     "text": "Origin definition.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Conventions and Definitions",
+     "quote": "An HTTP server receiving signed requests that implements the HTTP protocol and verifies",
+     "check": "OK",
+     "check_fp": "bc1c99cc60"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Draft",
+   "answer": "Draft. An Internet-Draft adopted by the IETF Web Bot Auth working group (revision -00, September 2026); it is not yet an RFC, and revision -01 followed in October 2026. The draft lists public implementations of both signing and verifying.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: still a draft, even though it has public implementations.",
+   "claims": [
+    {
+     "text": "Working group draft.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Front matter",
+     "quote": "docname: draft-ietf-webbotauth-httpsig-protocol-latest",
+     "check": "OK",
+     "check_fp": "c5a68951aa"
+    },
+    {
+     "text": "Public implementations are listed.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Implementations",
+     "quote": "This draft has a couple of public implementations.",
+     "check": "OK",
+     "check_fp": "c8f4718f57"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "RFC 9421, JWKS, JWK thumbprint, well-known URIs",
+   "answer": "HTTP Message Signatures (RFC 9421) for signing requests; JSON Web Key Sets (RFC 7517) for the key directory; JWK thumbprints (RFC 7638) as key IDs; and a well-known URI (RFC 8615) for the default directory location. Client ID Metadata Documents can be used as another way to discover keys.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The keyid is a JWK thumbprint.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Generating HTTP Message Signature",
+     "quote": "MUST be a base64url JWK SHA-256 Thumbprint",
+     "check": "OK",
+     "check_fp": "e8eb54f49d"
+    },
+    {
+     "text": "CIMD is one discovery type.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Key Distribution and Discovery",
+     "quote": "Resolve the member value as a Client ID Metadata Document",
+     "check": "OK",
+     "check_fp": "80ddbdcf8d"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Operator's key directory URL and key",
+   "answer": "Partly. The agent identifies itself with the HTTPS URL where its operator publishes its keys, sent in the Signature-Agent header. After verification, the website knows a pair: that URL and a key from it. This names the operator's key directory, which all of the operator's agents share, not an individual agent.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: the identifier names the provider's key URL, shared by all its agents (same as TAP).",
+   "claims": [
+    {
+     "text": "The URL is the identifier.",
+     "type": "fact",
+     "source": "spec",
+     "section": "The Signature-Agent URL is the identifier",
+     "quote": "An Agent identifies itself with the HTTPS URL it publishes its keys at, carried in Signature-Agent",
+     "check": "OK",
+     "check_fp": "df782db61c"
+    },
+    {
+     "text": "What the verifier ends up with.",
+     "type": "fact",
+     "source": "spec",
+     "section": "The Signature-Agent URL is the identifier",
+     "quote": "What the verifier ends up with is a pair: that URL, and a key the URL provides.",
+     "check": "OK",
+     "check_fp": "18ff8556df"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. The draft suggests keys that represent a role, company or automation identity (e.g. a named crawler) rather than a person, to avoid linking traffic to individual users. Nothing in the protocol identifies a specific agent instance.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier (same as MCP Authorization and TAP).",
+   "claims": [
+    {
+     "text": "Keys are expected to represent a role or company.",
+     "type": "fact",
+     "source": "spec",
+     "section": "No Human Correlation",
+     "quote": "A key that represents a role, company, or automation identity (e.g., \"news-aggregator-bot\", \"example-crawler-v1\") avoids this.",
+     "check": "OK",
+     "check_fp": "0820e5f72c"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "No",
+   "answer": "No. The draft does not authenticate human users and does not define authorization or delegation, and how a user directs an agent is outside its scope. The website learns nothing about whom the agent is acting for.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: explicitly out of scope.",
+   "claims": [
+    {
+     "text": "Out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Out of Scope",
+     "quote": "This protocol does not authenticate human users, does not provide anonymous authentication, and does not define authorization or delegation.",
+     "check": "OK",
+     "check_fp": "c3a8954b4e"
+    },
+    {
+     "text": "How the user directs the agent is outside the draft.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Protocol Overview",
+     "quote": "How a User directs an Agent is outside the scope of this document.",
+     "check": "OK",
+     "check_fp": "d0224773bf"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "HTTP Signature",
+   "answer": "An HTTP Message Signature (RFC 9421) on every request. It must cover the target host (@authority or @target-uri) and include created and expires times, a keyid (a thumbprint of the public key) and the tag web-bot-auth. Covering the method and path is only recommended and no nonce is required, so a signature over the host alone can be reused by anyone who sees it, against the same website, until it expires.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a signature on every request that the site can verify (same as TAP).",
+   "claims": [
+    {
+     "text": "Host must be covered.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Generating HTTP Message Signature",
+     "quote": "Agents MUST include at least one of the following components:",
+     "check": "OK",
+     "check_fp": "55dcac19b9"
+    },
+    {
+     "text": "Required parameters include created and expires.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Generating HTTP Message Signature",
+     "quote": "Agents MUST include the following @signature-params",
+     "check": "OK",
+     "check_fp": "fd61d5a075"
+    },
+    {
+     "text": "Method and path are optional.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Generating HTTP Message Signature",
+     "quote": "Agents that want to narrow the scope of their signature SHOULD also cover the following components. A signer that omits them remains conformant.",
+     "check": "OK",
+     "check_fp": "83bf0c3f91"
+    },
+    {
+     "text": "No extra nonce requirement.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Replay Protection",
+     "quote": "This document defines no additional nonce requirements.",
+     "check": "OK",
+     "check_fp": "b182b31ec2"
+    },
+    {
+     "text": "A host-only signature can be replayed until it expires.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Generating HTTP Message Signature",
+     "quote": "anyone who observes one request can reuse it against the same origin until then.",
+     "check": "OK",
+     "check_fp": "c2ff7c74ef"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "24 hours, recommended",
+   "answer": "Recommended, not enforced. Every signature must carry created and expires times, and the draft recommends that expiry be no more than 24 hours, but it sets no rule for verifiers. Because a signature over the host alone can be reused until it expires, a long expiry also widens the window for replay.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: a long limit that is only recommended for the signer (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "24-hour recommendation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Generating HTTP Message Signature",
+     "quote": "It is RECOMMENDED that expiry be no more than 24 hours.",
+     "check": "OK",
+     "check_fp": "2660376901"
+    },
+    {
+     "text": "Created and expires are required.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Generating HTTP Message Signature",
+     "quote": "Agents MUST include the following @signature-params",
+     "check": "OK",
+     "check_fp": "fd61d5a075"
+    },
+    {
+     "text": "A host-only signature can be replayed until it expires.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Generating HTTP Message Signature",
+     "quote": "anyone who observes one request can reuse it against the same origin until then.",
+     "check": "OK",
+     "check_fp": "c2ff7c74ef"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes",
+   "answer": "Yes. The website (or its proxy) reads the Signature-Agent header, fetches the operator's keys from that URL if it does not already have them, and verifies the signature and its time window. No prior relationship with the agent is needed. Verifiers should cache the key directory and refresh it when it expires, so key changes reach them only after that.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: verifiable against published keys with no prior relationship (same as MCP Authorization and TAP).",
+   "claims": [
+    {
+     "text": "Verification algorithm.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Validating Message Signature",
+     "quote": "Upon receiving an HTTP request, the origin has to verify the signature.",
+     "check": "OK",
+     "check_fp": "faf0d96761"
+    },
+    {
+     "text": "Keys are fetched from the Signature-Agent URL.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Validating Message Signature",
+     "quote": "if the keyid is not known for that URL, the Origin MAY fetch key material as indicated by the Signature-Agent header",
+     "check": "OK",
+     "check_fp": "b01bb42758"
+    },
+    {
+     "text": "Verifiers cache the directory.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Key Rotation",
+     "quote": "Verifiers SHOULD cache the directory contents and refresh upon expiration",
+     "check": "OK",
+     "check_fp": "a0fb8ccdbb"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "No, only verifies the operator's key",
+   "answer": "No. The signature proves that the request was signed with a key from the operator's directory, which all of the operator's agents share. The draft states that this says nothing about who operates the agent, whether it is benign, or whether the request is authorized. Human users are not authenticated.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: the site verifies a provider-level key, not the agent or user (same as TAP).",
+   "claims": [
+    {
+     "text": "A valid signature says only that a key holder signed.",
+     "type": "fact",
+     "source": "spec",
+     "section": "The Signature-Agent URL is the identifier",
+     "quote": "It says nothing about who operates the Agent, whether the Agent is benign, or whether the request is authorized.",
+     "check": "OK",
+     "check_fp": "13c443ae5c"
+    },
+    {
+     "text": "Human users are not authenticated.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Out of Scope",
+     "quote": "This protocol does not authenticate human users",
+     "check": "OK",
+     "check_fp": "10cc0dea5a"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "No, out of scope",
+   "answer": "No (out of scope). The draft does not define authorization or delegation, so the website learns nothing about what the agent is allowed to do. What it gets is a reliable operator identity to which it can apply its own policy, e.g. allowlisting, denylisting or rate limits per operator.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: explicitly out of scope.",
+   "claims": [
+    {
+     "text": "Out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Out of Scope",
+     "quote": "does not define authorization or delegation",
+     "check": "OK",
+     "check_fp": "7171b737e7"
+    },
+    {
+     "text": "The motivation is operator-level allowlisting and rate limiting.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Motivation",
+     "quote": "support allowlisting/denylisting the traffic in a granular manor, and enable sites to monitor and rate limit per agent operator",
+     "check": "OK",
+     "check_fp": "12fa591171"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "No, out of scope",
+   "answer": "No (out of scope). The protocol has no step where a person approves the agent's access, and how a user directs an agent is outside the draft's scope.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: authorization and user direction are out of scope.",
+   "claims": [
+    {
+     "text": "Out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Protocol Overview",
+     "quote": "How a User directs an Agent is outside the scope of this document.",
+     "check": "OK",
+     "check_fp": "d0224773bf"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "No one, out of scope",
+   "answer": "No one, by design. A valid signature shows that the key came from the URL in the Signature-Agent header, not that the operator of that URL is honest or is who it appears to be. The draft does not define how trust is built, held or shared between websites, so each website decides for itself.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: trust is explicitly out of scope; registries are outside the protocol.",
+   "claims": [
+    {
+     "text": "Trust is out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Out of Scope",
+     "quote": "It does not define how trust is accrued, held, or exchanged, and it defines no mechanism for one origin to convey an opinion about an Agent to another.",
+     "check": "OK",
+     "check_fp": "9a5c107735"
+    },
+    {
+     "text": "The URL does not vouch for honesty.",
+     "type": "fact",
+     "source": "spec",
+     "section": "What the URL Endorses",
+     "quote": "It does not say that the operator of that URL is honest, or that it is the same party everyone knows about.",
+     "check": "OK",
+     "check_fp": "55af915f39"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "None",
+   "answer": "None. The draft states that it does not define a revocation mechanism. If a key is compromised, the only remedy is to remove it from the directory, and each verifier stops accepting it when its cached copy expires. Websites can still block an operator's URL or key on their own.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: the draft states it defines no revocation.",
+   "claims": [
+    {
+     "text": "No revocation defined.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Key Rotation",
+     "quote": "It is not a revocation mechanism, and this document does not define any.",
+     "check": "OK",
+     "check_fp": "db1b3bd25a"
+    },
+    {
+     "text": "Key removal is the only remedy and waits for caches.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Key Compromise Response",
+     "quote": "Removing a compromised key from the directory is the only remedy, and it takes effect at each verifier on its next refresh",
+     "check": "OK",
+     "check_fp": "4c7fc25d84"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No by default. The draft defines no contact or escalation channel. A separate individual draft (draft-meunier-webbotauth-registry-03) defines a Signature Agent Card whose optional contacts field lists ways to reach the operator, typically email addresses.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: the protocol draft defines no contact; the contacts field is optional and in a separate individual draft.",
+   "claims": [
+    {
+     "text": "Searched the protocol draft for contact, abuse or support fields. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "Optional contacts in the Signature Agent Card (separate draft).",
+     "type": "fact",
+     "source": "registry",
+     "section": "Signature Agent Card",
+     "quote": "An array of URIs providing reliable communication channels, typically email addresses",
+     "check": "OK",
+     "check_fp": "807c733224"
+    },
+    {
+     "text": "All card parameters are optional.",
+     "type": "fact",
+     "source": "registry",
+     "section": "Signature Agent Card",
+     "quote": "Unless otherwise specified, all parameters in this document are OPTIONAL",
+     "check": "OK",
+     "check_fp": "749effc49a"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No, out of scope",
+   "answer": "No (out of scope). The draft explicitly defines no way for one website to pass its opinion of an agent to another.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: explicitly out of scope.",
+   "claims": [
+    {
+     "text": "Out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Out of Scope",
+     "quote": "it defines no mechanism for one origin to convey an opinion about an Agent to another",
+     "check": "OK",
+     "check_fp": "d0cdf300ce"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. The signature identifies the key holder only. An agent may sign extra headers (e.g. one stating its intent), but no field for the AI model is defined.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model.",
+   "claims": [
+    {
+     "text": "Optional extra signed headers exist, but none for the model.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Additional Headers",
+     "quote": "For example, an agent might include an HTTP header expressing its intent and sign it.",
+     "check": "OK",
+     "check_fp": "5d95418c16"
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The website learns only which operator's key signed the request. It can allow, rate-limit or block that operator, but receives no permissions or scopes.",
+  "incident_response": "Each website can block an operator's URL or key on its own. There is no revocation, and nothing reaches a specific agent instance.",
+  "accountability": "An action can be traced to the holder of the operator's key, not to a user or an agent instance."
+ },
+ "notes": [
+  "Calibration example for the protocol-analyzer skill (draft-ietf-webbotauth-httpsig-protocol-00).",
+  "Revision -01 (October 2026) changed some text. Re-check these quotes before reusing them for -01."
+ ],
+ "open_questions": [
+  "Will the working group define revocation or a contact channel in later revisions?"
+ ]
+}</script></body></html>

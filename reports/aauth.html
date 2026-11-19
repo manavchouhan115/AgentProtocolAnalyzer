@@ -1,0 +1,1082 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AAuth: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>AAuth<small>AAuth Protocol (Agent Auth)</small></h1><ul class="facts"><li><b>Specification:</b> draft-hardt-oauth-aauth-protocol-11</li><li><b>Date:</b> 2026-09-25</li><li><b>Maintainer:</b> Dick Hardt (Hellō); an OpenID Foundation AAuth working group was created in November 2026</li><li><b>Analysed:</b> 2026-11-18</li><li><b>Version note:</b> Specification work is moving to the OpenID Foundation AAuth working group, so the next version may be published there.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent authorization</span><span class="chip"><b>Mechanism:</b> HTTP Message Signatures, Proof-of-possession token</span><span class="chip"><b>Venue:</b> OpenID Foundation</span><span class="chip"><b>Maturity:</b> Proposal</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>AAuth is a proposed protocol that gives every AI agent its own cryptographic identity and lets it act for a person across organisations without being registered in advance at each service. It starts from the view that OAuth client IDs and API keys do not fit agents, which discover services at run time and work on long tasks across many organisations. It was written by Dick Hardt (Hellō) as an individual IETF draft, currently at revision -11 (September 2026). In November 2026 an OpenID Foundation working group was created to take it forward. Implementations so far are exploratory.</p><p>Each agent gets an identifier and an agent token from its agent provider and signs every request with its own key, so no token works without that key. On top of this, resources choose one of five access modes: recognising the agent alone, running their own sign-in, or relying on a person server that the person chooses. The person server tells the resource who the agent acts for (as a per-resource pseudonym), collects consent, and issues scoped auth tokens, optionally through the resource&#x27;s own access server. It also supports missions, permission requests and audit records for governing agents, and a revocation cascade. AAuth does not define model identity, a contact channel or a trust registry, and in the person-based modes the resource does not see which agent it is talking to.</p><h2 id="how">How it works</h2><ol class="steps"><li>The agent creates a key pair and proves itself to its agent provider, which issues an agent token with the agent&#x27;s identifier (aauth:local@domain) and public key.</li><li>The agent calls a resource with an HTTP Message Signature over the request and its agent token in the Signature-Key header. The resource checks the signature and the token, and may decide on the agent&#x27;s identity alone.</li><li>If the resource needs to know the person, it asks for a person token. The agent gets one from its person server, which identifies the person to that resource with a pseudonymous identifier.</li><li>If the resource needs authorization, it returns a resource token describing the access it offers. The agent takes this to its person server, which collects the person&#x27;s consent if needed (and, for four-party access, asks the resource&#x27;s access server) and returns a scoped auth token.</li><li>The agent presents the auth token on its signed requests, and the resource enforces the scopes. Tokens last at most an hour and can be revoked through a cascade that starts at the agent provider or person server.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>AAuth</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Per-agent signed requests, plus person-based authorization</td></tr><tr><td class="prop">Use cases</td><td class="">Agents calling APIs across organisations</td></tr><tr><td class="prop">Parties involved</td><td class="">Agent, agent provider, resource, person server, access server, person</td></tr><tr><td class="prop">Status and adoption</td><td class="red">Early draft, now at the OpenID Foundation</td></tr><tr><td class="prop">Building blocks</td><td class="">RFC 9421, HTTP Signature Keys, JWT, OpenID Connect</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="green">Per-agent ID (aauth:local@domain)</td></tr><tr><td class="prop">Agent instance identifier</td><td class="yellow">Yes, but hidden in person-based modes</td></tr><tr><td class="prop">Acting for (authority)</td><td class="yellow">Yes, if the agent has a person server</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">HTTP Message Signature plus key-bound token</td></tr><tr><td class="prop">Credential lifetime</td><td class="green">60-second signatures, tokens up to 1 hour</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="green">Yes, by the agent&#x27;s own key</td></tr><tr><td class="prop">Scoped authorization</td><td class="green">Yes, scopes and account binding</td></tr><tr><td class="prop">Human approval</td><td class="green">Yes, at the person server</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="yellow">Agent provider and person server; resource decides</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="yellow">Defined cascade, with gaps</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="red">No (extension point only)</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>Strong when a person server is used: the resource gets scoped, person-approved auth tokens bound to the agent&#x27;s key. In agent-identity mode the resource decides on who the agent is, with no scopes.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>Access can be cut off per agent through the revocation cascade, and tokens expire within an hour. An agent token presented directly to a resource cannot be revoked and lasts up to 24 hours, and servers without a revocation endpoint keep honouring tokens until they expire.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Each agent is bound to exactly one person at the person server, which can keep a mission log and audit records. Resources see a per-resource pseudonym for the person, and the specific agent only in the two simplest modes.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Status and adoption:</b> Early draft, now at the OpenID Foundation ()</li><li><b>Contact and escalation:</b> No (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No (extension point only) (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>AAuth</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An IETF individual draft, now adopted by an OpenID Foundation working group, in which every agent has its own identifier and key and signs every request, and a person server it chooses can identify the person and grant scoped access.<details><summary>Evidence (2)</summary><div class="claim">Each agent has its own key and signs every request. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, What AAuth Provides. <span class="chk">(quote verified against the source)</span><blockquote>“Every agent instance has its own identifier and signing key, and every request it makes is bound to that key by an HTTP Message Signature”</blockquote></div><div class="claim">No bearer credentials and no pre-registration. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, What AAuth Provides. <span class="chk">(quote verified against the source)</span><blockquote>“no credential is a bearer credential, and none needs pre-registration, so the first API call to a resource is the registration.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Agents that call APIs and services on behalf of people or organisations, especially across organisational boundaries where the agent cannot be registered in advance. Identity and authorization travel in signed HTTP headers. A resource can choose among five access modes, from simply recognising the agent to full authorization through the person&#x27;s server and its own access server, and can use different modes for different endpoints.<details><summary>Evidence (4)</summary><div class="claim">Agents discover resources at runtime. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agents Are Different. <span class="chk">(quote verified against the source)</span><blockquote>“They discover resources at runtime.”</blockquote></div><div class="claim">Tasks span services across trust domains. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agents Are Different. <span class="chk">(quote verified against the source)</span><blockquote>“They execute long-running tasks that span multiple services across trust domains.”</blockquote></div><div class="claim">Five access modes. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Resource Access Modes. <span class="chk">(quote verified against the source)</span><blockquote>“AAuth supports five resource access modes.”</blockquote></div><div class="claim">Modes can differ per endpoint. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Resource Access Modes. <span class="chk">(quote verified against the source)</span><blockquote>“A resource MAY apply different modes to different endpoints.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Agent: an HTTP client acting for a person. Agent provider: issues each agent its identity and agent token. Resource: the API or service being called. Person server: chosen by the person; represents them, handles consent and missions, and issues person and auth tokens. Access server: optional policy engine for a resource. Person: the user or organisation accountable for the agent. A supervisor (the person, or a supervision server) makes approval decisions.<details><summary>Evidence (6)</summary><div class="claim">Person. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A user or organization — the legal person — on whose behalf an agent acts and who is accountable for the agent&#x27;s actions.”</blockquote></div><div class="claim">Agent provider. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A server that manages agent identity and issues agent tokens to agents.”</blockquote></div><div class="claim">Resource. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A server that requires authentication and/or authorization to protect access to its APIs and data.”</blockquote></div><div class="claim">Person server. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A server that represents the person to the rest of the protocol.”</blockquote></div><div class="claim">Access server. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A policy engine that evaluates token requests, applies resource policy, and issues auth tokens on behalf of a resource.”</blockquote></div><div class="claim">Supervisor. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“The party that performs supervision — the Person by default, or a supervision server (SS) the PS delegates to”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="red"><span class="badge">Not addressed</span><br>Early. The latest published version is the individual Internet-Draft -11 (25 September 2026) by Dick Hardt (Hellō), with no IETF working group behind it. In November 2026 an OpenID Foundation working group was created for AAuth, and specification work will move there. The listed implementations (TypeScript, .NET, Python, a Keycloak extension) are all marked exploratory; no production deployments are named.<div class="meta">Why this rating: An individual draft whose implementations are all exploratory. The OpenID Foundation working group is new; this may move to yellow once a working-group draft is published.</div><details><summary>Evidence (5)</summary><div class="claim">Latest version is -11. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Document History. <span class="chk">(quote verified against the source)</span><blockquote>“draft-hardt-oauth-aauth-protocol-11”</blockquote></div><div class="claim">No IETF working group. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Front matter. <span class="chk">(quote verified against the source)</span><blockquote>“workgroup = &quot;TBD&quot;”</blockquote></div><div class="claim">Adopted by an OpenID Foundation working group. <i>Source states</i> <a href="https://github.com/dickhardt/AAuth">AAuth GitHub repository, README</a>, AAuth. <span class="chk">(quote verified against the source)</span><blockquote>“AAuth has been adopted as a working group at the OpenID Foundation.”</blockquote></div><div class="claim">Work will move there. <i>Source states</i> <a href="https://github.com/dickhardt/AAuth">AAuth GitHub repository, README</a>, AAuth. <span class="chk">(quote verified against the source)</span><blockquote>“Specification work will migrate there.”</blockquote></div><div class="claim">Implementations are exploratory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Implementation Status. <span class="chk">(quote verified against the source)</span><blockquote>“Level of maturity: exploratory.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">HTTP Message Signatures (RFC 9421) for signing every request, with keys conveyed in the Signature-Key header defined in a companion draft (HTTP Signature Keys); JWTs (RFC 7519) for all tokens, bound to the agent&#x27;s key with a confirmation claim (RFC 7800); well-known metadata and JWKS for key discovery (RFC 8615); and OpenID Connect scopes, claims and enterprise extensions. Companion drafts cover agent bootstrap, events and per-call authorization.<details><summary>Evidence (3)</summary><div class="claim">Signed requests. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Built On. <span class="chk">(quote verified against the source)</span><blockquote>“All requests are signed with HTTP Message Signatures”</blockquote></div><div class="claim">JWT tokens verified through issuer metadata. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Protocol Overview. <span class="chk">(quote verified against the source)</span><blockquote>“All AAuth tokens are JWTs, verified with a key from the issuer&#x27;s JWKS, which is discovered from the issuer&#x27;s well-known metadata”</blockquote></div><div class="claim">OpenID Connect vocabulary. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Built On. <span class="chk">(quote verified against the source)</span><blockquote>“AAuth reuses OpenID Connect scope values, identity claims, and enterprise extensions”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The agent provider gives each agent its own identifier of the form aauth:local@domain, where the domain is the provider&#x27;s. It names a specific agent with its own signing key, not just the application, and stays the same when the key rotates. The resource sees this identifier only in the two simplest access modes; in the person-based modes it is deliberately hidden (see the next row).<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the individual agent, unlike the client or provider identifiers of MCP Authorization, Web Bot Auth and Visa TAP.</div><details><summary>Evidence (3)</summary><div class="claim">Identifier format. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“An AP assigns each agent an identifier: a URI using the aauth scheme, of the form aauth:local@domain, where domain is the AP&#x27;s domain.”</blockquote></div><div class="claim">Per-instance by design. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Why Per-Instance Agent Identity. <span class="chk">(quote verified against the source)</span><blockquote>“AAuth&#x27;s aauth:local@domain agent identifier identifies a specific instance with its own signing key.”</blockquote></div><div class="claim">Stable across key rotation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“An agent identifier is stable across key rotations.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Each agent instance has its own identifier, and sub-agents get their own too (one level deep). In practice an &quot;instance&quot; is an install: the informational bootstrap draft gives each install one identity, so several processes under one install may share it. The resource sees the agent identifier only in agent-identity and resource-managed access; in the three person-based modes it is deliberately left out, for privacy and so resources cannot lock in a particular agent product.<div class="meta">Optional in the specification</div><div class="meta">Why this rating: Defined, but hidden from the resource in three of the five access modes.</div><details><summary>Evidence (5)</summary><div class="claim">Visible only in two modes. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Identity Access. <span class="chk">(quote verified against the source)</span><blockquote>“The agent identifier reaches a resource only in this mode and in resource-managed access.”</blockquote></div><div class="claim">Not in the other three. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Identity Access. <span class="chk">(quote verified against the source)</span><blockquote>“In the other three, no token the resource reads carries one”</blockquote></div><div class="claim">One identity per install. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-aauth-bootstrap/">AAuth Bootstrap Guidance (informational draft)</a>, Per-Install Identity. <span class="chk">(quote verified against the source)</span><blockquote>“Each install&#x27;s durable key is the basis for one agent identity.”</blockquote></div><div class="claim">Sub-agents have their own identity. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Sub-Agent Identity. <span class="chk">(quote verified against the source)</span><blockquote>“A sub-agent has its own agent identity”</blockquote></div><div class="claim">Only one level of sub-agents. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Single-Level Depth. <span class="chk">(quote verified against the source)</span><blockquote>“Delegation is at most one level deep”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. If the agent has a person server, the resource can require a person token, which tells it which person the agent acts for. The identifier is pseudonymous and different at each resource, so resources cannot correlate the person across services. Having a person server is optional: an agent without one can only use agent-identity or resource-managed access, where the resource runs its own sign-in if it needs to know the person.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: Defined by the protocol, but only available when the agent has an (optional) person server.</div><details><summary>Evidence (4)</summary><div class="claim">The resource learns the person from a person token. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Person Identity Access. <span class="chk">(quote verified against the source)</span><blockquote>“The resource verifies the token, learns which person the agent acts for, and applies its own access control on that identity.”</blockquote></div><div class="claim">The person server is optional. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“An agent MAY have a person server, declared via the ps claim in the agent token.”</blockquote></div><div class="claim">Without one, no person token. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Resource Access. <span class="chk">(quote verified against the source)</span><blockquote>“An agent with no PS cannot obtain a person token, so agent-token and interaction are the whole of what is available to it.”</blockquote></div><div class="claim">Pseudonymous per resource. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Directed Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“The PS SHOULD provide a pairwise pseudonymous user identifier (sub) per resource”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>An HTTP Message Signature (RFC 9421) on every request, covering the method, host, path and the Signature-Key header (plus a digest of the body for server endpoints). The request also carries a JWT: the agent token, a person token or an auth token, each containing the agent&#x27;s public key. The verifier checks that this key signed the request, so every token is proof of possession and useless without the private key.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A signed credential on every request, with proof of possession (stronger than MCP Authorization&#x27;s bearer token).</div><details><summary>Evidence (4)</summary><div class="claim">Required signature coverage. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Covered Components. <span class="chk">(quote verified against the source)</span><blockquote>“The signature MUST cover the following derived components and header fields:”</blockquote></div><div class="claim">Tokens carry the agent&#x27;s key. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Keying Material. <span class="chk">(quote verified against the source)</span><blockquote>“Agents MUST use the jwt scheme, presenting a token that carries their public key in cnf”</blockquote></div><div class="claim">Key must match the signature. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Token Verification. <span class="chk">(quote verified against the source)</span><blockquote>“Verify cnf.jwk matches the key used to sign the HTTP request.”</blockquote></div><div class="claim">Not bearer tokens. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Person Token. <span class="chk">(quote verified against the source)</span><blockquote>“It is not a bearer credential — cnf binds it to the agent&#x27;s signing key”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="green"><span class="badge">Addressed</span><br>Very short for signatures, short for tokens. Servers reject a signature created more than 60 seconds ago by default. Person and auth tokens MUST NOT last more than 1 hour; agent tokens SHOULD NOT last more than 24 hours. There is no nonce, so the same signed request could be replayed within the 60-second window unless the server keeps an optional replay cache.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A specific short window that verifiers enforce (same as Visa TAP).</div><details><summary>Evidence (5)</summary><div class="claim">60-second signature window. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Verification (Server). <span class="chk">(quote verified against the source)</span><blockquote>“The default window is 60 seconds; servers MAY advertise a different window via metadata”</blockquote></div><div class="claim">Person tokens up to 1 hour. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Person Token Structure. <span class="chk">(quote verified against the source)</span><blockquote>“Person tokens MUST NOT have a lifetime exceeding 1 hour”</blockquote></div><div class="claim">Auth tokens up to 1 hour. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Auth Token Structure. <span class="chk">(quote verified against the source)</span><blockquote>“Auth tokens MUST NOT have a lifetime exceeding 1 hour”</blockquote></div><div class="claim">Agent tokens up to 24 hours (recommended). <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Token Structure. <span class="chk">(quote verified against the source)</span><blockquote>“Agent tokens SHOULD NOT have a lifetime exceeding 24 hours.”</blockquote></div><div class="claim">No nonce. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Freshness and Replay. <span class="chk">(quote verified against the source)</span><blockquote>“This profile defines no nonce mechanism.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The server verifies the HTTP signature and its 60-second window, verifies the presented JWT with the issuer&#x27;s keys (found through the issuer&#x27;s well-known metadata), checks that the token has not expired, and checks that the key inside the token is the one that signed the request. No prior registration with the agent is needed.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Verifiable against published keys with no prior relationship (same as MCP Authorization, Web Bot Auth and Visa TAP).</div><details><summary>Evidence (4)</summary><div class="claim">Verification is required. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Verification (Server). <span class="chk">(quote verified against the source)</span><blockquote>“When a server receives a signed request, it MUST perform the following steps.”</blockquote></div><div class="claim">Keys found through issuer metadata. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Common JWT Verification. <span class="chk">(quote verified against the source)</span><blockquote>“Discover the issuer&#x27;s JWKS via {iss}/.well-known/{dwk}”</blockquote></div><div class="claim">Expiry checked. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Common JWT Verification. <span class="chk">(quote verified against the source)</span><blockquote>“Verify exp is in the future, judged by the verifier&#x27;s own clock.”</blockquote></div><div class="claim">No registration needed. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, HTTP Clients Need Their Own Identity. <span class="chk">(quote verified against the source)</span><blockquote>“no pre-registration, no shared secrets”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes for the agent. Every request is signed with a key that belongs to that specific agent instance, and the token presented binds that key, so the resource verifies the actual sender rather than a provider-wide key or a bearer token. The user is authenticated by the person server, not by the resource: a person token gives a stable pseudonym and makes no claim about how the person&#x27;s identity was checked.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The resource verifies per-agent proof on every request, unlike the provider-level keys of Web Bot Auth and Visa TAP.</div><details><summary>Evidence (3)</summary><div class="claim">Per-agent keys. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, What AAuth Provides. <span class="chk">(quote verified against the source)</span><blockquote>“Every agent instance has its own identifier and signing key”</blockquote></div><div class="claim">Same key in person tokens. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Person Token Usage. <span class="chk">(quote verified against the source)</span><blockquote>“The person token&#x27;s cnf.jwk is the same key that signed the request”</blockquote></div><div class="claim">No identity proofing implied. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Person Token. <span class="chk">(quote verified against the source)</span><blockquote>“a resource MUST NOT treat it as evidence of identity proofing”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. In the person-server modes the agent receives an auth token with scopes the resource defined and the person approved, and the granted scope can never be broader than what the resource offered. An optional account claim limits access to one account. In agent-identity mode there are no scopes; the resource simply decides based on who the agent is. Companion drafts add finer, operation-level authorization (R3) and spending ceilings per resource (Budgets).<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: Scoped permissions in the normal person-server flow, enforced by the resource (same as MCP Authorization).</div><details><summary>Evidence (6)</summary><div class="claim">Scopes. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Scopes. <span class="chk">(quote verified against the source)</span><blockquote>“Scopes define what an agent is authorized to do at a resource.”</blockquote></div><div class="claim">No broader than offered. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Scopes. <span class="chk">(quote verified against the source)</span><blockquote>“MUST NOT be broader than the resource token&#x27;s scope.”</blockquote></div><div class="claim">Account binding. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Account Binding. <span class="chk">(quote verified against the source)</span><blockquote>“Scope says what the agent may do; account says which account it may do it to.”</blockquote></div><div class="claim">Identity-only mode has no scopes. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Identity Access. <span class="chk">(quote verified against the source)</span><blockquote>“The resource verifies the agent&#x27;s identity and applies its own access control, granting or denying based on who the agent is”</blockquote></div><div class="claim">R3 adds structured, operation-level authorization (companion draft). <i>Source states</i> <a href="https://dickhardt.github.io/AAuth/draft-hardt-aauth-r3.html">AAuth Rich Resource Requests (R3) (draft)</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“enables structured, vocabulary-based authorization for resource access”</blockquote></div><div class="claim">Budgets adds spending ceilings (companion draft). <i>Source states</i> <a href="https://dickhardt.github.io/AAuth/draft-hardt-aauth-budgets.html">AAuth Budgets (draft)</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“A budget is a ceiling on what an agent may consume at one resource”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The person server handles the person&#x27;s consent before issuing tokens when needed, and the person can approve missions (task descriptions the agent proposes). An agent can also ask the person server for permission before local actions such as sending an email. The consent screen must separate what the resource says from what the agent claims. Approval can be delegated to a supervision server, which may be software rather than a person.<div class="meta">Part of the normal flow · requirement level: MAY</div><div class="meta">Why this rating: A defined approval step before access in the person-server flow (same as MCP Authorization); note that approval may be delegated to software.</div><details><summary>Evidence (5)</summary><div class="claim">Consent at the person server. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Auth Token Endpoint. <span class="chk">(quote verified against the source)</span><blockquote>“The PS evaluates the request, handles user consent if needed, and either issues the auth token itself or federates”</blockquote></div><div class="claim">Interaction before issuing. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Person Token Endpoint. <span class="chk">(quote verified against the source)</span><blockquote>“The PS MAY require user interaction before issuing”</blockquote></div><div class="claim">Permission before local actions. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Permission Endpoint. <span class="chk">(quote verified against the source)</span><blockquote>“The permission endpoint lets an agent ask the PS before an action no remote resource governs”</blockquote></div><div class="claim">Resource vs agent claims kept apart. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Consent Presentation. <span class="chk">(quote verified against the source)</span><blockquote>“A PS MUST visually distinguish resource-asserted content from agent-asserted content”</blockquote></div><div class="claim">Approval can be delegated. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Roles. <span class="chk">(quote verified against the source)</span><blockquote>“the Person by default, or a supervision server (SS) the PS MAY delegate to”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The agent provider vouches for its agents (it is trusted to issue agent tokens only to agents it authorizes), and the person server vouches for the person and their consent. But the resource decides for itself which agent providers and person servers to accept: it can trust an agent whose key it knows or whose domain it trusts, and in three-party mode any person server can assert to any resource. AAuth defines no registry or list of trusted providers.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: Vouching parties are defined, but choosing which to trust is left to each resource, with no shared registry.</div><details><summary>Evidence (4)</summary><div class="claim">The agent provider vouches for agents. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“Trusted by the person to issue agent tokens only to authorized agents.”</blockquote></div><div class="claim">Resources decide which agents to trust. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Resource-Managed Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“A resource MAY also authorize on the agent&#x27;s identity alone, without any interaction, when the agent&#x27;s key is already known or its domain is trusted.”</blockquote></div><div class="claim">Any person server can assert. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, PS Authorization Access (Three-Party). <span class="chk">(quote verified against the source)</span><blockquote>“Any PS can assert to any resource without bilateral setup.”</blockquote></div><div class="claim">Searched for a registry, allowlist or trust framework for agent providers or person servers. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Whole document.</div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Revocation is defined: servers SHOULD publish a revocation endpoint, and an agent provider revoking an agent token triggers a cascade through the person server to the person tokens and auth tokens issued to that agent, at agent level rather than provider level. Gaps: an agent token presented directly to a resource has no revocation path (up to 24 hours), and a server without a revocation endpoint keeps honouring tokens until they expire.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: Revocation is defined and can target one agent, but it does not reach every verifier.</div><details><summary>Evidence (5)</summary><div class="claim">Revocation endpoints recommended. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Token Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“A PS and an AS SHOULD provide a revocation endpoint, and so SHOULD a resource that accepts person tokens.”</blockquote></div><div class="claim">Cascade by agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Revocation Cascade. <span class="chk">(quote verified against the source)</span><blockquote>“The cascade is by agent identity”</blockquote></div><div class="claim">Gap for agent tokens used directly. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Who Revokes What. <span class="chk">(quote verified against the source)</span><blockquote>“A resource that accepts an agent token directly has no revocation path”</blockquote></div><div class="claim">No endpoint, no revocation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Token Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“A server without one honors a revoked token until its exp.”</blockquote></div><div class="claim">Short lifetimes recommended for immediate termination. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Presenting a Revoked Token. <span class="chk">(quote verified against the source)</span><blockquote>“Deployments requiring immediate termination should issue shorter-lived tokens rather than rely on revocation reaching every holder.”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Agent provider metadata includes a name, description, logo, documentation and terms or privacy links, but no contact or abuse channel. A person server may keep its own channel to the person (e.g. email or push notifications), but that is for approvals and alerts to the person, not a way for a service to reach whoever is responsible for an agent.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact or escalation field is defined (same as MCP Authorization, Web Bot Auth and Visa TAP).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the agent provider, person server and resource metadata fields for contact, abuse or support channels. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Provider Metadata; Metadata Documents.</div><div class="claim">The person server&#x27;s channel to the person. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Person Server. <span class="chk">(quote verified against the source)</span><blockquote>“A PS MAY also maintain a direct channel to the person, such as email, push notification, or messaging, for out-of-band approvals, notifications, and revocation alerts.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The companion AAuth Events draft lets resources send events to an agent through its agent provider, which is a channel to the agent, not between services. Revocations travel between the parties involved in a grant, but there is no way for one service to warn others about a misbehaving agent.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as the calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Events go to the agent. <i>Source states</i> <a href="https://dickhardt.github.io/AAuth/draft-hardt-aauth-events.html">AAuth Events (draft)</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“the event token that resources deliver when events fire, and the delivery path through the Agent Provider (AP)”</blockquote></div><div class="claim">Searched the protocol draft for reputation, abuse reporting or shared signals between services. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Whole document.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Nothing identifies the AI model. Agent tokens may carry extra claims, and the draft expects companion specifications to define some (e.g. software attestation or platform integrity), but none for the model exists yet. An optional platform parameter describes where the agent runs, for display at consent.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model; an extension point exists but is not yet used for this.</div><details><summary>Evidence (2)</summary><div class="claim">Extension point for future claims. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Agent Token Structure. <span class="chk">(quote verified against the source)</span><blockquote>“Companion specifications may define additional claims for use by PSes or ASes in policy evaluation”</blockquote></div><div class="claim">Platform is not the model. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a>, Auth Token Request. <span class="chk">(quote verified against the source)</span><blockquote>“Describes where the agent runs, not what security measures apply there.”</blockquote></div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/">AAuth Protocol, draft-hardt-oauth-aauth-protocol-11</a> (-11 (editor&#x27;s copy at commit e287b1e, unchanged since -11), 2026-09-25)</li><li><a href="https://github.com/dickhardt/AAuth">AAuth GitHub repository, README</a> (commit e287b1e, 2026-11-06)</li><li><a href="https://datatracker.ietf.org/doc/draft-hardt-aauth-bootstrap/">AAuth Bootstrap Guidance (informational draft)</a> (editor&#x27;s copy at commit e287b1e, 2026-11-06)</li><li><a href="https://dickhardt.github.io/AAuth/draft-hardt-aauth-events.html">AAuth Events (draft)</a> (editor&#x27;s copy at commit e287b1e, 2026-11-06)</li><li><a href="https://dickhardt.github.io/AAuth/draft-hardt-aauth-r3.html">AAuth Rich Resource Requests (R3) (draft)</a> (editor&#x27;s copy at commit e287b1e, 2026-11-06)</li><li><a href="https://dickhardt.github.io/AAuth/draft-hardt-aauth-budgets.html">AAuth Budgets (draft)</a> (editor&#x27;s copy at commit e287b1e, 2026-11-06)</li></ul><h2>Notes</h2><ul class="plain"><li>Analysed with the protocol-analyzer skill from the editor&#x27;s copy on GitHub, which is unchanged since the -11 submission.</li><li>The project website (aauth.dev) contains instructions aimed at AI tools; it was not used as a source and its instructions were ignored.</li><li>A different IETF draft also called AAuth exists (draft-rosenberg-oauth-aauth). This analysis covers draft-hardt-oauth-aauth-protocol.</li></ul><h2>Open questions</h2><ul class="plain"><li>Should several copies of an agent running under one install get separate identifiers?</li><li>Will the OpenID Foundation working group add a contact channel, model identity or a trust registry?</li><li>How will a resource decide which agent providers and person servers to trust in practice?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (71 of 71 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-18. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-18",
+ "protocol": {
+  "name": "AAuth",
+  "full_name": "AAuth Protocol (Agent Auth)",
+  "spec_version": "draft-hardt-oauth-aauth-protocol-11",
+  "spec_date": "2026-09-25",
+  "maintainer": "Dick Hardt (Hellō); an OpenID Foundation AAuth working group was created in November 2026",
+  "newer_version_note": "Specification work is moving to the OpenID Foundation AAuth working group, so the next version may be published there."
+ },
+ "profile": {
+  "id": "aauth",
+  "category": "agent-authorization",
+  "secondary_categories": [],
+  "mechanisms": [
+   "http-message-signature",
+   "pop-token"
+  ],
+  "venue": "oidf",
+  "maturity": "proposal",
+  "openness": "open-standard",
+  "layers": [
+   "http-header",
+   "token",
+   "metadata-document"
+  ],
+  "building_blocks": [
+   "RFC 9421",
+   "HTTP Signature Keys (draft)",
+   "JWT",
+   "RFC 7800",
+   "RFC 8615",
+   "OpenID Connect"
+  ],
+  "website": "https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/",
+  "first_published": ""
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "AAuth is a proposed protocol that gives every AI agent its own cryptographic identity and lets it act for a person across organisations without being registered in advance at each service. It starts from the view that OAuth client IDs and API keys do not fit agents, which discover services at run time and work on long tasks across many organisations. It was written by Dick Hardt (Hellō) as an individual IETF draft, currently at revision -11 (September 2026). In November 2026 an OpenID Foundation working group was created to take it forward. Implementations so far are exploratory.",
+  "Each agent gets an identifier and an agent token from its agent provider and signs every request with its own key, so no token works without that key. On top of this, resources choose one of five access modes: recognising the agent alone, running their own sign-in, or relying on a person server that the person chooses. The person server tells the resource who the agent acts for (as a per-resource pseudonym), collects consent, and issues scoped auth tokens, optionally through the resource's own access server. It also supports missions, permission requests and audit records for governing agents, and a revocation cascade. AAuth does not define model identity, a contact channel or a trust registry, and in the person-based modes the resource does not see which agent it is talking to."
+ ],
+ "how_it_works": [
+  "The agent creates a key pair and proves itself to its agent provider, which issues an agent token with the agent's identifier (aauth:local@domain) and public key.",
+  "The agent calls a resource with an HTTP Message Signature over the request and its agent token in the Signature-Key header. The resource checks the signature and the token, and may decide on the agent's identity alone.",
+  "If the resource needs to know the person, it asks for a person token. The agent gets one from its person server, which identifies the person to that resource with a pseudonymous identifier.",
+  "If the resource needs authorization, it returns a resource token describing the access it offers. The agent takes this to its person server, which collects the person's consent if needed (and, for four-party access, asks the resource's access server) and returns a scoped auth token.",
+  "The agent presents the auth token on its signed requests, and the resource enforces the scopes. Tokens last at most an hour and can be revoked through a cascade that starts at the agent provider or person server."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "AAuth Protocol, draft-hardt-oauth-aauth-protocol-11",
+   "url": "https://datatracker.ietf.org/doc/draft-hardt-oauth-aauth-protocol/",
+   "fetch_url": "https://raw.githubusercontent.com/dickhardt/AAuth/e287b1e5d4616b61e5fcda1ac56b1be14f9d8d06/draft-hardt-oauth-aauth-protocol.md",
+   "version": "-11 (editor's copy at commit e287b1e, unchanged since -11)",
+   "date": "2026-09-25",
+   "kind": "primary"
+  },
+  {
+   "id": "readme",
+   "title": "AAuth GitHub repository, README",
+   "url": "https://github.com/dickhardt/AAuth",
+   "fetch_url": "https://raw.githubusercontent.com/dickhardt/AAuth/e287b1e5d4616b61e5fcda1ac56b1be14f9d8d06/README.md",
+   "version": "commit e287b1e",
+   "date": "2026-11-06",
+   "kind": "primary"
+  },
+  {
+   "id": "bootstrap",
+   "title": "AAuth Bootstrap Guidance (informational draft)",
+   "url": "https://datatracker.ietf.org/doc/draft-hardt-aauth-bootstrap/",
+   "fetch_url": "https://raw.githubusercontent.com/dickhardt/AAuth/e287b1e5d4616b61e5fcda1ac56b1be14f9d8d06/draft-hardt-aauth-bootstrap.md",
+   "version": "editor's copy at commit e287b1e",
+   "date": "2026-11-06",
+   "kind": "primary"
+  },
+  {
+   "id": "events",
+   "title": "AAuth Events (draft)",
+   "url": "https://dickhardt.github.io/AAuth/draft-hardt-aauth-events.html",
+   "fetch_url": "https://raw.githubusercontent.com/dickhardt/AAuth/e287b1e5d4616b61e5fcda1ac56b1be14f9d8d06/draft-hardt-aauth-events.md",
+   "version": "editor's copy at commit e287b1e",
+   "date": "2026-11-06",
+   "kind": "primary"
+  },
+  {
+   "id": "r3",
+   "title": "AAuth Rich Resource Requests (R3) (draft)",
+   "url": "https://dickhardt.github.io/AAuth/draft-hardt-aauth-r3.html",
+   "fetch_url": "https://raw.githubusercontent.com/dickhardt/AAuth/e287b1e5d4616b61e5fcda1ac56b1be14f9d8d06/draft-hardt-aauth-r3.md",
+   "version": "editor's copy at commit e287b1e",
+   "date": "2026-11-06",
+   "kind": "primary"
+  },
+  {
+   "id": "budgets",
+   "title": "AAuth Budgets (draft)",
+   "url": "https://dickhardt.github.io/AAuth/draft-hardt-aauth-budgets.html",
+   "fetch_url": "https://raw.githubusercontent.com/dickhardt/AAuth/e287b1e5d4616b61e5fcda1ac56b1be14f9d8d06/draft-hardt-aauth-budgets.md",
+   "version": "editor's copy at commit e287b1e",
+   "date": "2026-11-06",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Per-agent signed requests, plus person-based authorization",
+   "answer": "An IETF individual draft, now adopted by an OpenID Foundation working group, in which every agent has its own identifier and key and signs every request, and a person server it chooses can identify the person and grant scoped access.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Each agent has its own key and signs every request.",
+     "type": "fact",
+     "source": "spec",
+     "section": "What AAuth Provides",
+     "quote": "Every agent instance has its own identifier and signing key, and every request it makes is bound to that key by an HTTP Message Signature",
+     "check": "OK",
+     "check_fp": "0c929f8d9a"
+    },
+    {
+     "text": "No bearer credentials and no pre-registration.",
+     "type": "fact",
+     "source": "spec",
+     "section": "What AAuth Provides",
+     "quote": "no credential is a bearer credential, and none needs pre-registration, so the first API call to a resource is the registration.",
+     "check": "OK",
+     "check_fp": "8ae3ca7a03"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agents calling APIs across organisations",
+   "answer": "Agents that call APIs and services on behalf of people or organisations, especially across organisational boundaries where the agent cannot be registered in advance. Identity and authorization travel in signed HTTP headers. A resource can choose among five access modes, from simply recognising the agent to full authorization through the person's server and its own access server, and can use different modes for different endpoints.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Agents discover resources at runtime.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agents Are Different",
+     "quote": "They discover resources at runtime.",
+     "check": "OK",
+     "check_fp": "ecf1cbb2a1"
+    },
+    {
+     "text": "Tasks span services across trust domains.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agents Are Different",
+     "quote": "They execute long-running tasks that span multiple services across trust domains.",
+     "check": "OK",
+     "check_fp": "fe07a57aba"
+    },
+    {
+     "text": "Five access modes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Resource Access Modes",
+     "quote": "AAuth supports five resource access modes.",
+     "check": "OK",
+     "check_fp": "c851cb8d23"
+    },
+    {
+     "text": "Modes can differ per endpoint.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Resource Access Modes",
+     "quote": "A resource MAY apply different modes to different endpoints.",
+     "check": "OK",
+     "check_fp": "3efa24940f"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Agent, agent provider, resource, person server, access server, person",
+   "answer": "Agent: an HTTP client acting for a person. Agent provider: issues each agent its identity and agent token. Resource: the API or service being called. Person server: chosen by the person; represents them, handles consent and missions, and issues person and auth tokens. Access server: optional policy engine for a resource. Person: the user or organisation accountable for the agent. A supervisor (the person, or a supervision server) makes approval decisions.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Person.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Terminology",
+     "quote": "A user or organization — the legal person — on whose behalf an agent acts and who is accountable for the agent's actions.",
+     "check": "OK",
+     "check_fp": "e4c8e2d9e8"
+    },
+    {
+     "text": "Agent provider.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Terminology",
+     "quote": "A server that manages agent identity and issues agent tokens to agents.",
+     "check": "OK",
+     "check_fp": "77bfdfedcc"
+    },
+    {
+     "text": "Resource.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Terminology",
+     "quote": "A server that requires authentication and/or authorization to protect access to its APIs and data.",
+     "check": "OK",
+     "check_fp": "965c7e95b1"
+    },
+    {
+     "text": "Person server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Terminology",
+     "quote": "A server that represents the person to the rest of the protocol.",
+     "check": "OK",
+     "check_fp": "6a032a8313"
+    },
+    {
+     "text": "Access server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Terminology",
+     "quote": "A policy engine that evaluates token requests, applies resource policy, and issues auth tokens on behalf of a resource.",
+     "check": "OK",
+     "check_fp": "c8fa9ad9f3"
+    },
+    {
+     "text": "Supervisor.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Terminology",
+     "quote": "The party that performs supervision — the Person by default, or a supervision server (SS) the PS delegates to",
+     "check": "OK",
+     "check_fp": "2d31441f94"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Early draft, now at the OpenID Foundation",
+   "answer": "Early. The latest published version is the individual Internet-Draft -11 (25 September 2026) by Dick Hardt (Hellō), with no IETF working group behind it. In November 2026 an OpenID Foundation working group was created for AAuth, and specification work will move there. The listed implementations (TypeScript, .NET, Python, a Keycloak extension) are all marked exploratory; no production deployments are named.",
+   "rating": "red",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Red: an individual draft whose implementations are all exploratory. The OpenID Foundation working group is new; this may move to yellow once a working-group draft is published.",
+   "claims": [
+    {
+     "text": "Latest version is -11.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Document History",
+     "quote": "draft-hardt-oauth-aauth-protocol-11",
+     "check": "OK",
+     "check_fp": "2816a5fe72"
+    },
+    {
+     "text": "No IETF working group.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Front matter",
+     "quote": "workgroup = \"TBD\"",
+     "check": "OK",
+     "check_fp": "10e0bd6431"
+    },
+    {
+     "text": "Adopted by an OpenID Foundation working group.",
+     "type": "fact",
+     "source": "readme",
+     "section": "AAuth",
+     "quote": "AAuth has been adopted as a working group at the OpenID Foundation.",
+     "check": "OK",
+     "check_fp": "8e68879d2f"
+    },
+    {
+     "text": "Work will move there.",
+     "type": "fact",
+     "source": "readme",
+     "section": "AAuth",
+     "quote": "Specification work will migrate there.",
+     "check": "OK",
+     "check_fp": "1eaaba1c3e"
+    },
+    {
+     "text": "Implementations are exploratory.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Implementation Status",
+     "quote": "Level of maturity: exploratory.",
+     "check": "OK",
+     "check_fp": "e2ef6234f3"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "RFC 9421, HTTP Signature Keys, JWT, OpenID Connect",
+   "answer": "HTTP Message Signatures (RFC 9421) for signing every request, with keys conveyed in the Signature-Key header defined in a companion draft (HTTP Signature Keys); JWTs (RFC 7519) for all tokens, bound to the agent's key with a confirmation claim (RFC 7800); well-known metadata and JWKS for key discovery (RFC 8615); and OpenID Connect scopes, claims and enterprise extensions. Companion drafts cover agent bootstrap, events and per-call authorization.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Signed requests.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Built On",
+     "quote": "All requests are signed with HTTP Message Signatures",
+     "check": "OK",
+     "check_fp": "fe8673e709"
+    },
+    {
+     "text": "JWT tokens verified through issuer metadata.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Protocol Overview",
+     "quote": "All AAuth tokens are JWTs, verified with a key from the issuer's JWKS, which is discovered from the issuer's well-known metadata",
+     "check": "OK",
+     "check_fp": "170fcfb574"
+    },
+    {
+     "text": "OpenID Connect vocabulary.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Built On",
+     "quote": "AAuth reuses OpenID Connect scope values, identity claims, and enterprise extensions",
+     "check": "OK",
+     "check_fp": "094530ff78"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Per-agent ID (aauth:local@domain)",
+   "answer": "Yes. The agent provider gives each agent its own identifier of the form aauth:local@domain, where the domain is the provider's. It names a specific agent with its own signing key, not just the application, and stays the same when the key rotates. The resource sees this identifier only in the two simplest access modes; in the person-based modes it is deliberately hidden (see the next row).",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the identifier names the individual agent, unlike the client or provider identifiers of MCP Authorization, Web Bot Auth and Visa TAP.",
+   "claims": [
+    {
+     "text": "Identifier format.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agent Identifiers",
+     "quote": "An AP assigns each agent an identifier: a URI using the aauth scheme, of the form aauth:local@domain, where domain is the AP's domain.",
+     "check": "OK",
+     "check_fp": "4575512291"
+    },
+    {
+     "text": "Per-instance by design.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Why Per-Instance Agent Identity",
+     "quote": "AAuth's aauth:local@domain agent identifier identifies a specific instance with its own signing key.",
+     "check": "OK",
+     "check_fp": "5007e36fef"
+    },
+    {
+     "text": "Stable across key rotation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agent Identifiers",
+     "quote": "An agent identifier is stable across key rotations.",
+     "check": "OK",
+     "check_fp": "0e52c3c8b6"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Yes, but hidden in person-based modes",
+   "answer": "Partly. Each agent instance has its own identifier, and sub-agents get their own too (one level deep). In practice an \"instance\" is an install: the informational bootstrap draft gives each install one identity, so several processes under one install may share it. The resource sees the agent identifier only in agent-identity and resource-managed access; in the three person-based modes it is deliberately left out, for privacy and so resources cannot lock in a particular agent product.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "none",
+   "rating_reason": "Yellow: defined, but hidden from the resource in three of the five access modes.",
+   "claims": [
+    {
+     "text": "Visible only in two modes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agent Identity Access",
+     "quote": "The agent identifier reaches a resource only in this mode and in resource-managed access.",
+     "check": "OK",
+     "check_fp": "eec96a14be"
+    },
+    {
+     "text": "Not in the other three.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agent Identity Access",
+     "quote": "In the other three, no token the resource reads carries one",
+     "check": "OK",
+     "check_fp": "e04b15a04e"
+    },
+    {
+     "text": "One identity per install.",
+     "type": "fact",
+     "source": "bootstrap",
+     "section": "Per-Install Identity",
+     "quote": "Each install's durable key is the basis for one agent identity.",
+     "check": "OK",
+     "check_fp": "52c7f41f76"
+    },
+    {
+     "text": "Sub-agents have their own identity.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Sub-Agent Identity",
+     "quote": "A sub-agent has its own agent identity",
+     "check": "OK",
+     "check_fp": "db0223a3b3"
+    },
+    {
+     "text": "Only one level of sub-agents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Single-Level Depth",
+     "quote": "Delegation is at most one level deep",
+     "check": "OK",
+     "check_fp": "7253d4b802"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Yes, if the agent has a person server",
+   "answer": "Partly. If the agent has a person server, the resource can require a person token, which tells it which person the agent acts for. The identifier is pseudonymous and different at each resource, so resources cannot correlate the person across services. Having a person server is optional: an agent without one can only use agent-identity or resource-managed access, where the resource runs its own sign-in if it needs to know the person.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: defined by the protocol, but only available when the agent has an (optional) person server.",
+   "claims": [
+    {
+     "text": "The resource learns the person from a person token.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Person Identity Access",
+     "quote": "The resource verifies the token, learns which person the agent acts for, and applies its own access control on that identity.",
+     "check": "OK",
+     "check_fp": "c07ae2f5fe"
+    },
+    {
+     "text": "The person server is optional.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Terminology",
+     "quote": "An agent MAY have a person server, declared via the ps claim in the agent token.",
+     "check": "OK",
+     "check_fp": "1a64493fc0"
+    },
+    {
+     "text": "Without one, no person token.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Resource Access",
+     "quote": "An agent with no PS cannot obtain a person token, so agent-token and interaction are the whole of what is available to it.",
+     "check": "OK",
+     "check_fp": "1947a8ae97"
+    },
+    {
+     "text": "Pseudonymous per resource.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Directed Identifiers",
+     "quote": "The PS SHOULD provide a pairwise pseudonymous user identifier (sub) per resource",
+     "check": "OK",
+     "check_fp": "b86151c279"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "HTTP Message Signature plus key-bound token",
+   "answer": "An HTTP Message Signature (RFC 9421) on every request, covering the method, host, path and the Signature-Key header (plus a digest of the body for server endpoints). The request also carries a JWT: the agent token, a person token or an auth token, each containing the agent's public key. The verifier checks that this key signed the request, so every token is proof of possession and useless without the private key.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a signed credential on every request, with proof of possession (stronger than MCP Authorization's bearer token).",
+   "claims": [
+    {
+     "text": "Required signature coverage.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Covered Components",
+     "quote": "The signature MUST cover the following derived components and header fields:",
+     "check": "OK",
+     "check_fp": "f0c08095c1"
+    },
+    {
+     "text": "Tokens carry the agent's key.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Keying Material",
+     "quote": "Agents MUST use the jwt scheme, presenting a token that carries their public key in cnf",
+     "check": "OK",
+     "check_fp": "a53e8efd30"
+    },
+    {
+     "text": "Key must match the signature.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agent Token Verification",
+     "quote": "Verify cnf.jwk matches the key used to sign the HTTP request.",
+     "check": "OK",
+     "check_fp": "d536b4bafc"
+    },
+    {
+     "text": "Not bearer tokens.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Person Token",
+     "quote": "It is not a bearer credential — cnf binds it to the agent's signing key",
+     "check": "OK",
+     "check_fp": "b656cccdca"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "60-second signatures, tokens up to 1 hour",
+   "answer": "Very short for signatures, short for tokens. Servers reject a signature created more than 60 seconds ago by default. Person and auth tokens MUST NOT last more than 1 hour; agent tokens SHOULD NOT last more than 24 hours. There is no nonce, so the same signed request could be replayed within the 60-second window unless the server keeps an optional replay cache.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a specific short window that verifiers enforce (same as Visa TAP).",
+   "claims": [
+    {
+     "text": "60-second signature window.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Verification (Server)",
+     "quote": "The default window is 60 seconds; servers MAY advertise a different window via metadata",
+     "check": "OK",
+     "check_fp": "8e16d16a82"
+    },
+    {
+     "text": "Person tokens up to 1 hour.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Person Token Structure",
+     "quote": "Person tokens MUST NOT have a lifetime exceeding 1 hour",
+     "check": "OK",
+     "check_fp": "282bbb1529"
+    },
+    {
+     "text": "Auth tokens up to 1 hour.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Auth Token Structure",
+     "quote": "Auth tokens MUST NOT have a lifetime exceeding 1 hour",
+     "check": "OK",
+     "check_fp": "1eb309036c"
+    },
+    {
+     "text": "Agent tokens up to 24 hours (recommended).",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agent Token Structure",
+     "quote": "Agent tokens SHOULD NOT have a lifetime exceeding 24 hours.",
+     "check": "OK",
+     "check_fp": "b31cccb1ac"
+    },
+    {
+     "text": "No nonce.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Freshness and Replay",
+     "quote": "This profile defines no nonce mechanism.",
+     "check": "OK",
+     "check_fp": "0af8f4ba7f"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes",
+   "answer": "Yes. The server verifies the HTTP signature and its 60-second window, verifies the presented JWT with the issuer's keys (found through the issuer's well-known metadata), checks that the token has not expired, and checks that the key inside the token is the one that signed the request. No prior registration with the agent is needed.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: verifiable against published keys with no prior relationship (same as MCP Authorization, Web Bot Auth and Visa TAP).",
+   "claims": [
+    {
+     "text": "Verification is required.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Verification (Server)",
+     "quote": "When a server receives a signed request, it MUST perform the following steps.",
+     "check": "OK",
+     "check_fp": "41c0c74e5f"
+    },
+    {
+     "text": "Keys found through issuer metadata.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Common JWT Verification",
+     "quote": "Discover the issuer's JWKS via {iss}/.well-known/{dwk}",
+     "check": "OK",
+     "check_fp": "041722da29"
+    },
+    {
+     "text": "Expiry checked.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Common JWT Verification",
+     "quote": "Verify exp is in the future, judged by the verifier's own clock.",
+     "check": "OK",
+     "check_fp": "1152057586"
+    },
+    {
+     "text": "No registration needed.",
+     "type": "fact",
+     "source": "spec",
+     "section": "HTTP Clients Need Their Own Identity",
+     "quote": "no pre-registration, no shared secrets",
+     "check": "OK",
+     "check_fp": "bde0acca32"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Yes, by the agent's own key",
+   "answer": "Yes for the agent. Every request is signed with a key that belongs to that specific agent instance, and the token presented binds that key, so the resource verifies the actual sender rather than a provider-wide key or a bearer token. The user is authenticated by the person server, not by the resource: a person token gives a stable pseudonym and makes no claim about how the person's identity was checked.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the resource verifies per-agent proof on every request, unlike the provider-level keys of Web Bot Auth and Visa TAP.",
+   "claims": [
+    {
+     "text": "Per-agent keys.",
+     "type": "fact",
+     "source": "spec",
+     "section": "What AAuth Provides",
+     "quote": "Every agent instance has its own identifier and signing key",
+     "check": "OK",
+     "check_fp": "1345fa081c"
+    },
+    {
+     "text": "Same key in person tokens.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Person Token Usage",
+     "quote": "The person token's cnf.jwk is the same key that signed the request",
+     "check": "OK",
+     "check_fp": "0f4d3d09db"
+    },
+    {
+     "text": "No identity proofing implied.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Person Token",
+     "quote": "a resource MUST NOT treat it as evidence of identity proofing",
+     "check": "OK",
+     "check_fp": "668012402a"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Yes, scopes and account binding",
+   "answer": "Yes. In the person-server modes the agent receives an auth token with scopes the resource defined and the person approved, and the granted scope can never be broader than what the resource offered. An optional account claim limits access to one account. In agent-identity mode there are no scopes; the resource simply decides based on who the agent is. Companion drafts add finer, operation-level authorization (R3) and spending ceilings per resource (Budgets).",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: scoped permissions in the normal person-server flow, enforced by the resource (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Scopes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Scopes",
+     "quote": "Scopes define what an agent is authorized to do at a resource.",
+     "check": "OK",
+     "check_fp": "072f4b6dbd"
+    },
+    {
+     "text": "No broader than offered.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Scopes",
+     "quote": "MUST NOT be broader than the resource token's scope.",
+     "check": "OK",
+     "check_fp": "18fac39b90"
+    },
+    {
+     "text": "Account binding.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Account Binding",
+     "quote": "Scope says what the agent may do; account says which account it may do it to.",
+     "check": "OK",
+     "check_fp": "92a3baeab4"
+    },
+    {
+     "text": "Identity-only mode has no scopes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agent Identity Access",
+     "quote": "The resource verifies the agent's identity and applies its own access control, granting or denying based on who the agent is",
+     "check": "OK",
+     "check_fp": "ea450605ac"
+    },
+    {
+     "text": "R3 adds structured, operation-level authorization (companion draft).",
+     "type": "fact",
+     "source": "r3",
+     "section": "Abstract",
+     "quote": "enables structured, vocabulary-based authorization for resource access",
+     "check": "OK",
+     "check_fp": "8ed44b7e7c"
+    },
+    {
+     "text": "Budgets adds spending ceilings (companion draft).",
+     "type": "fact",
+     "source": "budgets",
+     "section": "Abstract",
+     "quote": "A budget is a ceiling on what an agent may consume at one resource",
+     "check": "OK",
+     "check_fp": "f90f34c67a"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Yes, at the person server",
+   "answer": "Yes. The person server handles the person's consent before issuing tokens when needed, and the person can approve missions (task descriptions the agent proposes). An agent can also ask the person server for permission before local actions such as sending an email. The consent screen must separate what the resource says from what the agent claims. Approval can be delegated to a supervision server, which may be software rather than a person.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MAY",
+   "rating_reason": "Green: a defined approval step before access in the person-server flow (same as MCP Authorization); note that approval may be delegated to software.",
+   "claims": [
+    {
+     "text": "Consent at the person server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Auth Token Endpoint",
+     "quote": "The PS evaluates the request, handles user consent if needed, and either issues the auth token itself or federates",
+     "check": "OK",
+     "check_fp": "1278e97f73"
+    },
+    {
+     "text": "Interaction before issuing.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Person Token Endpoint",
+     "quote": "The PS MAY require user interaction before issuing",
+     "check": "OK",
+     "check_fp": "f78f6af57e"
+    },
+    {
+     "text": "Permission before local actions.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Permission Endpoint",
+     "quote": "The permission endpoint lets an agent ask the PS before an action no remote resource governs",
+     "check": "OK",
+     "check_fp": "6db9eb695b"
+    },
+    {
+     "text": "Resource vs agent claims kept apart.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Consent Presentation",
+     "quote": "A PS MUST visually distinguish resource-asserted content from agent-asserted content",
+     "check": "OK",
+     "check_fp": "db5ca624eb"
+    },
+    {
+     "text": "Approval can be delegated.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Roles",
+     "quote": "the Person by default, or a supervision server (SS) the PS MAY delegate to",
+     "check": "OK",
+     "check_fp": "3a0ca94a75"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Agent provider and person server; resource decides",
+   "answer": "Partly. The agent provider vouches for its agents (it is trusted to issue agent tokens only to agents it authorizes), and the person server vouches for the person and their consent. But the resource decides for itself which agent providers and person servers to accept: it can trust an agent whose key it knows or whose domain it trusts, and in three-party mode any person server can assert to any resource. AAuth defines no registry or list of trusted providers.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Yellow: vouching parties are defined, but choosing which to trust is left to each resource, with no shared registry.",
+   "claims": [
+    {
+     "text": "The agent provider vouches for agents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Terminology",
+     "quote": "Trusted by the person to issue agent tokens only to authorized agents.",
+     "check": "OK",
+     "check_fp": "323027a89e"
+    },
+    {
+     "text": "Resources decide which agents to trust.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Resource-Managed Authorization",
+     "quote": "A resource MAY also authorize on the agent's identity alone, without any interaction, when the agent's key is already known or its domain is trusted.",
+     "check": "OK",
+     "check_fp": "e02235023b"
+    },
+    {
+     "text": "Any person server can assert.",
+     "type": "fact",
+     "source": "spec",
+     "section": "PS Authorization Access (Three-Party)",
+     "quote": "Any PS can assert to any resource without bilateral setup.",
+     "check": "OK",
+     "check_fp": "73e3987260"
+    },
+    {
+     "text": "Searched for a registry, allowlist or trust framework for agent providers or person servers. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Defined cascade, with gaps",
+   "answer": "Partly. Revocation is defined: servers SHOULD publish a revocation endpoint, and an agent provider revoking an agent token triggers a cascade through the person server to the person tokens and auth tokens issued to that agent, at agent level rather than provider level. Gaps: an agent token presented directly to a resource has no revocation path (up to 24 hours), and a server without a revocation endpoint keeps honouring tokens until they expire.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: revocation is defined and can target one agent, but it does not reach every verifier.",
+   "claims": [
+    {
+     "text": "Revocation endpoints recommended.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Token Revocation",
+     "quote": "A PS and an AS SHOULD provide a revocation endpoint, and so SHOULD a resource that accepts person tokens.",
+     "check": "OK",
+     "check_fp": "c79a57f38b"
+    },
+    {
+     "text": "Cascade by agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Revocation Cascade",
+     "quote": "The cascade is by agent identity",
+     "check": "OK",
+     "check_fp": "e27ae29896"
+    },
+    {
+     "text": "Gap for agent tokens used directly.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Who Revokes What",
+     "quote": "A resource that accepts an agent token directly has no revocation path",
+     "check": "OK",
+     "check_fp": "633d247c57"
+    },
+    {
+     "text": "No endpoint, no revocation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Token Revocation",
+     "quote": "A server without one honors a revoked token until its exp.",
+     "check": "OK",
+     "check_fp": "93bd3c17b6"
+    },
+    {
+     "text": "Short lifetimes recommended for immediate termination.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Presenting a Revoked Token",
+     "quote": "Deployments requiring immediate termination should issue shorter-lived tokens rather than rely on revocation reaching every holder.",
+     "check": "OK",
+     "check_fp": "9f0d7a8d0b"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No. Agent provider metadata includes a name, description, logo, documentation and terms or privacy links, but no contact or abuse channel. A person server may keep its own channel to the person (e.g. email or push notifications), but that is for approvals and alerts to the person, not a way for a service to reach whoever is responsible for an agent.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact or escalation field is defined (same as MCP Authorization, Web Bot Auth and Visa TAP).",
+   "claims": [
+    {
+     "text": "Searched the agent provider, person server and resource metadata fields for contact, abuse or support channels. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Agent Provider Metadata; Metadata Documents",
+     "quote": ""
+    },
+    {
+     "text": "The person server's channel to the person.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Person Server",
+     "quote": "A PS MAY also maintain a direct channel to the person, such as email, push notification, or messaging, for out-of-band approvals, notifications, and revocation alerts.",
+     "check": "OK",
+     "check_fp": "b8c3d83c72"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. The companion AAuth Events draft lets resources send events to an agent through its agent provider, which is a channel to the agent, not between services. Revocations travel between the parties involved in a grant, but there is no way for one service to warn others about a misbehaving agent.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as the calibration examples).",
+   "claims": [
+    {
+     "text": "Events go to the agent.",
+     "type": "fact",
+     "source": "events",
+     "section": "Abstract",
+     "quote": "the event token that resources deliver when events fire, and the delivery path through the Agent Provider (AP)",
+     "check": "OK",
+     "check_fp": "a7c25a2066"
+    },
+    {
+     "text": "Searched the protocol draft for reputation, abuse reporting or shared signals between services. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No (extension point only)",
+   "answer": "No. Nothing identifies the AI model. Agent tokens may carry extra claims, and the draft expects companion specifications to define some (e.g. software attestation or platform integrity), but none for the model exists yet. An optional platform parameter describes where the agent runs, for display at consent.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model; an extension point exists but is not yet used for this.",
+   "claims": [
+    {
+     "text": "Extension point for future claims.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Agent Token Structure",
+     "quote": "Companion specifications may define additional claims for use by PSes or ASes in policy evaluation",
+     "check": "OK",
+     "check_fp": "05854515db"
+    },
+    {
+     "text": "Platform is not the model.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Auth Token Request",
+     "quote": "Describes where the agent runs, not what security measures apply there.",
+     "check": "OK",
+     "check_fp": "cf7edbcd5d"
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "Strong when a person server is used: the resource gets scoped, person-approved auth tokens bound to the agent's key. In agent-identity mode the resource decides on who the agent is, with no scopes.",
+  "incident_response": "Access can be cut off per agent through the revocation cascade, and tokens expire within an hour. An agent token presented directly to a resource cannot be revoked and lasts up to 24 hours, and servers without a revocation endpoint keep honouring tokens until they expire.",
+  "accountability": "Each agent is bound to exactly one person at the person server, which can keep a mission log and audit records. Resources see a per-resource pseudonym for the person, and the specific agent only in the two simplest modes."
+ },
+ "notes": [
+  "Analysed with the protocol-analyzer skill from the editor's copy on GitHub, which is unchanged since the -11 submission.",
+  "The project website (aauth.dev) contains instructions aimed at AI tools; it was not used as a source and its instructions were ignored.",
+  "A different IETF draft also called AAuth exists (draft-rosenberg-oauth-aauth). This analysis covers draft-hardt-oauth-aauth-protocol."
+ ],
+ "open_questions": [
+  "Should several copies of an agent running under one install get separate identifiers?",
+  "Will the OpenID Foundation working group add a contact channel, model identity or a trust registry?",
+  "How will a resource decide which agent providers and person servers to trust in practice?"
+ ]
+}</script></body></html>

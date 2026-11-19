@@ -1,0 +1,802 @@
+{
+  "schema_version": "2.1",
+  "rubric_version": "2.1",
+  "analysed_on": "2026-11-18",
+  "protocol": {
+    "name": "Visa TAP",
+    "full_name": "Visa Trusted Agent Protocol",
+    "spec_version": "Merchant specifications page (no version number shown)",
+    "spec_date": "launched 2025-10-14; page accessed 2026-11-18",
+    "maintainer": "Visa (vendor specification), developed with Cloudflare",
+    "newer_version_note": "The specification page shows no version number or date, so it may change without notice."
+  },
+  "profile": {
+    "id": "visa-tap",
+    "category": "agentic-commerce",
+    "secondary_categories": [
+      "web-bot-identity"
+    ],
+    "mechanisms": [
+      "http-message-signature"
+    ],
+    "venue": "vendor",
+    "maturity": "stable",
+    "openness": "vendor-terms",
+    "layers": [
+      "http-header",
+      "http-body"
+    ],
+    "building_blocks": [
+      "RFC 9421",
+      "RFC 7517",
+      "JWT"
+    ],
+    "website": "https://developer.visa.com/capabilities/trusted-agent-protocol/overview",
+    "first_published": "2025-10"
+  },
+  "review": {
+    "status": "draft",
+    "reviewed_by": "",
+    "reviewed_on": ""
+  },
+  "summary": [
+    "Visa's Trusted Agent Protocol (TAP) helps online merchants tell AI shopping agents that Visa has approved apart from other bots. As agents begin to browse shops and pay on behalf of consumers, merchants need a way to let approved agents through while still blocking other automated traffic. TAP is a vendor specification published by Visa in October 2025, developed with Cloudflare, and available on the Visa Developer Center and GitHub under Visa's terms of use.",
+    "An approved agent provider signs each request to a merchant with HTTP Message Signatures (RFC 9421), the same building block as Web Bot Auth, and marks it as browsing or paying. The merchant, or a CDN in front of it, checks the signature against public keys that Visa publishes, a validity window of at most 8 minutes, and a one-time nonce. A request may also carry signed objects describing the consumer (an ID token with a stable identifier and obfuscated contact details) and the payment. TAP does not identify the individual agent, and leaves spending limits, purchase approval (handled by Visa Intelligent Commerce) and revocation outside the protocol."
+  ],
+  "how_it_works": [
+    "An agent provider is onboarded with Visa, and its public keys are published in Visa's key store at a well-known location.",
+    "When the agent contacts a merchant, it signs the request with an HTTP Message Signature that includes created and expires times, a keyid, a nonce and a tag: agent-browser-auth for browsing or agent-payer-auth for paying.",
+    "The request may also carry an Agentic Consumer Recognition Object (information about the consumer) and payment information in an Agentic Payment Container, each signed with the same key and linked by the same nonce.",
+    "The merchant, or a site protection provider in front of it (e.g. a CDN), retrieves Visa's public key and checks the signature, the time window of at most 8 minutes and that the nonce has not been seen before. If any check does not pass, the message should be blocked.",
+    "If the checks pass, the merchant treats the request as coming from an approved agent and can use the consumer information to recognise its customer. Payment approval and limits are handled by Visa outside TAP."
+  ],
+  "sources": [
+    {
+      "id": "tap-spec",
+      "title": "Visa Developer, Trusted Agent Protocol specifications (Merchant specifications)",
+      "url": "https://developer.visa.com/docs/trusted-agent-protocol/trusted-agent-protocol-specifications",
+      "version": "no version shown",
+      "date": "accessed 2026-11-18",
+      "kind": "primary"
+    },
+    {
+      "id": "tap-overview",
+      "title": "Visa Developer, Trusted Agent Protocol overview",
+      "url": "https://developer.visa.com/capabilities/trusted-agent-protocol/overview",
+      "version": "",
+      "date": "accessed 2026-11-18",
+      "kind": "primary"
+    },
+    {
+      "id": "tap-github",
+      "title": "visa/trusted-agent-protocol, README",
+      "url": "https://github.com/visa/trusted-agent-protocol",
+      "fetch_url": "https://raw.githubusercontent.com/visa/trusted-agent-protocol/16d59bdf3f8a542bc538d0962edbb80ea30a02af/README.md",
+      "version": "commit 16d59bd",
+      "date": "2025-10-28",
+      "kind": "primary"
+    },
+    {
+      "id": "tap-license",
+      "title": "visa/trusted-agent-protocol, LICENSE",
+      "url": "https://github.com/visa/trusted-agent-protocol/blob/main/LICENSE.md",
+      "fetch_url": "https://raw.githubusercontent.com/visa/trusted-agent-protocol/16d59bdf3f8a542bc538d0962edbb80ea30a02af/LICENSE.md",
+      "version": "commit 16d59bd",
+      "date": "2025-10-28",
+      "kind": "primary"
+    },
+    {
+      "id": "tap-press",
+      "title": "Visa press release, Visa Introduces Trusted Agent Protocol",
+      "url": "https://usa.visa.com/about-visa/newsroom/press-releases.releaseId.21716.html",
+      "version": "",
+      "date": "2025-10-14",
+      "kind": "primary"
+    },
+    {
+      "id": "cf-blog",
+      "title": "Cloudflare blog, Securing agentic commerce: helping AI Agents transact with Visa and Mastercard",
+      "url": "https://blog.cloudflare.com/secure-agentic-commerce/",
+      "version": "",
+      "date": "2025-10-24",
+      "kind": "primary"
+    },
+    {
+      "id": "vic",
+      "title": "Visa Developer, Visa Intelligent Commerce for AI Agents (use case page)",
+      "url": "https://developer.visa.com/use-cases/visa-intelligent-commerce-for-agents",
+      "version": "",
+      "date": "accessed 2026-11-18",
+      "kind": "primary"
+    }
+  ],
+  "rows": [
+    {
+      "id": "summary",
+      "group": "What is it?",
+      "property": "Summary",
+      "short": "Visa-approved agents sign requests to merchants",
+      "answer": "Visa's protocol where approved shopping agents sign their requests to merchants and attach signed consumer and payment data, so merchants can trust them for browsing and checkout.",
+      "rating": "n/a",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "",
+      "claims": [
+        {
+          "text": "Visa's own description.",
+          "type": "fact",
+          "source": "tap-github",
+          "section": "The Solution",
+          "quote": "Visa's Trusted Agent Protocol provides a standardized, cryptographic method for an AI agent to prove its identity and associated authorization directly to merchants.",
+          "check": "OK",
+          "check_fp": "2ca76df75b"
+        },
+        {
+          "text": "Goal: tell legitimate agents from bots.",
+          "type": "fact",
+          "source": "tap-overview",
+          "section": "Overview page",
+          "quote": "a verifiable, cryptographic standard to help merchants differentiate legitimate agents from nefarious bots",
+          "check": "WEB-OK",
+          "check_fp": "59de78e9d4"
+        }
+      ]
+    },
+    {
+      "id": "use_cases",
+      "group": "What is it?",
+      "property": "Use cases",
+      "short": "Commerce",
+      "answer": "Online commerce. A shopping agent interacts with a merchant's website or API at two kinds of moment: browsing and paying. The protocol uses a signature in the HTTP headers plus signed objects in the request body. Verification can be done by the merchant or by a site protection provider in front of it, such as a CDN.",
+      "rating": "n/a",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "",
+      "claims": [
+        {
+          "text": "Two interaction types, marked by the tag.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Required Message Signature Fields",
+          "quote": "Will contain the value of agent-browser-auth or agent-payer-auth based on the type of interaction",
+          "check": "WEB-OK",
+          "check_fp": "2a476e1a8a"
+        },
+        {
+          "text": "CDNs can verify for the merchant.",
+          "type": "fact",
+          "source": "cf-blog",
+          "section": "Blog post",
+          "quote": "Merchants rely on networks like Cloudflare to verify the agent's cryptographic signatures",
+          "check": "WEB-OK",
+          "check_fp": "a8c6b1d61e"
+        }
+      ]
+    },
+    {
+      "id": "actors",
+      "group": "What is it?",
+      "property": "Parties involved",
+      "short": "Eight participants defined by the spec",
+      "answer": "Agent Providers: AI platforms onboarded to a payment scheme. Checkout Enablers: services an agent may use to reach merchant sites. Consumers: cardholders with a profile at the agent. Site Protection Providers: a layer in front of the merchant (e.g. CDNs). Identity Provider: verified the consumer's credentials. Merchants: the shops. Payment Schemes: e.g. Visa. Key Store: where public keys are published.",
+      "rating": "n/a",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "",
+      "claims": [
+        {
+          "text": "Agent Providers.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "are certified AI platforms that have been onboarded as an \"Agent\" to Payment Schemes",
+          "check": "WEB-OK",
+          "check_fp": "d419ffa856"
+        },
+        {
+          "text": "Checkout Enablers.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "may be used by agents to interact with Merchant websites.",
+          "check": "WEB-OK",
+          "check_fp": "598753dda1"
+        },
+        {
+          "text": "Consumers.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "are account holders of respective Payment Schemes that have a profile created at an Agent",
+          "check": "WEB-OK",
+          "check_fp": "5e2f15c0a0"
+        },
+        {
+          "text": "Site Protection Providers.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "are defined as systems that are typically a layer sitting in front of a Merchant's website.",
+          "check": "WEB-OK",
+          "check_fp": "13c2e3de20"
+        },
+        {
+          "text": "Identity Provider.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "is an entity that has verified the credentials used to identify a Consumer",
+          "check": "WEB-OK",
+          "check_fp": "69d2bb17c1"
+        },
+        {
+          "text": "Merchants.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "are online entities selling goods or services",
+          "check": "WEB-OK",
+          "check_fp": "15d9d3b147"
+        },
+        {
+          "text": "Payment Schemes.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "refer to systems that facilitate electronic payments between consumers, merchants, and financial institutions.",
+          "check": "WEB-OK",
+          "check_fp": "92484caf8f"
+        },
+        {
+          "text": "Key Store.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "will be the location on the web where Merchants or Site Protection Providers can retrieve the public keys",
+          "check": "WEB-OK",
+          "check_fp": "d00a9d3c3d"
+        }
+      ]
+    },
+    {
+      "id": "status_adoption",
+      "group": "What is it?",
+      "property": "Status and adoption",
+      "short": "Vendor spec (Oct 2025)",
+      "answer": "Vendor specification, launched by Visa on 14 October 2025 and developed with Cloudflare, which verifies agent signatures for merchants. Visa also names early partners such as Adyen, Ant International and Checkout.com. It is published on the Visa Developer Center and GitHub under Visa's terms of use, and the specification page shows no version number.",
+      "rating": "green",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "Green: a launched vendor specification with a named verifier (Cloudflare). Borderline: no named merchant deployments were found.",
+      "claims": [
+        {
+          "text": "Developed with Cloudflare.",
+          "type": "fact",
+          "source": "tap-press",
+          "section": "Press release",
+          "quote": "developed in collaboration with Cloudflare",
+          "check": "WEB-OK",
+          "check_fp": "6b543ee815"
+        },
+        {
+          "text": "Availability.",
+          "type": "fact",
+          "source": "tap-press",
+          "section": "Press release",
+          "quote": "Trusted Agent Protocol is available today in the Visa Developer Center and GitHub.",
+          "check": "WEB-OK",
+          "check_fp": "a082ef9ebc"
+        },
+        {
+          "text": "Early partners.",
+          "type": "fact",
+          "source": "tap-press",
+          "section": "Press release",
+          "quote": "we have received insightful feedback from other early partners including Adyen, Ant International, Checkout.com",
+          "check": "WEB-OK",
+          "check_fp": "88f7e0385b"
+        },
+        {
+          "text": "Use is under Visa's terms.",
+          "type": "fact",
+          "source": "tap-license",
+          "section": "LICENSE",
+          "quote": "By using, downloading, or installing this code, you agree to the terms and conditions contained in the",
+          "check": "OK",
+          "check_fp": "46ff0b4a57"
+        }
+      ]
+    },
+    {
+      "id": "building_blocks",
+      "group": "What is it?",
+      "property": "Building blocks",
+      "short": "RFC 9421, JWKS, JWS/JWT, Visa Intelligent Commerce",
+      "answer": "HTTP Message Signatures (RFC 9421) in HTTP headers, the same building block as Web Bot Auth, with TAP's own tags; JSON Web Keys (RFC 7517) for publishing keys; and ID tokens inside the consumer recognition object. Spending limits and purchase approval come from Visa Intelligent Commerce, a separate Visa programme.",
+      "rating": "n/a",
+      "coverage": "n/a",
+      "requirement": "none",
+      "rating_reason": "",
+      "claims": [
+        {
+          "text": "Builds on Web Bot Auth's HTTP Message Signatures with its own tag.",
+          "type": "fact",
+          "source": "cf-blog",
+          "section": "Blog post",
+          "quote": "Both protocols build on Web Bot Auth by introducing a new tag that agents must supply in the",
+          "check": "WEB-OK",
+          "check_fp": "6f5537e6ed"
+        },
+        {
+          "text": "Keys are published at a well-known location.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Public Keys Retrieval Service",
+          "quote": "Visa publishes public keys on the web in the following well-known location",
+          "check": "WEB-OK",
+          "check_fp": "931f80ba42"
+        }
+      ]
+    },
+    {
+      "id": "identifier",
+      "group": "Who is being identified?",
+      "property": "Identifier",
+      "short": "Agent provider's key",
+      "answer": "Partly. Each signature carries a keyid, which identifies the agent provider's signing key in Visa's key store. All agents from that provider share it, so it names the provider, not the agent. The consumer is identified separately, by the subject identifier (sub) in the optional consumer recognition object.",
+      "rating": "yellow",
+      "coverage": "required",
+      "requirement": "MUST*",
+      "rating_reason": "Yellow: the identifier names the provider's key, shared by all its agents (same as Web Bot Auth).",
+      "claims": [
+        {
+          "text": "keyid is one of the required signature parameters.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature)",
+          "quote": "contain the below minimum set of parameters that are required to be present for a trusted Agent.",
+          "check": "WEB-OK",
+          "check_fp": "684639c1e5"
+        },
+        {
+          "text": "The consumer's sub is separate from the agent identifier.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Public Claims (sub)",
+          "quote": "A locally unique and never reassigned identifier within the Issuer",
+          "check": "WEB-OK",
+          "check_fp": "ec3986ff2e"
+        }
+      ]
+    },
+    {
+      "id": "instance_identifier",
+      "group": "Who is being identified?",
+      "property": "Agent instance identifier",
+      "short": "No",
+      "answer": "No. A nonce ties together the signatures and objects of one interaction, acting as a session identifier, but it does not identify the agent instance. TAP defines no per-agent or per-instance identifier.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: no per-instance identifier (same as MCP Authorization and Web Bot Auth).",
+      "claims": [
+        {
+          "text": "The nonce ties the objects of one interaction together.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Required Message Signature Fields",
+          "quote": "the session identifier should be the same nonce used in other message signatures.",
+          "check": "WEB-OK",
+          "check_fp": "99b18737e2"
+        },
+        {
+          "text": "Searched Participants and the signature parameter tables for an agent instance identifier. None is defined.",
+          "type": "silent",
+          "source": "tap-spec",
+          "section": "Participants; Signature Verification (Agent Recognition Signature)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "acting_for",
+      "group": "Who is being identified?",
+      "property": "Acting for (authority)",
+      "short": "Optional consumer object",
+      "answer": "Partly, when the agent includes it. Requests may carry an Agentic Consumer Recognition Object with an ID token about the consumer, including a stable subject identifier and obfuscated contact details such as email. The merchant can match this to its own customer records, and decides whether to use the content. Because the specification says interactions \"may contain\" this object, a merchant cannot count on receiving it.",
+      "rating": "yellow",
+      "coverage": "optional",
+      "requirement": "MAY*",
+      "rating_reason": "Yellow: defined by the protocol but optional (lowercase \"may\"); a merchant cannot rely on receiving it.",
+      "claims": [
+        {
+          "text": "The object is optional.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Consumer Recognition > Processes",
+          "quote": "Both of the above interactions may contain an Agentic Consumer Recognition Object",
+          "check": "WEB-OK",
+          "check_fp": "245e0af00e"
+        },
+        {
+          "text": "It carries obfuscated contact data.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Standard ID Token Claims",
+          "quote": "Obfuscated end user's preferred e-mail address.",
+          "check": "WEB-OK",
+          "check_fp": "95c26cdfa4"
+        },
+        {
+          "text": "Use of the content is up to the merchant.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Consumer Recognition > Signature Verification",
+          "quote": "It is at the discretion of the Merchant to determine whether the content of the object is usable",
+          "check": "WEB-OK",
+          "check_fp": "fdc21e2d32"
+        }
+      ]
+    },
+    {
+      "id": "credential_type",
+      "group": "Credential and validity",
+      "property": "Credential type",
+      "short": "HTTP Signature",
+      "answer": "An HTTP Message Signature (RFC 9421) on every request, made with the agent provider's private key. It must include a minimum set of parameters: created and expires times, the keyid, a nonce, and a tag saying whether the agent is browsing (agent-browser-auth) or paying (agent-payer-auth). The consumer and payment objects in the body carry their own signatures with the same key, linked by the same nonce.",
+      "rating": "green",
+      "coverage": "required",
+      "requirement": "MUST*",
+      "rating_reason": "Green: a signature on every request that the merchant can verify (same as Web Bot Auth).",
+      "claims": [
+        {
+          "text": "Required signature parameters.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature)",
+          "quote": "contain the below minimum set of parameters that are required to be present for a trusted Agent.",
+          "check": "WEB-OK",
+          "check_fp": "684639c1e5"
+        },
+        {
+          "text": "Body objects are signed with the same key.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Consumer Recognition",
+          "quote": "contains a signature signed with the same private key used to sign the message signature.",
+          "check": "WEB-OK",
+          "check_fp": "75c0b03859"
+        }
+      ]
+    },
+    {
+      "id": "credential_lifetime",
+      "group": "Credential and validity",
+      "property": "Credential lifetime",
+      "short": "8 minutes",
+      "answer": "Very short. A signature's created and expires times should be no more than 8 minutes apart and must fall around the current time, and merchants should block messages with a longer window. A nonce that has already been seen is also blocked, so each signature can only be used once. Keys themselves can expire, and messages signed with an expired key should be blocked.",
+      "rating": "green",
+      "coverage": "required",
+      "requirement": "SHOULD*",
+      "rating_reason": "Green: a specific short maximum that verifiers are told to enforce, even though the spec uses lowercase \"should\".",
+      "claims": [
+        {
+          "text": "Eight-minute window.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Verification Steps",
+          "quote": "The timestamps (created and expired) should fall within the current GMT time and should not be more than 8 minutes apart.",
+          "check": "WEB-OK",
+          "check_fp": "5589037270"
+        },
+        {
+          "text": "Longer windows lead to blocking.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Verification Steps",
+          "quote": "if the interval between the created and expired timestamps is greater than 8 minutes",
+          "check": "WEB-OK",
+          "check_fp": "6736ef716b"
+        },
+        {
+          "text": "Expired keys are blocked.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Verification Steps",
+          "quote": "If the public key cannot be retrieved or the public key has expired, the message should be blocked.",
+          "check": "WEB-OK",
+          "check_fp": "3d09cd6151"
+        },
+        {
+          "text": "Replayed nonces are blocked.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Verification Steps",
+          "quote": "if the nonce received matches a recorded nonce, the message should be blocked.",
+          "check": "WEB-OK",
+          "check_fp": "825ac7c16d"
+        }
+      ]
+    },
+    {
+      "id": "validity",
+      "group": "Credential and validity",
+      "property": "Validity (credential validation)",
+      "short": "Yes",
+      "answer": "Yes, for agents in Visa's key store. The merchant (or its CDN) retrieves the provider's public key from Visa's published keys and checks the signature, the time window of at most 8 minutes and that the nonce is new. If the key cannot be retrieved or has expired, or the signature does not verify, the message should be blocked. The consumer and payment objects are checked with the same key and nonce.",
+      "rating": "green",
+      "coverage": "required",
+      "requirement": "SHOULD*",
+      "rating_reason": "Green: verifiable against published keys with no prior relationship with the agent (same as MCP Authorization and Web Bot Auth).",
+      "claims": [
+        {
+          "text": "Failed signatures are blocked.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Verification Steps",
+          "quote": "If signature validation fails, the message should be blocked.",
+          "check": "WEB-OK",
+          "check_fp": "514c9c54e3"
+        },
+        {
+          "text": "Unknown or expired keys are blocked.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Verification Steps",
+          "quote": "If the public key cannot be retrieved or the public key has expired, the message should be blocked.",
+          "check": "WEB-OK",
+          "check_fp": "3d09cd6151"
+        },
+        {
+          "text": "Replayed nonces are blocked.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Verification Steps",
+          "quote": "if the nonce received matches a recorded nonce, the message should be blocked.",
+          "check": "WEB-OK",
+          "check_fp": "825ac7c16d"
+        }
+      ]
+    },
+    {
+      "id": "authentication",
+      "group": "Authentication and authorization",
+      "property": "Authentication of the agent or user",
+      "short": "No, only verifies the agent provider",
+      "answer": "No. The agent provider's key signs each request, and the merchant (or its CDN) checks the signature against Visa's key store. All of the provider's agents share that key, so the merchant verifies the provider, not the specific agent. The consumer is not authenticated by the merchant either.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: the merchant verifies a provider-level key (same as Web Bot Auth).",
+      "claims": [
+        {
+          "text": "Keys belong to onboarded agent providers and are retrieved from the key store.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "will be the location on the web where Merchants or Site Protection Providers can retrieve the public keys",
+          "check": "WEB-OK",
+          "check_fp": "d00a9d3c3d"
+        },
+        {
+          "text": "The keys identify onboarded agent platforms, so the check authenticates the provider, not an individual agent or the consumer (inference from the Participants definitions).",
+          "type": "inference",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "are certified AI platforms that have been onboarded as an \"Agent\" to Payment Schemes",
+          "check": "WEB-OK",
+          "check_fp": "d419ffa856"
+        },
+        {
+          "text": "Searched the specification for any check of the individual agent or consumer by the merchant. None is defined.",
+          "type": "silent",
+          "source": "tap-spec",
+          "section": "Whole page (all sections)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "authorization",
+      "group": "Authentication and authorization",
+      "property": "Scoped authorization",
+      "short": "Partial, mostly out of scope",
+      "answer": "Partly. TAP only distinguishes two kinds of interaction, browsing (agent-browser-auth) and paying (agent-payer-auth), so a merchant can treat them differently. It carries no scopes or per-action limits. Spending limits and transaction controls belong to Visa Intelligent Commerce, a separate Visa programme.",
+      "rating": "yellow",
+      "coverage": "default",
+      "requirement": "MUST*",
+      "rating_reason": "Yellow: only coarse categories (browse vs pay); finer limits are outside the protocol.",
+      "claims": [
+        {
+          "text": "Coarse authorization by interaction type.",
+          "type": "fact",
+          "source": "tap-github",
+          "section": "The Solution",
+          "quote": "Ensure the agent is authorized for the specific action it is taking (browsing or payment)",
+          "check": "OK",
+          "check_fp": "690b4efdfc"
+        },
+        {
+          "text": "Spending controls are a separate Visa product.",
+          "type": "fact",
+          "source": "vic",
+          "section": "Support cardholders",
+          "quote": "Visa Transaction Controls",
+          "check": "WEB-OK",
+          "check_fp": "531838e0ba"
+        }
+      ]
+    },
+    {
+      "id": "human_approval",
+      "group": "Authentication and authorization",
+      "property": "Human approval",
+      "short": "No, out of scope",
+      "answer": "No (outside the protocol). TAP defines no step where the consumer approves an action. Approval of purchases is handled outside TAP, e.g. through Visa Payment Passkey in Visa Intelligent Commerce.",
+      "rating": "red",
+      "coverage": "outside",
+      "requirement": "none",
+      "rating_reason": "Red: approval is handled entirely outside the protocol.",
+      "claims": [
+        {
+          "text": "Searched the specification for consent, approval or passkey steps. None is defined in TAP.",
+          "type": "silent",
+          "source": "tap-spec",
+          "section": "Whole page (all sections)",
+          "quote": ""
+        },
+        {
+          "text": "Passkey approval is a separate Visa product.",
+          "type": "fact",
+          "source": "vic",
+          "section": "Protect and secure transactions",
+          "quote": "Visa Payment Passkey",
+          "check": "WEB-OK",
+          "check_fp": "a975b15efc"
+        }
+      ]
+    },
+    {
+      "id": "trust",
+      "group": "Trust",
+      "property": "Trust (who vouches for the agent)",
+      "short": "Visa, as central authority",
+      "answer": "Visa, as a central authority. Agent providers are onboarded with Visa (the specification calls them certified AI platforms onboarded to payment schemes), and only their keys are in Visa's key store, so a valid signature means the agent comes from a provider Visa has approved. Merchants rely on Visa's onboarding; TAP does not describe the onboarding criteria.",
+      "rating": "green",
+      "coverage": "default",
+      "requirement": "none",
+      "rating_reason": "Green: a named party (Visa) vouches by onboarding agents and publishing their keys.",
+      "claims": [
+        {
+          "text": "Agent providers are onboarded by the payment scheme.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Participants",
+          "quote": "are certified AI platforms that have been onboarded as an \"Agent\" to Payment Schemes",
+          "check": "WEB-OK",
+          "check_fp": "d419ffa856"
+        },
+        {
+          "text": "Visa publishes the keys.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Public Keys Retrieval Service",
+          "quote": "Visa publishes public keys on the web in the following well-known location",
+          "check": "WEB-OK",
+          "check_fp": "931f80ba42"
+        },
+        {
+          "text": "Searched the specification for onboarding or certification criteria. None is described.",
+          "type": "silent",
+          "source": "tap-spec",
+          "section": "Whole page (all sections)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "revocation",
+      "group": "Response and accountability",
+      "property": "Revocation",
+      "short": "Not defined; Visa can remove keys",
+      "answer": "Not defined. Visa runs the key store, so it can cut off an agent provider by removing its key; merchants should block messages whose key cannot be retrieved, although a cached key may keep working until each merchant refreshes it. Payments still pass through Visa's network, where they can be stopped. Access can only be cut off for a whole provider, not one agent.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: no revocation is defined; key removal is coarse (whole provider) and waits for caches (same as Web Bot Auth).",
+      "claims": [
+        {
+          "text": "Searched the specification for revocation, key removal or disabling an agent. None is defined.",
+          "type": "silent",
+          "source": "tap-spec",
+          "section": "Whole page (all sections)",
+          "quote": ""
+        },
+        {
+          "text": "If a key is gone or expired, merchants should block.",
+          "type": "fact",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature), Verification Steps",
+          "quote": "If the public key cannot be retrieved or the public key has expired, the message should be blocked.",
+          "check": "WEB-OK",
+          "check_fp": "3d09cd6151"
+        }
+      ]
+    },
+    {
+      "id": "contact_escalation",
+      "group": "Response and accountability",
+      "property": "Contact and escalation",
+      "short": "No",
+      "answer": "No by default. TAP defines no contact or escalation field. Because Visa onboards every agent provider, Visa could act as a de facto point of contact, but the specification does not describe this.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: no contact field or process is defined (same as MCP Authorization and Web Bot Auth).",
+      "claims": [
+        {
+          "text": "Searched the specification for contact, support or escalation fields. None is defined.",
+          "type": "silent",
+          "source": "tap-spec",
+          "section": "Whole page (all sections)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "cross_party_signalling",
+      "group": "Monitoring and provenance",
+      "property": "Cross-party signalling",
+      "short": "No",
+      "answer": "No. TAP defines no way for merchants or site protection providers to share information about a misbehaving agent with each other.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: not addressed.",
+      "claims": [
+        {
+          "text": "Searched the specification for reporting, reputation or shared signals. None is defined.",
+          "type": "silent",
+          "source": "tap-spec",
+          "section": "Whole page (all sections)",
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "model_identity",
+      "group": "Monitoring and provenance",
+      "property": "Model identity",
+      "short": "No",
+      "answer": "No. The signature and objects identify the agent provider's key and, optionally, the consumer. Nothing says which AI model the agent uses.",
+      "rating": "red",
+      "coverage": "none",
+      "requirement": "none",
+      "rating_reason": "Red: nothing identifies the model.",
+      "claims": [
+        {
+          "text": "Searched the signature parameters and body objects for a model or software field. None is defined.",
+          "type": "silent",
+          "source": "tap-spec",
+          "section": "Signature Verification (Agent Recognition Signature)",
+          "quote": ""
+        }
+      ]
+    }
+  ],
+  "goals_reading": {
+    "access_control": "The merchant learns that the agent comes from a provider Visa has onboarded, and whether it is browsing or paying. Spending limits are enforced by Visa outside the protocol.",
+    "incident_response": "Visa can cut off a whole agent provider by removing its key, which reaches merchants as their caches refresh, and payments can be stopped in Visa's network. One specific agent cannot be cut off.",
+    "accountability": "An action can be traced to the agent provider, and to the consumer only when the consumer recognition object is sent."
+  },
+  "notes": [
+    "Calibration example for the protocol-analyzer skill (Visa TAP specification page as accessed on 2026-11-18).",
+    "The specification page uses lowercase requirement words (should, may) rather than RFC 2119 keywords. Requirement tags with an asterisk reflect this.",
+    "The Visa sites block scripted downloads, so their quotes were checked with a web tool (WEB-OK). The web tool limits quotes to about 125 characters, so some quotes are sentence fragments.",
+    "The specification page shows no version number or date, so it may change without notice."
+  ],
+  "open_questions": [
+    "Which merchants verify TAP signatures in production, beyond Cloudflare as a verifier?",
+    "Does Visa have a process to remove an agent provider's keys quickly, and how long do merchants cache them?"
+  ]
+}
