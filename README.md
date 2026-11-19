@@ -49,13 +49,20 @@ read-only, and new reports are added with the script below.
 ## Protocols included
 | Protocol | Category | Status |
 |---|---|---|
-| MCP Authorization | Agent authorization | Draft analysis |
-| Web Bot Auth | Web bot identity | Draft analysis |
-| Visa Trusted Agent Protocol | Agentic commerce | Draft analysis |
+| A2A | Agent communication | Draft analysis |
 | AAuth | Agent authorization | Draft analysis |
-
-"Draft analysis" means the report was produced by the skill and has not yet been
-reviewed by a person.
+| ACP | Agentic commerce | Draft analysis |
+| ANS | Discovery registry | Draft analysis |
+| AP2 | Agentic commerce | Draft analysis |
+| ERC-8004 | Discovery registry | Draft analysis |
+| ID-JAG (Cross App Access) | Agent authorization | Draft analysis |
+| KYA-OS | Agent authorization | Draft analysis |
+| MCP Authorization | Agent authorization | Draft analysis |
+| Verifiable Intent | Agentic commerce | Draft analysis |
+| Visa TAP | Agentic commerce | Draft analysis |
+| Web Bot Auth | Web bot identity | Draft analysis |
+| WIMSE WIT + WPT | Workload identity | Draft analysis |
+| x402 | Agentic commerce | Draft analysis |
 
 ## Project layout
 See `CLAUDE.md` for the full brief, data model and roadmap.

@@ -488,6 +488,8 @@ details.table-view .cmp-wrap { margin-top: 14px; }
   .pv-nav a.next { margin-left: 0; text-align: left; }
 }
 
+.prose h2[id] { scroll-margin-top: 84px; }
+.row .side .rel { font-size: 13px; color: var(--muted); }
 .skill-cta { margin: 16px 0 0; font-size: 15px; color: var(--ink-2); }
 footer.site a { color: inherit; }
 ol.plain-num { padding-left: 22px; margin: 10px 0 0; }

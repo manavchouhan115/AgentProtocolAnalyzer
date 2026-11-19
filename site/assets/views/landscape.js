@@ -36,7 +36,7 @@ export function renderLandscape(el, _parts, params) {
           <label>Rows <select class="input" id="rows">${Object.entries(ROWS).map(([k, v]) => `<option value="${k}" ${st.rows === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
         </div>
       </div>
-      <p class="lede muted">${st.measure === "score" ? `Scores use your weights from the <a href="#/rank">Rank</a> page.` : "Coverage is the share of rated properties a protocol addresses, with partly addressed counting as half."}</p>
+      <p class="lede muted">${st.measure === "score" ? `Scores use your weights from the <a href="#/rank">Rank</a> page.` : "Coverage is the share of the rated properties (all except status and adoption) a protocol addresses, with partly addressed counting as half."}</p>
       <div class="chart" id="strip"></div>
     </section>
 

@@ -259,6 +259,13 @@ export function hideTip() { document.getElementById("tip").classList.remove("sho
 
 // ---------- compare tray ----------
 export const MAX_COMPARE = 4;
+// "2025-04" -> "Apr 2025"; "2025" -> "2025"; anything else as given.
+export function monthYear(v) {
+  const m = /^(\d{4})(?:-(\d{2}))?/.exec(String(v || ""));
+  if (!m) return v ? String(v) : "";
+  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return m[2] ? `${names[Number(m[2]) - 1]} ${m[1]}` : m[1];
+}
 // Where people can download the protocol-analyzer skill.
 export const SKILL_URL = "https://drive.google.com/drive/folders/1QaKJ1ngJ2Dw5tPssELHjXJTAfV73cUz-?usp=drive_link";
 export function toggleCompare(id) {

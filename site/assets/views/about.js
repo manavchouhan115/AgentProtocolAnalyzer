@@ -1,6 +1,6 @@
 import { state, esc, scoredProps, goals, SKILL_URL } from "../core.js";
 
-export function renderAbout(el) {
+export function renderAbout(el, _parts, params) {
   document.title = "About | Protocol Explorer";
   const groups = [];
   state.props.forEach((p) => {
@@ -28,13 +28,13 @@ export function renderAbout(el) {
     <h2 style="margin-top:36px">Evidence and review</h2>
     <p>Every statement in an analysis is backed by a source, a section and a short verbatim quote. Quotes are checked automatically against the source where possible. Analyses marked “Draft analysis” were produced by the analysis skill and have not yet been checked by a person.</p>
 
-    <h2 style="margin-top:36px">Analyse a protocol yourself</h2>
+    <h2 style="margin-top:36px" id="analyse">Analyse a protocol yourself</h2>
     <p>Every analysis here was made with the protocol-analyzer skill, and you can use it too.</p>
     <ol class="plain-num">
       <li><a href="${SKILL_URL}" target="_blank" rel="noopener">Download the protocol-analyzer skill</a>.</li>
-      <li>Add it to Claude as a skill.</li>
-      <li>Ask Claude to analyse a protocol by name, specification or website, for example “Analyse AAuth using the protocol analyzer skill”.</li>
-      <li>You get one HTML report. Open it in a browser to read it, or <a href="#/add">add it to this explorer</a>.</li>
+      <li>Add it to Claude as a skill. Code execution must be turned on in Claude's settings.</li>
+      <li>Ask Claude to analyse a protocol by name, specification or website, for example “Analyse AAuth using the protocol analyzer skill”. Claude Opus 5.5 with high effort gives the best results.</li>
+      <li>Each protocol takes about 5 minutes. You get one HTML report: open it in a browser to read it, or <a href="#/add">add it to this explorer</a>.</li>
     </ol>
 
     <h2 style="margin-top:36px">How ranking works</h2>
@@ -47,4 +47,6 @@ export function renderAbout(el) {
     <h2 style="margin-top:36px">The ${state.props.length} properties</h2>
     ${groups.map((g) => `<h3 style="margin-top:22px">${esc(g.name)}</h3><ul class="plain">${g.props.map((p) => `<li><b>${esc(p.property)}:</b> ${esc(p.question)}</li>`).join("")}</ul>`).join("")}
   </div></div>`;
+  const target = params && params.get("s");
+  if (target) requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView({ block: "start" }));
 }

@@ -1,6 +1,6 @@
 import {
   state, esc, name, pid, byId, versionsOf, rowOf, RATING, label, reviewBadge, pill, compareButton,
-  wireCompareButtons, toast, setQuery,
+  wireCompareButtons, toast, setQuery, monthYear,
 } from "../core.js";
 
 export const COVERAGE_TEXT = {
@@ -25,10 +25,11 @@ export function renderProtocol(el, parts, params) {
 
   const facts = [
     ["Specification", `<span class="mono">${esc(p.protocol?.spec_version)}</span>`],
-    ["Published", esc(p.protocol?.spec_date)],
+    ["This version", esc(p.protocol?.spec_date)],
     ["Maintainer", esc(p.protocol?.maintainer)],
     ["Mechanism", esc((pr.mechanisms || []).map((m) => label("mechanisms", m)).join(", "))],
     ["Builds on", esc((pr.building_blocks || []).join(", "))],
+    ["First released", esc(monthYear(pr.first_published))],
     ["Analysed", esc(p.analysed_on)],
   ].filter(([, v]) => v).map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
 

@@ -1,6 +1,6 @@
 import {
   state, esc, name, pid, rowOf, coverage, label, fingerprint, reviewBadge, profileChips, compareButton,
-  wireCompareButtons, setQuery, maturityRank, markText, parseTerms,
+  wireCompareButtons, setQuery, maturityRank, markText, parseTerms, monthYear, scoredProps,
 } from "../core.js";
 
 const FACETS = [
@@ -11,7 +11,7 @@ const FACETS = [
   { key: "openness", title: "Openness", get: (p) => [p.profile?.openness] },
   { key: "review", title: "Review", get: (p) => [p.review?.status === "reviewed" ? "reviewed" : "draft"], labels: { reviewed: "Reviewed by a person", draft: "Draft analysis" } },
 ];
-const SORTS = { coverage: "Coverage", name: "Name", maturity: "Maturity", recent: "Recently analysed" };
+const SORTS = { coverage: "Coverage", released: "First released (newest first)", name: "Name", maturity: "Maturity", recent: "Recently analysed" };
 const GROUPS = { none: "No grouping", category: "Category", maturity: "Maturity", venue: "Developed at", mechanisms: "Mechanism" };
 
 export function renderExplore(el, _parts, params) {
@@ -141,6 +141,8 @@ function sortFn(st) {
     coverage: (a, b) => coverage(b) - coverage(a) || name(a).localeCompare(name(b)),
     name: (a, b) => name(a).localeCompare(name(b)),
     maturity: (a, b) => maturityRank(a) - maturityRank(b) || name(a).localeCompare(name(b)),
+    // protocols without a recorded first release go last
+    released: (a, b) => String(b.profile?.first_published || "").localeCompare(String(a.profile?.first_published || "")) || name(a).localeCompare(name(b)),
     recent: (a, b) => String(b.analysed_on).localeCompare(String(a.analysed_on)) || name(a).localeCompare(name(b)),
   }[st.sort];
 }
@@ -168,7 +170,8 @@ function rowHtml(p, st) {
       <div class="chips">${profileChips(p, ["category", "maturity", "venue"])}${reviewBadge(p)}</div>
     </div>
     <div class="side">
-      <div class="cov" title="Share of the rated properties this protocol addresses (partly addressed counts as half)"><b>${coverage(p)}%</b> coverage</div>
+      <div class="cov" title="Share of the ${scoredProps().length} rated properties that count towards coverage (all except status and adoption), with partly addressed counting as half"><b>${coverage(p)}%</b> coverage</div>
+      <div class="rel">${p.profile?.first_published ? `First released ${esc(monthYear(p.profile.first_published))}` : "First release not recorded"}</div>
       ${fingerprint(p, { size: 12 })}
       ${compareButton(id)}
     </div>

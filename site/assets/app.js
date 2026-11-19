@@ -45,7 +45,7 @@ async function route() {
   const changed = path !== lastPath;
   lastPath = path;
   await fn(view, parts.slice(1), params, { changed });
-  if (changed && !params.get("prop")) window.scrollTo(0, 0);
+  if (changed && !params.get("prop") && !params.get("s")) window.scrollTo(0, 0);
   renderTray();
 }
 
