@@ -69,7 +69,7 @@ export function renderOverview(el) {
   <div class="wrap">
     <section class="hero">
       <h1>How AI agent protocols identify, authorize and answer for agents</h1>
-      <p>Each protocol is analysed on ${state.props.length} properties from the side of the service that receives an agent's request, and ${rated.length} of them get a colour rating. Every rating links to the quotes from the specification behind it.</p>
+      <p>Each protocol is analysed on ${state.props.length} <a href="#/properties">properties</a>, and ${rated.length} of them get a colour rating. Every rating links to the quotes from the specification behind it.</p>
       <div class="actions"><a class="btn primary" href="#/explore">Explore each protocol</a><a class="btn" href="#/rank">Rank by what matters to you</a><a class="btn" href="#/landscape">See the landscape</a></div>
       <p class="skill-cta">Want to analyse a protocol yourself? <a href="${SKILL_URL}" target="_blank" rel="noopener">Get the protocol-analyzer skill</a> and <a href="#/about?s=analyse">follow these steps</a>.</p>
       <div class="stats">
