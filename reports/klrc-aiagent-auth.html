@@ -1,0 +1,1016 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Agent Authentication and Authorization (draft-klrc-aiagent-auth): protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>AI Agent Authentication and Authorization (draft-klrc-aiagent-auth)<small>AI Agent Authentication and Authorization, draft-klrc-aiagent-auth</small></h1><ul class="facts"><li><b>Specification:</b> draft-klrc-aiagent-auth-03</li><li><b>Date:</b> 2026-07-06</li><li><b>Maintainer:</b> P. Kasselman (Defakto Security), J. Lombardo (AWS), Y. Rosomakho (Zscaler), B. Campbell (Ping Identity), N. Steele (OpenAI), A. Parecki (Okta); individual Internet-Draft, later adopted by the IETF WIMSE working group</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> -03 is the last revision under this name. The IETF datatracker lists it as replaced by the WIMSE working-group draft draft-ietf-wimse-aims (-00 September 2026, -01 2 November 2026), developed in the same repository. The successor was not analysed.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent authorization</span><span class="chip"><b>Also:</b> Workload identity</span><span class="chip"><b>Mechanism:</b> mTLS, Proof-of-possession token, HTTP Message Signatures, Bearer token</span><span class="chip"><b>Venue:</b> IETF individual draft</span><span class="chip"><b>Maturity:</b> Proposal</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>Many groups are inventing new identity and authorization protocols for AI agents. This Informational Internet-Draft argues that existing standards already cover most needs and shows how to combine them. It treats an agent as a workload, like any other running service, and gives best practices for identifying, authenticating, authorizing and monitoring it. It is written by authors from Defakto, AWS, Zscaler, Ping Identity, OpenAI and Okta. Version -03 (July 2026) is the last version under this name: the IETF WIMSE working group has since adopted it as draft-ietf-wimse-aims, which is not analysed here. No deployment of the framework itself is named.</p><p>Each agent must have exactly one workload identifier (WIMSE, possibly a SPIFFE ID) and short-lived credentials bound to a key, issued after an assessment of its environment. Services authenticate the agent with mutual TLS, WIMSE proof tokens or HTTP Message Signatures, and grant access through OAuth access tokens. The token names the agent (client_id) and the user it acts for (sub), with user approval and CIBA step-up for sensitive actions. Revocation and monitoring rely on OpenID Shared Signals, and audit logs are mandatory. It defines no new messages, no model identity, no contact channel, and no identifier for individual running copies.</p><h2 id="how">How it works</h2><ol class="steps"><li>When an agent is deployed, its platform&#x27;s provisioning system (e.g. SPIFFE) checks the agent&#x27;s environment and issues it a short-lived credential bound to its unique WIMSE identifier (e.g. an X.509 certificate or a Workload Identity Token), and rotates it automatically. The language model never sees these credentials.</li><li>To act for a user, the agent sends the user to the authorization server, where the user signs in (preferably with a passkey) and approves the access. The agent then authenticates with its own credential (not a static secret) to redeem an access token naming the user in sub and the agent in client_id. Acting for itself, it uses client credentials or a JWT grant.</li><li>The agent calls a tool, service or LLM, authenticating with mutual TLS, a WIMSE proof token or an HTTP Message Signature using its key, and presents the access token.</li><li>The service checks the agent&#x27;s proof, validates the access token (directly or by introspection) and decides on the request using the agent and user identifiers, scopes and its own policy. For sensitive actions the authorization server can require extra user approval, e.g. through CIBA.</li><li>Inside the service, the access token is swapped for a Transaction Token; to reach another domain, the agent uses Identity and Authorization Chaining to get a token from that domain&#x27;s authorization server.</li><li>Participants may subscribe to Shared Signals (CAEP or RISC) events and must stop using revoked access promptly. All parties keep tamper-evident audit logs of the agent, the user, the action and the decision.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>AI Agent Authentication and Authorization (draft-klrc-aiagent-auth)</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Best-practice framework composing WIMSE, SPIFFE, OAuth, SSF</td></tr><tr><td class="prop">Use cases</td><td class="">Agents calling LLMs, tools, services, other agents</td></tr><tr><td class="prop">Parties involved</td><td class="">User/System, Agent, LLM, Tools, AS, AIMS</td></tr><tr><td class="prop">Status and adoption</td><td class="red">Individual draft -03, replaced by WIMSE WG draft</td></tr><tr><td class="prop">Building blocks</td><td class="">WIMSE, SPIFFE, OAuth family, Txn-Tokens, SSF</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">One WIMSE/SPIFFE workload ID per agent</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">Not defined</td></tr><tr><td class="prop">Acting for (authority)</td><td class="green">Yes, user or system in sub</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Key-bound workload credential plus access token</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Short recommended, explicit expiry required</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, key proof and token validation</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="green">Yes, agent&#x27;s own key, per request</td></tr><tr><td class="prop">Scoped authorization</td><td class="green">Yes, OAuth scopes and token claims</td></tr><tr><td class="prop">Human approval</td><td class="green">Yes, consent plus CIBA step-up</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="green">Credential provisioner and authorization server</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="yellow">Optional via Shared Signals; short lifetimes</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No contact field</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="yellow">Optional, via OpenID Shared Signals</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The service authenticates the agent by its own key and receives an OAuth token naming the agent, the user it acts for and the approved scopes, with user approval and step-up for sensitive actions.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>Access ends mainly through short credential lifetimes; services that subscribe to Shared Signals can cut off sessions, users or agents promptly, but subscription is optional and there is no contact channel or instance-level cut-off.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Mandatory tamper-evident audit logs record the authenticated agent, the delegated user or system, the action and the decision, so actions can be traced to the agent workload and the user, but not to a specific running copy or model.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Status and adoption:</b> Individual draft -03, replaced by WIMSE WG draft ()</li><li><b>Agent instance identifier:</b> Not defined (not addressed by the specification)</li><li><b>Contact and escalation:</b> No contact field (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>AI Agent Authentication and Authorization (draft-klrc-aiagent-auth)</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An Informational IETF draft that treats AI agents as workloads and tells deployers to give each agent a WIMSE or SPIFFE identity with short-lived key-bound credentials, authenticate it with mutual TLS or signed proofs, authorize it with OAuth access tokens naming the agent and the user, and monitor and revoke through Shared Signals.<details><summary>Evidence (2)</summary><div class="claim">The document proposes best practices built on existing standards. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“This document proposes best practices for authentication and authorization of AI agent interactions.”</blockquote></div><div class="claim">It defines no new protocols. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“Rather than defining new protocols, this document describes how existing and widely deployed standards can be applied or extended to establish agent authentication and authorization.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Any agent calling a large language model, tools, services, resources or other agents, whether for a user, for a system or on its own behalf, inside one organisation or across domains. Identity travels at the transport layer (mutual TLS) or in HTTP headers (proof tokens, HTTP Message Signatures), plus an OAuth access token; the receiving service verifies these itself, or a service mesh does. Communication inside or between tools and services is out of scope.<details><summary>Evidence (4)</summary><div class="claim">Agents interact with LLMs and tools, services and resources. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 4. Agents are workloads. <span class="chk">(quote verified against the source)</span><blockquote>“An Agent is a workload that iteratively interacts with a Large Language Model (LLM) and a set of Tools, Services and Resources.”</blockquote></div><div class="claim">Communication between tools is out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 4. Agents are workloads. <span class="chk">(quote verified against the source)</span><blockquote>“Communication within or between Tools, Services, and Resources is out of scope.”</blockquote></div><div class="claim">Authentication can happen at either layer. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9. Agent Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“authentication can occur at either the transport layer or the application layer, and many deployments rely on a combination of both.”</blockquote></div><div class="claim">mTLS is common in service meshes. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.1. Transport Layer Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“One example of this is the use of mTLS in service mesh architectures such as Istio or LinkerD.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">User or System: gives the agent a request or mission (a system can be a batch job or another agent). AI Agent: a workload that loops between the LLM and tools until its task ends. Large Language Model: chooses which tools to call. Tools, Services and Resources: the endpoints the agent calls, which can themselves be agents. OAuth authorization server: issues access tokens. Agent Identity Management System (AIMS): a conceptual set of functions (identity providers, provisioning, policy engines, enforcement points), not one product.<details><summary>Evidence (4)</summary><div class="claim">The figure names User or System, Agent, LLM, and Tools, Services and Resources. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 4. Agents are workloads. <span class="chk">(quote verified against the source)</span><blockquote>“illustrates the high-level interaction model between the User or System, the AI Agent, the Large Language Model (LLM), Tools, Services, and Resources.”</blockquote></div><div class="claim">A tool can itself be an agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 4. Agents are workloads. <span class="chk">(quote verified against the source)</span><blockquote>“A Tool endpoint may itself be implemented by another AI agent.”</blockquote></div><div class="claim">AIMS is a conceptual model across components. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 5. Agent Identity Management System. <span class="chk">(quote verified against the source)</span><blockquote>“AIMS may be implemented by one component or distributed across multiple systems (such as identity providers, provisioning services, authorization servers, policy engines, and runtime enforcement points).”</blockquote></div><div class="claim">The authorization server issues tokens. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.2. Leverage OAuth 2.0 as a Delegation Authorization Framework. <span class="chk">(quote verified against the source)</span><blockquote>“an Agent acts as an OAuth 2.0 Client to an OAuth 2.0 Authorization Server”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="red"><span class="badge">Not addressed</span><br>Early proposal, since replaced. Version -03 (6 July 2026) is an individual Informational Internet-Draft; the WIMSE working group has adopted the work as draft-ietf-wimse-aims, now the active document. Several building blocks (WIMSE identifier, credentials and proof tokens, Transaction Tokens, Identity Chaining) are themselves still drafts, while SPIFFE and the OAuth RFCs are deployed. No deployment of the framework as such is named.<div class="meta">Why this rating: An individual draft with no named deployments of the framework; its working-group successor was not rated.</div><details><summary>Evidence (4)</summary><div class="claim">At -03 the repository describes an individual draft. <i>Source states</i> <a href="https://github.com/PieterKas/agent2agent-auth-framework/tree/draft-klrc-aiagent-auth-03">Repository README at the -03 tag</a>, Agent-to-Agent Authentication and Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“This is the working area for the individual Internet-Draft, &quot;Agent-to-Agent Authentication and Authorization&quot;.”</blockquote></div><div class="claim">The repository now hosts the WIMSE working-group successor. <i>Source states</i> <a href="https://github.com/PieterKas/agent2agent-auth-framework">Repository README at the draft-ietf-wimse-aims-01 tag (successor status)</a>, AI Identity Management System. <span class="chk">(quote verified against the source)</span><blockquote>“This is the working area for the IETF WIMSE Working Group Internet-Draft, &quot;AI Identity Management System&quot;.”</blockquote></div><div class="claim">Several building blocks are drafts. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 6. Agent Identifier. <span class="chk">(quote verified against the source)</span><blockquote>“The Workload Identity in Multi-System Environments (WIMSE) identifier as defined by {{!WIMSE-ID=I-D.ietf-wimse-identifier}} is the primary identifier for agents in this framework.”</blockquote></div><div class="claim">Searched all sections for implementations or deployments of the framework; none named. No implementation of the framework is named. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Searched all sections for implementations or deployments of the framework; none named.</div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">Identity and credentials: WIMSE identifiers and workload credentials (drafts) and SPIFFE IDs and SVIDs. Authentication: mutual TLS, WIMSE Workload Proof Tokens (draft) and WIMSE HTTP Message Signatures (RFC 9421). Authorization: OAuth 2.0 (RFC 6749) with JWT access tokens (RFC 9068), introspection (RFC 7662), JWT and mTLS client authentication (RFC 7523, RFC 8705), Token Exchange (RFC 8693), the OAuth Security BCP (RFC 9700), Transaction Tokens and Identity Chaining (drafts), discovery (RFC 8414, RFC 9728) and CIBA. Monitoring: OpenID Shared Signals with CAEP and RISC.<details><summary>Evidence (3)</summary><div class="claim">Built on SPIFFE, WIMSE, OAuth and SSF. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 4. Agents are workloads. <span class="chk">(quote verified against the source)</span><blockquote>“This document describes how AI Agents should leverage existing standards defined by SPIFFE {{SPIFFE}}, WIMSE, OAuth and OpenID SSF {{SSF}}.”</blockquote></div><div class="claim">WIMSE defines WPTs and HTTP signatures for agents. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.2. Application Layer Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“The WIMSE working group defines WIMSE Proof Tokens and HTTP Message Signatures as authentication mechanisms that may be used by agents.”</blockquote></div><div class="claim">OAuth Security BCP applies. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.4.4. OAuth 2.0 Security Best Practices. <span class="chk">(quote verified against the source)</span><blockquote>“The Best Current Practice for OAuth 2.0 Security as described in {{!OAUTH-BCP=RFC9700}} are applicable when requesting and using access tokens.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Yes, per agent, but not necessarily per running copy. Every agent must have exactly one WIMSE identifier, a URI that uniquely names a workload within a trust domain; it may be a SPIFFE ID (spiffe://trust-domain/path). In access tokens the agent appears as the OAuth client_id. The draft does not say whether separate running copies of the same agent get separate identifiers; in common SPIFFE deployments replicas of one service share an ID.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Each agent has a required identifier of its own, but the draft does not require each running copy to have one, so by the tie rule it is rated with identifiers that name the application (MCP Authorization) rather than green.</div><details><summary>Evidence (5)</summary><div class="claim">Agents must be uniquely identified. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 6. Agent Identifier. <span class="chk">(quote verified against the source)</span><blockquote>“Agents MUST be uniquely identified in order to support authentication, authorization, auditing, and delegation.”</blockquote></div><div class="claim">Exactly one WIMSE identifier per agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 6. Agent Identifier. <span class="chk">(quote verified against the source)</span><blockquote>“An agent participating in this framework MUST be assigned exactly one WIMSE identifier, which MAY be a SPIFFE ID.”</blockquote></div><div class="claim">What a WIMSE identifier is. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 6. Agent Identifier. <span class="chk">(quote verified against the source)</span><blockquote>“A WIMSE identifier is a URI that uniquely identifies a workload within a trust domain.”</blockquote></div><div class="claim">In access tokens the agent is client_id. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.3. Use of OAuth 2.0 Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“The access token includes the Agent identity as the &#x27;client_id&#x27; claim as defined in {{Section 2.2 of OAUTH-ACCESSTOKEN-JWT}}.”</blockquote></div><div class="claim">Searched 5 Agent Identity Management System, 6 Agent Identifier, 8 Agent Credential Provisioning for instance, replica or session. The draft does not address separate identifiers for running copies of one agent. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Searched 5 Agent Identity Management System, 6 Agent Identifier, 8 Agent Credential Provisioning for instance, replica or session.</div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not defined. The draft identifies agents as workloads but never distinguishes one running copy, session or task of an agent from another, and defines no instance or session identifier. A deployment could give each running copy its own WIMSE identifier and credential, which the draft allows but does not require. Audit records must include a transaction or request correlation identifier, which identifies a request, not an agent instance.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier is defined (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched all sections for instance, replica, session and sub-agent identifiers. No instance identifier. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Searched all sections for instance, replica, session and sub-agent identifiers.</div><div class="claim">Audit records carry a request correlation identifier. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 11. Agent Monitoring, Observability and Remediation. <span class="chk">(quote verified against the source)</span><blockquote>“timestamp and transaction or request correlation identifier”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. When the agent acts for a user or a system, the access token carries that party&#x27;s identifier in the sub claim (as in JWT access tokens, RFC 9068), and resource servers must use these identifiers, with the other claims, to decide on access. For opaque tokens the same information comes through introspection. When the agent acts on its own behalf, there is no separate principal.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: The framework puts the delegating user or system in the access token the service receives, as part of its normal flow; MCP Authorization is red because it defines no such rule.</div><details><summary>Evidence (3)</summary><div class="claim">The user or system is conveyed in sub. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.3. Use of OAuth 2.0 Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“When the Agent is acting on-behalf of another User or System, the User or System identifier is conveyed in the &#x27;sub&#x27; claim as defined in {{Section 2.2 of OAUTH-ACCESSTOKEN-JWT}}.”</blockquote></div><div class="claim">Resource servers must use these identifiers. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.3. Use of OAuth 2.0 Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“These identifiers MUST be used by resource servers protected by the OAuth 2.0 authorization service, along with other claims in the access token, to determine if access to a resource should be allowed.”</blockquote></div><div class="claim">Opaque tokens give the same through introspection. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.3. Use of OAuth 2.0 Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“The introspection response provides the active state of the token and associated authorization attributes equivalent to those conveyed in structured tokens.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>A workload credential bound to the agent&#x27;s key, plus an OAuth access token. The agent proves its identity with mutual TLS (X.509 certificate), a WIMSE Workload Proof Token (a signed JWT tied to the request, covering e.g. audience, expiry and a hash of the agent&#x27;s token) or an HTTP Message Signature covering e.g. method, path and body digest; these are proof of possession. JWT-SVIDs and the access token are bearer tokens; -03 does not require sender-constrained access tokens. Static API keys are called an antipattern.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: Cryptographically bound credentials are required and presented in the normal flow; the answer notes which options are bearer (as for MCP Authorization).</div><details><summary>Evidence (7)</summary><div class="claim">Credentials must be cryptographically bound. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 7. Agent Credentials. <span class="chk">(quote verified against the source)</span><blockquote>“Agents MUST possess credentials that provide a cryptographic binding to the agent identifier.”</blockquote></div><div class="claim">WPTs give proof of possession tied to a message. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.2.1. WIMSE Proof Tokens (WPTs). <span class="chk">(quote verified against the source)</span><blockquote>“A WPT is defined as a signed JSON Web Token (JWT) that binds an agent’s authentication to a specific message context, for example, an HTTP request, thereby providing proof of possession rather than relying on bearer semantics.”</blockquote></div><div class="claim">WPT claims include audience, expiry, unique ID and a hash of the WIT. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.2.1. WIMSE Proof Tokens (WPTs). <span class="chk">(quote verified against the source)</span><blockquote>“They carry claims such as audience (aud), expiration (exp), a unique token identifier (jti), and a hash of the associated WIT (wth).”</blockquote></div><div class="claim">HTTP Message Signatures cover request components. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.2.2. HTTP Message Signatures. <span class="chk">(quote verified against the source)</span><blockquote>“The profile mandates signing of some request components (e.g., method, request-target, content digest, and the WIT itself) and supports optional response signing.”</blockquote></div><div class="claim">JWT-SVIDs are bearer credentials. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 7. Agent Credentials. <span class="chk">(quote verified against the source)</span><blockquote>“JWT-SVIDs are short-lived bearer credentials used for JWT-based authentication.”</blockquote></div><div class="claim">Static API keys are an antipattern. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 7. Agent Credentials. <span class="chk">(quote verified against the source)</span><blockquote>“Static API keys are an antipattern for agent identity.”</blockquote></div><div class="claim">Searched 10.3 Use of OAuth 2.0 Access Tokens and 10.4 for DPoP, sender-constrained or certificate-bound access tokens. No sender-constraint requirement for access tokens. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Searched 10.3 Use of OAuth 2.0 Access Tokens and 10.4 for DPoP, sender-constrained or certificate-bound access tokens.</div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Short, but no number. Agent credentials SHOULD be short-lived and MUST carry an explicit expiry after which they are not accepted; the draft presents short lifetimes with automatic rotation as an alternative to explicit revocation. Proof tokens are typically short-lived. No maximum is given for workload credentials or access tokens, and verifiers are not told to reject long-lived ones.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: Short lifetimes are recommended with no specific limit (same as MCP Authorization).</div><details><summary>Evidence (3)</summary><div class="claim">Short-lived recommended, expiry mandatory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 7. Agent Credentials. <span class="chk">(quote verified against the source)</span><blockquote>“Agent credentials SHOULD be short-lived to minimize the risk of credential theft, MUST include an explicit expiration time after which it is no longer accepted”</blockquote></div><div class="claim">Short lifetimes as an alternative to revocation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 8. Agent Credential Provisioning. <span class="chk">(quote verified against the source)</span><blockquote>“It provides an alternative to explicit revocation mechanisms and simplifies lifecycle management in large, automated environments”</blockquote></div><div class="claim">WPTs are typically short-lived. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.2.1. WIMSE Proof Tokens (WPTs). <span class="chk">(quote verified against the source)</span><blockquote>“WPTs are designed to work alongside WITs {{WIMSE-CRED}} and are typically short-lived to reduce the window for replay attacks.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The receiving service verifies the agent&#x27;s identity, possession of its key and the binding to the message (through the TLS handshake, the proof token or the HTTP signature), and checks that credentials have not expired. It validates JWT access tokens itself or asks its authorization server through introspection. Checking the workload credential needs the agent&#x27;s trust-domain keys (e.g. a SPIFFE trust bundle), which in practice means prior setup between domains; the draft does not describe that distribution.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: The service can validate both credentials with expiry checks, the access token through its own authorization server (same as MCP Authorization).</div><details><summary>Evidence (4)</summary><div class="claim">Receivers verify identity, key possession and message binding. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.2.1. WIMSE Proof Tokens (WPTs). <span class="chk">(quote verified against the source)</span><blockquote>“This design enables receiving systems to verify identity, key possession, and message binding at the application layer”</blockquote></div><div class="claim">Access tokens are validated directly or by introspection. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.3. Use of OAuth 2.0 Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“JWT access tokens can be validated directly by resource servers while other formats that are opaque to the resource server can be validated through a mechanism that calls back to the authorization server”</blockquote></div><div class="claim">Expired credentials are not accepted. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 7. Agent Credentials. <span class="chk">(quote verified against the source)</span><blockquote>“MUST include an explicit expiration time after which it is no longer accepted”</blockquote></div><div class="claim">Searched 7 Agent Credentials, 9 Agent Authentication for trust bundle, key distribution and federation between trust domains. Trust-bundle distribution is not described. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Searched 7 Agent Credentials, 9 Agent Authentication for trust bundle, key distribution and federation between trust domains.</div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, for the agent. The service authenticates the agent directly with the agent&#x27;s own key: in the mutual TLS handshake, or per request through a WIMSE proof token or HTTP Message Signature, each tied to the agent&#x27;s workload credential. SPIFFE-style provisioning gives each credential its own short-lived key. The user is authenticated by the authorization server (preferably with a passkey), not by the service. Which mechanism a deployment uses is its choice; the draft describes options rather than mandating one.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: In the framework&#x27;s normal flow the service verifies proof from the agent&#x27;s own key; the calibration examples are red because they check only a token or a provider key.</div><details><summary>Evidence (5)</summary><div class="claim">mTLS proves control of the agent&#x27;s private key. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.1. Transport Layer Authentication. <span class="chk">(quote verified against the source)</span><blockquote>“mTLS provides strong channel binding and cryptographic proof of control over the agent’s private key.”</blockquote></div><div class="claim">WPTs are generated by the agent with its key. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 9.2.1. WIMSE Proof Tokens (WPTs). <span class="chk">(quote verified against the source)</span><blockquote>“WPTs are generated by the agent, using the private key matching the public key in the WIT.”</blockquote></div><div class="claim">Services and others authenticate the agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 4. Agents are workloads. <span class="chk">(quote verified against the source)</span><blockquote>“the AI agent is a workload that needs an identifier and credentials so it can be authenticated by the Tools, Services, Resources, Large Language Model, System and the User”</blockquote></div><div class="claim">Keys are ephemeral per credential with SPIFFE. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 8. Agent Credential Provisioning. <span class="chk">(quote verified against the source)</span><blockquote>“{{SPIFFE}} also provisions ephemeral cryptographic key material bound to each credential”</blockquote></div><div class="claim">The user authenticates at the authorization server. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.4.1. User Delegates Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“the user authenticates to the authorization server and explicitly approves the requested access.”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Access is granted through OAuth access tokens carrying claims such as scope, audience, client_id and sub, and resource servers decide using these together with their own policy, attribute or role systems. Agents SHOULD request only the minimum scopes needed, and Transaction Tokens narrow access inside a service to one transaction. How an agent turns its natural-language mission into specific permissions is out of scope.<div class="meta">Part of the normal flow · requirement level: SHOULD</div><div class="meta">Why this rating: Scoped permissions in the access token are part of the normal flow and enforced by the service (same as MCP Authorization).</div><details><summary>Evidence (4)</summary><div class="claim">Access tokens carry scope and other claims. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.3. Use of OAuth 2.0 Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“which include claims such as &#x27;client_id&#x27;, &#x27;sub&#x27;, &#x27;aud&#x27;, &#x27;scope&#x27;, and other attributes relevant to authorization.”</blockquote></div><div class="claim">Least privilege is recommended. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.9. Privacy Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Agents SHOULD request only the minimum scopes and authorization details necessary to complete a task.”</blockquote></div><div class="claim">Mission translation is out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.1. Agent Mission. <span class="chk">(quote verified against the source)</span><blockquote>“The process through which the mission is translated into authorization requriements is out of scope of this specification.”</blockquote></div><div class="claim">Transaction Tokens narrow access internally. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.5. Risk Reduction with Transaction Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“This results in a downscoped token that is bound to a specific transaction and cannot be used as an access token, with another transaction, or within the same transaction with modified transaction details”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, when the agent acts for a user. The user signs in at the authorization server and explicitly approves the access before a token is issued. For risky requests the authorization server SHOULD decline or obtain more approval, e.g. through CIBA (a push to the user&#x27;s phone). Confirmation inside the agent&#x27;s own interface does not count: it must be tied to a grant from the authorization server. Agents acting on their own behalf need no person, and the draft notes CIBA fits mid-task approval poorly.<div class="meta">Part of the normal flow · requirement level: SHOULD</div><div class="meta">Why this rating: A user approval step is part of the defined delegation flow, with step-up for sensitive actions (same as MCP Authorization).</div><details><summary>Evidence (4)</summary><div class="claim">The user explicitly approves. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.4.1. User Delegates Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“the user authenticates to the authorization server and explicitly approves the requested access.”</blockquote></div><div class="claim">The authorization server can require more approval. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.7. Human in the Loop. <span class="chk">(quote verified against the source)</span><blockquote>“In such cases the authorization server SHOULD either decline the request or obtain additional authorization from the User.”</blockquote></div><div class="claim">Local UI confirmation is not enough. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.7. Human in the Loop. <span class="chk">(quote verified against the source)</span><blockquote>“the agent MUST NOT treat local UI confirmation alone as sufficient authorization.”</blockquote></div><div class="claim">CIBA has limits mid-execution. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.7. Human in the Loop. <span class="chk">(quote verified against the source)</span><blockquote>“CIBA itself only accounts for client initiation, which doesn&#x27;t map well to cases that envision the need for User confirmation to occur mid-execution.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="green"><span class="badge">Addressed</span><br>Two parties. The provisioning system (e.g. SPIFFE) vouches for the agent&#x27;s identity: it checks signals about the agent and its environment (posture) and only then issues short-lived credentials. The authorization server vouches for access: it evaluates policy and issues the tokens the service accepts. The draft requires no particular posture mechanism or evidence, so how much the identity is worth depends on the deployment.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: The framework names the parties that vouch (credential provisioner and authorization server), as MCP Authorization names its authorization server.</div><details><summary>Evidence (3)</summary><div class="claim">Provisioning issues credentials after verification. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 8. Agent Credential Provisioning. <span class="chk">(quote verified against the source)</span><blockquote>“a provisioning component gathers workload and execution context signals, verifies them according to local policy, and, if verification succeeds, issues short-lived credentials for subsequent authentication and authorization.”</blockquote></div><div class="claim">The authorization server evaluates policy and issues tokens. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.2. Leverage OAuth 2.0 as a Delegation Authorization Framework. <span class="chk">(quote verified against the source)</span><blockquote>“which receives the request, evaluate the authorization policy and returns an access token”</blockquote></div><div class="claim">No posture mechanism is required. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 8. Agent Credential Provisioning. <span class="chk">(quote verified against the source)</span><blockquote>“This document does not require any particular posture assessment mechanism, evidence format, or verifier architecture.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The main tool is short credential lifetimes, which the draft calls an alternative to explicit revocation. In addition, any participant MAY subscribe to OpenID Shared Signals events (CAEP or RISC, e.g. session revoked or subject disabled), and recipients must then stop using revoked authorization without undue delay. Subscription is optional and who sends which events is left open. Granularity depends on the event (a session, a user or the agent&#x27;s identity).<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: Revocation via signals is defined and enforced promptly once received, but subscribing is optional, so it may not reach every verifier; the calibration examples are red because they define none.</div><details><summary>Evidence (3)</summary><div class="claim">Subscribing to signals is optional. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 11. Agent Monitoring, Observability and Remediation. <span class="chk">(quote verified against the source)</span><blockquote>“Any participant in the system, including the Agent, Tool, System, LLM or other resources and service MAY subscribe to change notifications using eventing mechanisms such as the OpenID Shared Signals Framework {{SSF}}”</blockquote></div><div class="claim">Recipients must enforce revocation promptly. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 11. Agent Monitoring, Observability and Remediation. <span class="chk">(quote verified against the source)</span><blockquote>“Recipients of such signals MUST ensure that revoked or downgraded authorization is enforced without undue delay.”</blockquote></div><div class="claim">Short lifetimes replace explicit revocation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 8. Agent Credential Provisioning. <span class="chk">(quote verified against the source)</span><blockquote>“It provides an alternative to explicit revocation mechanisms and simplifies lifecycle management in large, automated environments”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft defines no way for a service to reach whoever runs the agent. It requires tamper-evident audit logs, recommends correlating events across parties, and mentions client metadata documents and dynamic registration for learning about clients, but none of these is defined as a contact or escalation channel.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field is defined (same as the three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Searched all sections for contact, escalation, abuse and operator details. No contact channel. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Searched all sections for contact, escalation, abuse and operator details.</div><div class="claim">Audit logs are mandatory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 11. Agent Monitoring, Observability and Remediation. <span class="chk">(quote verified against the source)</span><blockquote>“deployments MUST produce durable audit logs covering authorization decisions and subsequent remediations.”</blockquote></div><div class="claim">Client metadata documents may describe clients. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 10.10.3. Client Capability Discovery. <span class="chk">(quote verified against the source)</span><blockquote>“Where supported, they MAY use Client ID Metadata Documents”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Optional. Participants MAY exchange security events through the OpenID Shared Signals Framework, using CAEP for access changes and RISC for risk incidents (e.g. token replay suspected, risk elevated), and recipients SHOULD reduce access in response. The draft does not say who must send which events. Monitoring systems SHOULD also correlate events across agents, tools, services and models to detect misuse.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: Signals between parties are named but optional; the calibration examples are red because they define none.</div><details><summary>Evidence (3)</summary><div class="claim">Signals through SSF, CAEP or RISC. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 11. Agent Monitoring, Observability and Remediation. <span class="chk">(quote verified against the source)</span><blockquote>“Any participant in the system, including the Agent, Tool, System, LLM or other resources and service MAY subscribe to change notifications using eventing mechanisms such as the OpenID Shared Signals Framework {{SSF}}”</blockquote></div><div class="claim">Recipients should remediate. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 11. Agent Monitoring, Observability and Remediation. <span class="chk">(quote verified against the source)</span><blockquote>“the recipient SHOULD remediate by attenuating access”</blockquote></div><div class="claim">Cross-party correlation is recommended. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 11. Agent Monitoring, Observability and Remediation. <span class="chk">(quote verified against the source)</span><blockquote>“Monitoring / Observability systems SHOULD correlate events across Agents, Tools, Services, Resources and LLMs to detect misuse patterns”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft treats the language model as a separate resource the agent calls and must authenticate to; it defines no claim telling a service which model drives the agent. Credentials MAY carry extra attributes (e.g. attestation evidence or workload metadata), and posture checks may use software or supply-chain signals, but model identity is not named among them.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model to the service (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Credentials may carry extra attributes. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, 7. Agent Credentials. <span class="chk">(quote verified against the source)</span><blockquote>“MAY carry additional attributes relevant to the agent (for example trust domain, attestation evidence, or workload metadata).”</blockquote></div><div class="claim">Searched all sections for model identifier, model version and model provenance. No model identity. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a>, Searched all sections for model identifier, model version and model provenance.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/">AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03</a> (-03 (repository tag draft-klrc-aiagent-auth-03, commit 56ffb18), 2026-07-06)</li><li><a href="https://github.com/PieterKas/agent2agent-auth-framework/tree/draft-klrc-aiagent-auth-03">Repository README at the -03 tag</a> (commit 56ffb18, 2026-07-06)</li><li><a href="https://github.com/PieterKas/agent2agent-auth-framework">Repository README at the draft-ietf-wimse-aims-01 tag (successor status)</a> (commit a11288c, 2026-11-02)</li></ul><h2>Notes</h2><ul class="plain"><li>This is a best-practice framework rather than a wire protocol: it composes existing standards. Ratings count what the draft itself requires or recommends; capabilities of the referenced standards that the draft does not invoke are not counted.</li><li>The analysed text was taken from the authors&#x27; repository at the tag draft-klrc-aiagent-auth-03. Section numbers follow the published -03 numbering, derived from the order of headings in the source.</li><li>The draft has been replaced by the WIMSE working-group draft draft-ietf-wimse-aims (latest -01, 2 November 2026). The successor&#x27;s commit history shows additions such as a section on sender-constrained access tokens, which could change several ratings; it was not analysed.</li><li>OpenID AuthZEN is listed as a normative reference in -03 but not used in the text.</li><li>The draft uses RFC 2119 keywords; lowercase &#x27;may&#x27; in descriptive text (e.g. &#x27;Agents may authenticate using a variety of mechanisms&#x27;) was not treated as a requirement. No instructions aimed at AI tools were found in the sources.</li></ul><h2>Open questions</h2><ul class="plain"><li>Does &#x27;agent&#x27; in &#x27;Agents MUST be uniquely identified&#x27; mean each running copy or the agent as a deployed service? The draft does not say; the identifier was rated yellow and the instance identifier red on that basis.</li><li>Authentication was rated green because every described mechanism uses the agent&#x27;s own key, but the draft offers these as options rather than requiring one. Whether a deployment may skip agent authentication and rely on the access token alone is not stated.</li><li>Which parties transmit Shared Signals events about agents, and with what subject identifiers (WIMSE ID, client_id), is not specified, so how revocation reaches a given service is unclear.</li><li>How a receiving service in another trust domain obtains the keys to verify an agent&#x27;s workload credential is not described.</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (61 of 61 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "AI Agent Authentication and Authorization (draft-klrc-aiagent-auth)",
+  "full_name": "AI Agent Authentication and Authorization, draft-klrc-aiagent-auth",
+  "spec_version": "draft-klrc-aiagent-auth-03",
+  "spec_date": "2026-07-06",
+  "maintainer": "P. Kasselman (Defakto Security), J. Lombardo (AWS), Y. Rosomakho (Zscaler), B. Campbell (Ping Identity), N. Steele (OpenAI), A. Parecki (Okta); individual Internet-Draft, later adopted by the IETF WIMSE working group",
+  "newer_version_note": "-03 is the last revision under this name. The IETF datatracker lists it as replaced by the WIMSE working-group draft draft-ietf-wimse-aims (-00 September 2026, -01 2 November 2026), developed in the same repository. The successor was not analysed."
+ },
+ "profile": {
+  "id": "klrc-aiagent-auth",
+  "category": "agent-authorization",
+  "secondary_categories": [
+   "workload-identity"
+  ],
+  "mechanisms": [
+   "mtls",
+   "pop-token",
+   "http-message-signature",
+   "bearer-token"
+  ],
+  "venue": "ietf-individual",
+  "maturity": "proposal",
+  "openness": "open-standard",
+  "layers": [
+   "transport",
+   "http-header",
+   "token"
+  ],
+  "building_blocks": [
+   "WIMSE identifier (draft)",
+   "WIMSE workload credentials (draft)",
+   "WIMSE Workload Proof Token (draft)",
+   "SPIFFE",
+   "RFC 9421",
+   "OAuth 2.0",
+   "RFC 6749",
+   "RFC 9068",
+   "RFC 7662",
+   "RFC 7523",
+   "RFC 8705",
+   "RFC 8693",
+   "RFC 9700",
+   "RFC 8414",
+   "RFC 9728",
+   "Transaction Tokens (draft)",
+   "Identity Chaining (draft)",
+   "OpenID SSF",
+   "OpenID CAEP",
+   "OpenID RISC",
+   "OpenID CIBA"
+  ],
+  "website": "https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/",
+  "first_published": "2026-03"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "Many groups are inventing new identity and authorization protocols for AI agents. This Informational Internet-Draft argues that existing standards already cover most needs and shows how to combine them. It treats an agent as a workload, like any other running service, and gives best practices for identifying, authenticating, authorizing and monitoring it. It is written by authors from Defakto, AWS, Zscaler, Ping Identity, OpenAI and Okta. Version -03 (July 2026) is the last version under this name: the IETF WIMSE working group has since adopted it as draft-ietf-wimse-aims, which is not analysed here. No deployment of the framework itself is named.",
+  "Each agent must have exactly one workload identifier (WIMSE, possibly a SPIFFE ID) and short-lived credentials bound to a key, issued after an assessment of its environment. Services authenticate the agent with mutual TLS, WIMSE proof tokens or HTTP Message Signatures, and grant access through OAuth access tokens. The token names the agent (client_id) and the user it acts for (sub), with user approval and CIBA step-up for sensitive actions. Revocation and monitoring rely on OpenID Shared Signals, and audit logs are mandatory. It defines no new messages, no model identity, no contact channel, and no identifier for individual running copies."
+ ],
+ "how_it_works": [
+  "When an agent is deployed, its platform's provisioning system (e.g. SPIFFE) checks the agent's environment and issues it a short-lived credential bound to its unique WIMSE identifier (e.g. an X.509 certificate or a Workload Identity Token), and rotates it automatically. The language model never sees these credentials.",
+  "To act for a user, the agent sends the user to the authorization server, where the user signs in (preferably with a passkey) and approves the access. The agent then authenticates with its own credential (not a static secret) to redeem an access token naming the user in sub and the agent in client_id. Acting for itself, it uses client credentials or a JWT grant.",
+  "The agent calls a tool, service or LLM, authenticating with mutual TLS, a WIMSE proof token or an HTTP Message Signature using its key, and presents the access token.",
+  "The service checks the agent's proof, validates the access token (directly or by introspection) and decides on the request using the agent and user identifiers, scopes and its own policy. For sensitive actions the authorization server can require extra user approval, e.g. through CIBA.",
+  "Inside the service, the access token is swapped for a Transaction Token; to reach another domain, the agent uses Identity and Authorization Chaining to get a token from that domain's authorization server.",
+  "Participants may subscribe to Shared Signals (CAEP or RISC) events and must stop using revoked access promptly. All parties keep tamper-evident audit logs of the agent, the user, the action and the decision."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "AI Agent Authentication and Authorization, draft-klrc-aiagent-auth-03",
+   "url": "https://datatracker.ietf.org/doc/draft-klrc-aiagent-auth/03/",
+   "fetch_url": "https://raw.githubusercontent.com/PieterKas/agent2agent-auth-framework/56ffb188b7f66d0e6bf31d4145afd3caab49ff51/draft-klrc-aiagent-auth.md",
+   "version": "-03 (repository tag draft-klrc-aiagent-auth-03, commit 56ffb18)",
+   "date": "2026-07-06",
+   "kind": "primary"
+  },
+  {
+   "id": "readme03",
+   "title": "Repository README at the -03 tag",
+   "url": "https://github.com/PieterKas/agent2agent-auth-framework/tree/draft-klrc-aiagent-auth-03",
+   "fetch_url": "https://raw.githubusercontent.com/PieterKas/agent2agent-auth-framework/56ffb188b7f66d0e6bf31d4145afd3caab49ff51/README.md",
+   "version": "commit 56ffb18",
+   "date": "2026-07-06",
+   "kind": "primary"
+  },
+  {
+   "id": "readme-now",
+   "title": "Repository README at the draft-ietf-wimse-aims-01 tag (successor status)",
+   "url": "https://github.com/PieterKas/agent2agent-auth-framework",
+   "fetch_url": "https://raw.githubusercontent.com/PieterKas/agent2agent-auth-framework/a11288c0f98a5986239b8c2b98155b7aa719c460/README.md",
+   "version": "commit a11288c",
+   "date": "2026-11-02",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Best-practice framework composing WIMSE, SPIFFE, OAuth, SSF",
+   "answer": "An Informational IETF draft that treats AI agents as workloads and tells deployers to give each agent a WIMSE or SPIFFE identity with short-lived key-bound credentials, authenticate it with mutual TLS or signed proofs, authorize it with OAuth access tokens naming the agent and the user, and monitor and revoke through Shared Signals.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The document proposes best practices built on existing standards.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "This document proposes best practices for authentication and authorization of AI agent interactions.",
+     "check": "OK",
+     "check_fp": "74b3ec9fbe"
+    },
+    {
+     "text": "It defines no new protocols.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "Rather than defining new protocols, this document describes how existing and widely deployed standards can be applied or extended to establish agent authentication and authorization.",
+     "check": "OK",
+     "check_fp": "0bf17c0297"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agents calling LLMs, tools, services, other agents",
+   "answer": "Any agent calling a large language model, tools, services, resources or other agents, whether for a user, for a system or on its own behalf, inside one organisation or across domains. Identity travels at the transport layer (mutual TLS) or in HTTP headers (proof tokens, HTTP Message Signatures), plus an OAuth access token; the receiving service verifies these itself, or a service mesh does. Communication inside or between tools and services is out of scope.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Agents interact with LLMs and tools, services and resources.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agents are workloads",
+     "quote": "An Agent is a workload that iteratively interacts with a Large Language Model (LLM) and a set of Tools, Services and Resources.",
+     "check": "OK",
+     "check_fp": "7e67ae806a"
+    },
+    {
+     "text": "Communication between tools is out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "4. Agents are workloads",
+     "quote": "Communication within or between Tools, Services, and Resources is out of scope.",
+     "check": "OK",
+     "check_fp": "d00cb0b830"
+    },
+    {
+     "text": "Authentication can happen at either layer.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9. Agent Authentication",
+     "quote": "authentication can occur at either the transport layer or the application layer, and many deployments rely on a combination of both.",
+     "check": "OK",
+     "check_fp": "2924b3a186"
+    },
+    {
+     "text": "mTLS is common in service meshes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.1. Transport Layer Authentication",
+     "quote": "One example of this is the use of mTLS in service mesh architectures such as Istio or LinkerD.",
+     "check": "OK",
+     "check_fp": "35e846aecd"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "User/System, Agent, LLM, Tools, AS, AIMS",
+   "answer": "User or System: gives the agent a request or mission (a system can be a batch job or another agent). AI Agent: a workload that loops between the LLM and tools until its task ends. Large Language Model: chooses which tools to call. Tools, Services and Resources: the endpoints the agent calls, which can themselves be agents. OAuth authorization server: issues access tokens. Agent Identity Management System (AIMS): a conceptual set of functions (identity providers, provisioning, policy engines, enforcement points), not one product.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The figure names User or System, Agent, LLM, and Tools, Services and Resources.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agents are workloads",
+     "quote": "illustrates the high-level interaction model between the User or System, the AI Agent, the Large Language Model (LLM), Tools, Services, and Resources.",
+     "check": "OK",
+     "check_fp": "68c35d411f"
+    },
+    {
+     "text": "A tool can itself be an agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agents are workloads",
+     "quote": "A Tool endpoint may itself be implemented by another AI agent.",
+     "check": "OK",
+     "check_fp": "e9f3deaf5a"
+    },
+    {
+     "text": "AIMS is a conceptual model across components.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5. Agent Identity Management System",
+     "quote": "AIMS may be implemented by one component or distributed across multiple systems (such as identity providers, provisioning services, authorization servers, policy engines, and runtime enforcement points).",
+     "check": "OK",
+     "check_fp": "f0c2bf10f9"
+    },
+    {
+     "text": "The authorization server issues tokens.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.2. Leverage OAuth 2.0 as a Delegation Authorization Framework",
+     "quote": "an Agent acts as an OAuth 2.0 Client to an OAuth 2.0 Authorization Server",
+     "check": "OK",
+     "check_fp": "8a523f70c5"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Individual draft -03, replaced by WIMSE WG draft",
+   "answer": "Early proposal, since replaced. Version -03 (6 July 2026) is an individual Informational Internet-Draft; the WIMSE working group has adopted the work as draft-ietf-wimse-aims, now the active document. Several building blocks (WIMSE identifier, credentials and proof tokens, Transaction Tokens, Identity Chaining) are themselves still drafts, while SPIFFE and the OAuth RFCs are deployed. No deployment of the framework as such is named.",
+   "rating": "red",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Red: an individual draft with no named deployments of the framework; its working-group successor was not rated.",
+   "claims": [
+    {
+     "text": "At -03 the repository describes an individual draft.",
+     "type": "fact",
+     "source": "readme03",
+     "section": "Agent-to-Agent Authentication and Authorization",
+     "quote": "This is the working area for the individual Internet-Draft, \"Agent-to-Agent Authentication and Authorization\".",
+     "check": "OK",
+     "check_fp": "fbbb6bfcf3"
+    },
+    {
+     "text": "The repository now hosts the WIMSE working-group successor.",
+     "type": "fact",
+     "source": "readme-now",
+     "section": "AI Identity Management System",
+     "quote": "This is the working area for the IETF WIMSE Working Group Internet-Draft, \"AI Identity Management System\".",
+     "check": "OK",
+     "check_fp": "45c11ac0a2"
+    },
+    {
+     "text": "Several building blocks are drafts.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6. Agent Identifier",
+     "quote": "The Workload Identity in Multi-System Environments (WIMSE) identifier as defined by {{!WIMSE-ID=I-D.ietf-wimse-identifier}} is the primary identifier for agents in this framework.",
+     "check": "OK",
+     "check_fp": "a5049a8aa5"
+    },
+    {
+     "text": "Searched all sections for implementations or deployments of the framework; none named. No implementation of the framework is named.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched all sections for implementations or deployments of the framework; none named",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "WIMSE, SPIFFE, OAuth family, Txn-Tokens, SSF",
+   "answer": "Identity and credentials: WIMSE identifiers and workload credentials (drafts) and SPIFFE IDs and SVIDs. Authentication: mutual TLS, WIMSE Workload Proof Tokens (draft) and WIMSE HTTP Message Signatures (RFC 9421). Authorization: OAuth 2.0 (RFC 6749) with JWT access tokens (RFC 9068), introspection (RFC 7662), JWT and mTLS client authentication (RFC 7523, RFC 8705), Token Exchange (RFC 8693), the OAuth Security BCP (RFC 9700), Transaction Tokens and Identity Chaining (drafts), discovery (RFC 8414, RFC 9728) and CIBA. Monitoring: OpenID Shared Signals with CAEP and RISC.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Built on SPIFFE, WIMSE, OAuth and SSF.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agents are workloads",
+     "quote": "This document describes how AI Agents should leverage existing standards defined by SPIFFE {{SPIFFE}}, WIMSE, OAuth and OpenID SSF {{SSF}}.",
+     "check": "OK",
+     "check_fp": "b74e6b510e"
+    },
+    {
+     "text": "WIMSE defines WPTs and HTTP signatures for agents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.2. Application Layer Authentication",
+     "quote": "The WIMSE working group defines WIMSE Proof Tokens and HTTP Message Signatures as authentication mechanisms that may be used by agents.",
+     "check": "OK",
+     "check_fp": "a90d7a79c4"
+    },
+    {
+     "text": "OAuth Security BCP applies.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.4.4. OAuth 2.0 Security Best Practices",
+     "quote": "The Best Current Practice for OAuth 2.0 Security as described in {{!OAUTH-BCP=RFC9700}} are applicable when requesting and using access tokens.",
+     "check": "OK",
+     "check_fp": "806e5db29f"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "One WIMSE/SPIFFE workload ID per agent",
+   "answer": "Yes, per agent, but not necessarily per running copy. Every agent must have exactly one WIMSE identifier, a URI that uniquely names a workload within a trust domain; it may be a SPIFFE ID (spiffe://trust-domain/path). In access tokens the agent appears as the OAuth client_id. The draft does not say whether separate running copies of the same agent get separate identifiers; in common SPIFFE deployments replicas of one service share an ID.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: each agent has a required identifier of its own, but the draft does not require each running copy to have one, so by the tie rule it is rated with identifiers that name the application (MCP Authorization) rather than green.",
+   "claims": [
+    {
+     "text": "Agents must be uniquely identified.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6. Agent Identifier",
+     "quote": "Agents MUST be uniquely identified in order to support authentication, authorization, auditing, and delegation.",
+     "check": "OK",
+     "check_fp": "d5b1d9a5ad"
+    },
+    {
+     "text": "Exactly one WIMSE identifier per agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6. Agent Identifier",
+     "quote": "An agent participating in this framework MUST be assigned exactly one WIMSE identifier, which MAY be a SPIFFE ID.",
+     "check": "OK",
+     "check_fp": "09588d7cd2"
+    },
+    {
+     "text": "What a WIMSE identifier is.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6. Agent Identifier",
+     "quote": "A WIMSE identifier is a URI that uniquely identifies a workload within a trust domain.",
+     "check": "OK",
+     "check_fp": "730b16e3f4"
+    },
+    {
+     "text": "In access tokens the agent is client_id.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.3. Use of OAuth 2.0 Access Tokens",
+     "quote": "The access token includes the Agent identity as the 'client_id' claim as defined in {{Section 2.2 of OAUTH-ACCESSTOKEN-JWT}}.",
+     "check": "OK",
+     "check_fp": "4f88ca0d51"
+    },
+    {
+     "text": "Searched 5 Agent Identity Management System, 6 Agent Identifier, 8 Agent Credential Provisioning for instance, replica or session. The draft does not address separate identifiers for running copies of one agent.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched 5 Agent Identity Management System, 6 Agent Identifier, 8 Agent Credential Provisioning for instance, replica or session",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Not defined",
+   "answer": "Not defined. The draft identifies agents as workloads but never distinguishes one running copy, session or task of an agent from another, and defines no instance or session identifier. A deployment could give each running copy its own WIMSE identifier and credential, which the draft allows but does not require. Audit records must include a transaction or request correlation identifier, which identifies a request, not an agent instance.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier is defined (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched all sections for instance, replica, session and sub-agent identifiers. No instance identifier.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched all sections for instance, replica, session and sub-agent identifiers",
+     "quote": ""
+    },
+    {
+     "text": "Audit records carry a request correlation identifier.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Agent Monitoring, Observability and Remediation",
+     "quote": "timestamp and transaction or request correlation identifier",
+     "check": "OK",
+     "check_fp": "27dc2ae1fd"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Yes, user or system in sub",
+   "answer": "Yes. When the agent acts for a user or a system, the access token carries that party's identifier in the sub claim (as in JWT access tokens, RFC 9068), and resource servers must use these identifiers, with the other claims, to decide on access. For opaque tokens the same information comes through introspection. When the agent acts on its own behalf, there is no separate principal.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: the framework puts the delegating user or system in the access token the service receives, as part of its normal flow; MCP Authorization is red because it defines no such rule.",
+   "claims": [
+    {
+     "text": "The user or system is conveyed in sub.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.3. Use of OAuth 2.0 Access Tokens",
+     "quote": "When the Agent is acting on-behalf of another User or System, the User or System identifier is conveyed in the 'sub' claim as defined in {{Section 2.2 of OAUTH-ACCESSTOKEN-JWT}}.",
+     "check": "OK",
+     "check_fp": "c0ac4191ae"
+    },
+    {
+     "text": "Resource servers must use these identifiers.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.3. Use of OAuth 2.0 Access Tokens",
+     "quote": "These identifiers MUST be used by resource servers protected by the OAuth 2.0 authorization service, along with other claims in the access token, to determine if access to a resource should be allowed.",
+     "check": "OK",
+     "check_fp": "9f016aaf9e"
+    },
+    {
+     "text": "Opaque tokens give the same through introspection.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.3. Use of OAuth 2.0 Access Tokens",
+     "quote": "The introspection response provides the active state of the token and associated authorization attributes equivalent to those conveyed in structured tokens.",
+     "check": "OK",
+     "check_fp": "b03f0e9337"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Key-bound workload credential plus access token",
+   "answer": "A workload credential bound to the agent's key, plus an OAuth access token. The agent proves its identity with mutual TLS (X.509 certificate), a WIMSE Workload Proof Token (a signed JWT tied to the request, covering e.g. audience, expiry and a hash of the agent's token) or an HTTP Message Signature covering e.g. method, path and body digest; these are proof of possession. JWT-SVIDs and the access token are bearer tokens; -03 does not require sender-constrained access tokens. Static API keys are called an antipattern.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: cryptographically bound credentials are required and presented in the normal flow; the answer notes which options are bearer (as for MCP Authorization).",
+   "claims": [
+    {
+     "text": "Credentials must be cryptographically bound.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7. Agent Credentials",
+     "quote": "Agents MUST possess credentials that provide a cryptographic binding to the agent identifier.",
+     "check": "OK",
+     "check_fp": "24a0719d35"
+    },
+    {
+     "text": "WPTs give proof of possession tied to a message.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.2.1. WIMSE Proof Tokens (WPTs)",
+     "quote": "A WPT is defined as a signed JSON Web Token (JWT) that binds an agent’s authentication to a specific message context, for example, an HTTP request, thereby providing proof of possession rather than relying on bearer semantics.",
+     "check": "OK",
+     "check_fp": "5f903ec5d1"
+    },
+    {
+     "text": "WPT claims include audience, expiry, unique ID and a hash of the WIT.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.2.1. WIMSE Proof Tokens (WPTs)",
+     "quote": "They carry claims such as audience (aud), expiration (exp), a unique token identifier (jti), and a hash of the associated WIT (wth).",
+     "check": "OK",
+     "check_fp": "c171b6d061"
+    },
+    {
+     "text": "HTTP Message Signatures cover request components.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.2.2. HTTP Message Signatures",
+     "quote": "The profile mandates signing of some request components (e.g., method, request-target, content digest, and the WIT itself) and supports optional response signing.",
+     "check": "OK",
+     "check_fp": "cc39bf8cff"
+    },
+    {
+     "text": "JWT-SVIDs are bearer credentials.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7. Agent Credentials",
+     "quote": "JWT-SVIDs are short-lived bearer credentials used for JWT-based authentication.",
+     "check": "OK",
+     "check_fp": "0047942b24"
+    },
+    {
+     "text": "Static API keys are an antipattern.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7. Agent Credentials",
+     "quote": "Static API keys are an antipattern for agent identity.",
+     "check": "OK",
+     "check_fp": "72becaa55c"
+    },
+    {
+     "text": "Searched 10.3 Use of OAuth 2.0 Access Tokens and 10.4 for DPoP, sender-constrained or certificate-bound access tokens. No sender-constraint requirement for access tokens.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched 10.3 Use of OAuth 2.0 Access Tokens and 10.4 for DPoP, sender-constrained or certificate-bound access tokens",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Short recommended, explicit expiry required",
+   "answer": "Short, but no number. Agent credentials SHOULD be short-lived and MUST carry an explicit expiry after which they are not accepted; the draft presents short lifetimes with automatic rotation as an alternative to explicit revocation. Proof tokens are typically short-lived. No maximum is given for workload credentials or access tokens, and verifiers are not told to reject long-lived ones.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: short lifetimes are recommended with no specific limit (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Short-lived recommended, expiry mandatory.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7. Agent Credentials",
+     "quote": "Agent credentials SHOULD be short-lived to minimize the risk of credential theft, MUST include an explicit expiration time after which it is no longer accepted",
+     "check": "OK",
+     "check_fp": "fa97732025"
+    },
+    {
+     "text": "Short lifetimes as an alternative to revocation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8. Agent Credential Provisioning",
+     "quote": "It provides an alternative to explicit revocation mechanisms and simplifies lifecycle management in large, automated environments",
+     "check": "OK",
+     "check_fp": "1977d5d1ef"
+    },
+    {
+     "text": "WPTs are typically short-lived.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.2.1. WIMSE Proof Tokens (WPTs)",
+     "quote": "WPTs are designed to work alongside WITs {{WIMSE-CRED}} and are typically short-lived to reduce the window for replay attacks.",
+     "check": "OK",
+     "check_fp": "6b9b9516b2"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, key proof and token validation",
+   "answer": "Yes. The receiving service verifies the agent's identity, possession of its key and the binding to the message (through the TLS handshake, the proof token or the HTTP signature), and checks that credentials have not expired. It validates JWT access tokens itself or asks its authorization server through introspection. Checking the workload credential needs the agent's trust-domain keys (e.g. a SPIFFE trust bundle), which in practice means prior setup between domains; the draft does not describe that distribution.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: the service can validate both credentials with expiry checks, the access token through its own authorization server (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Receivers verify identity, key possession and message binding.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.2.1. WIMSE Proof Tokens (WPTs)",
+     "quote": "This design enables receiving systems to verify identity, key possession, and message binding at the application layer",
+     "check": "OK",
+     "check_fp": "4faf0d97be"
+    },
+    {
+     "text": "Access tokens are validated directly or by introspection.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.3. Use of OAuth 2.0 Access Tokens",
+     "quote": "JWT access tokens can be validated directly by resource servers while other formats that are opaque to the resource server can be validated through a mechanism that calls back to the authorization server",
+     "check": "OK",
+     "check_fp": "3c19d9e2bf"
+    },
+    {
+     "text": "Expired credentials are not accepted.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7. Agent Credentials",
+     "quote": "MUST include an explicit expiration time after which it is no longer accepted",
+     "check": "OK",
+     "check_fp": "f9476ea5af"
+    },
+    {
+     "text": "Searched 7 Agent Credentials, 9 Agent Authentication for trust bundle, key distribution and federation between trust domains. Trust-bundle distribution is not described.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched 7 Agent Credentials, 9 Agent Authentication for trust bundle, key distribution and federation between trust domains",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Yes, agent's own key, per request",
+   "answer": "Yes, for the agent. The service authenticates the agent directly with the agent's own key: in the mutual TLS handshake, or per request through a WIMSE proof token or HTTP Message Signature, each tied to the agent's workload credential. SPIFFE-style provisioning gives each credential its own short-lived key. The user is authenticated by the authorization server (preferably with a passkey), not by the service. Which mechanism a deployment uses is its choice; the draft describes options rather than mandating one.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Green: in the framework's normal flow the service verifies proof from the agent's own key; the calibration examples are red because they check only a token or a provider key.",
+   "claims": [
+    {
+     "text": "mTLS proves control of the agent's private key.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.1. Transport Layer Authentication",
+     "quote": "mTLS provides strong channel binding and cryptographic proof of control over the agent’s private key.",
+     "check": "OK",
+     "check_fp": "f5c51e054e"
+    },
+    {
+     "text": "WPTs are generated by the agent with its key.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.2.1. WIMSE Proof Tokens (WPTs)",
+     "quote": "WPTs are generated by the agent, using the private key matching the public key in the WIT.",
+     "check": "OK",
+     "check_fp": "8463d3ac57"
+    },
+    {
+     "text": "Services and others authenticate the agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agents are workloads",
+     "quote": "the AI agent is a workload that needs an identifier and credentials so it can be authenticated by the Tools, Services, Resources, Large Language Model, System and the User",
+     "check": "OK",
+     "check_fp": "9af33fda26"
+    },
+    {
+     "text": "Keys are ephemeral per credential with SPIFFE.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8. Agent Credential Provisioning",
+     "quote": "{{SPIFFE}} also provisions ephemeral cryptographic key material bound to each credential",
+     "check": "OK",
+     "check_fp": "98855a8220"
+    },
+    {
+     "text": "The user authenticates at the authorization server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.4.1. User Delegates Authorization",
+     "quote": "the user authenticates to the authorization server and explicitly approves the requested access.",
+     "check": "OK",
+     "check_fp": "6c65361718"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Yes, OAuth scopes and token claims",
+   "answer": "Yes. Access is granted through OAuth access tokens carrying claims such as scope, audience, client_id and sub, and resource servers decide using these together with their own policy, attribute or role systems. Agents SHOULD request only the minimum scopes needed, and Transaction Tokens narrow access inside a service to one transaction. How an agent turns its natural-language mission into specific permissions is out of scope.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "SHOULD",
+   "rating_reason": "Green: scoped permissions in the access token are part of the normal flow and enforced by the service (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Access tokens carry scope and other claims.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.3. Use of OAuth 2.0 Access Tokens",
+     "quote": "which include claims such as 'client_id', 'sub', 'aud', 'scope', and other attributes relevant to authorization.",
+     "check": "OK",
+     "check_fp": "26ea61c3f0"
+    },
+    {
+     "text": "Least privilege is recommended.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.9. Privacy Considerations",
+     "quote": "Agents SHOULD request only the minimum scopes and authorization details necessary to complete a task.",
+     "check": "OK",
+     "check_fp": "8ef0a6e77c"
+    },
+    {
+     "text": "Mission translation is out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "10.1. Agent Mission",
+     "quote": "The process through which the mission is translated into authorization requriements is out of scope of this specification.",
+     "check": "OK",
+     "check_fp": "fcb2b4986c"
+    },
+    {
+     "text": "Transaction Tokens narrow access internally.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.5. Risk Reduction with Transaction Tokens",
+     "quote": "This results in a downscoped token that is bound to a specific transaction and cannot be used as an access token, with another transaction, or within the same transaction with modified transaction details",
+     "check": "OK",
+     "check_fp": "323b8123cc"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Yes, consent plus CIBA step-up",
+   "answer": "Yes, when the agent acts for a user. The user signs in at the authorization server and explicitly approves the access before a token is issued. For risky requests the authorization server SHOULD decline or obtain more approval, e.g. through CIBA (a push to the user's phone). Confirmation inside the agent's own interface does not count: it must be tied to a grant from the authorization server. Agents acting on their own behalf need no person, and the draft notes CIBA fits mid-task approval poorly.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "SHOULD",
+   "rating_reason": "Green: a user approval step is part of the defined delegation flow, with step-up for sensitive actions (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "The user explicitly approves.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.4.1. User Delegates Authorization",
+     "quote": "the user authenticates to the authorization server and explicitly approves the requested access.",
+     "check": "OK",
+     "check_fp": "6c65361718"
+    },
+    {
+     "text": "The authorization server can require more approval.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.7. Human in the Loop",
+     "quote": "In such cases the authorization server SHOULD either decline the request or obtain additional authorization from the User.",
+     "check": "OK",
+     "check_fp": "38e4f52759"
+    },
+    {
+     "text": "Local UI confirmation is not enough.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.7. Human in the Loop",
+     "quote": "the agent MUST NOT treat local UI confirmation alone as sufficient authorization.",
+     "check": "OK",
+     "check_fp": "8bf5f95f30"
+    },
+    {
+     "text": "CIBA has limits mid-execution.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.7. Human in the Loop",
+     "quote": "CIBA itself only accounts for client initiation, which doesn't map well to cases that envision the need for User confirmation to occur mid-execution.",
+     "check": "OK",
+     "check_fp": "b7bdea6352"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Credential provisioner and authorization server",
+   "answer": "Two parties. The provisioning system (e.g. SPIFFE) vouches for the agent's identity: it checks signals about the agent and its environment (posture) and only then issues short-lived credentials. The authorization server vouches for access: it evaluates policy and issues the tokens the service accepts. The draft requires no particular posture mechanism or evidence, so how much the identity is worth depends on the deployment.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Green: the framework names the parties that vouch (credential provisioner and authorization server), as MCP Authorization names its authorization server.",
+   "claims": [
+    {
+     "text": "Provisioning issues credentials after verification.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8. Agent Credential Provisioning",
+     "quote": "a provisioning component gathers workload and execution context signals, verifies them according to local policy, and, if verification succeeds, issues short-lived credentials for subsequent authentication and authorization.",
+     "check": "OK",
+     "check_fp": "e7c8d21cfc"
+    },
+    {
+     "text": "The authorization server evaluates policy and issues tokens.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.2. Leverage OAuth 2.0 as a Delegation Authorization Framework",
+     "quote": "which receives the request, evaluate the authorization policy and returns an access token",
+     "check": "OK",
+     "check_fp": "58189c9869"
+    },
+    {
+     "text": "No posture mechanism is required.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8. Agent Credential Provisioning",
+     "quote": "This document does not require any particular posture assessment mechanism, evidence format, or verifier architecture.",
+     "check": "OK",
+     "check_fp": "ddfec590b0"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Optional via Shared Signals; short lifetimes",
+   "answer": "Partly. The main tool is short credential lifetimes, which the draft calls an alternative to explicit revocation. In addition, any participant MAY subscribe to OpenID Shared Signals events (CAEP or RISC, e.g. session revoked or subject disabled), and recipients must then stop using revoked authorization without undue delay. Subscription is optional and who sends which events is left open. Granularity depends on the event (a session, a user or the agent's identity).",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: revocation via signals is defined and enforced promptly once received, but subscribing is optional, so it may not reach every verifier; the calibration examples are red because they define none.",
+   "claims": [
+    {
+     "text": "Subscribing to signals is optional.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Agent Monitoring, Observability and Remediation",
+     "quote": "Any participant in the system, including the Agent, Tool, System, LLM or other resources and service MAY subscribe to change notifications using eventing mechanisms such as the OpenID Shared Signals Framework {{SSF}}",
+     "check": "OK",
+     "check_fp": "cf3fe510bf"
+    },
+    {
+     "text": "Recipients must enforce revocation promptly.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Agent Monitoring, Observability and Remediation",
+     "quote": "Recipients of such signals MUST ensure that revoked or downgraded authorization is enforced without undue delay.",
+     "check": "OK",
+     "check_fp": "ca01d375c0"
+    },
+    {
+     "text": "Short lifetimes replace explicit revocation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8. Agent Credential Provisioning",
+     "quote": "It provides an alternative to explicit revocation mechanisms and simplifies lifecycle management in large, automated environments",
+     "check": "OK",
+     "check_fp": "1977d5d1ef"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No contact field",
+   "answer": "No. The draft defines no way for a service to reach whoever runs the agent. It requires tamper-evident audit logs, recommends correlating events across parties, and mentions client metadata documents and dynamic registration for learning about clients, but none of these is defined as a contact or escalation channel.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field is defined (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched all sections for contact, escalation, abuse and operator details. No contact channel.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched all sections for contact, escalation, abuse and operator details",
+     "quote": ""
+    },
+    {
+     "text": "Audit logs are mandatory.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Agent Monitoring, Observability and Remediation",
+     "quote": "deployments MUST produce durable audit logs covering authorization decisions and subsequent remediations.",
+     "check": "OK",
+     "check_fp": "f1225ae727"
+    },
+    {
+     "text": "Client metadata documents may describe clients.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.10.3. Client Capability Discovery",
+     "quote": "Where supported, they MAY use Client ID Metadata Documents",
+     "check": "OK",
+     "check_fp": "00b948da85"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "Optional, via OpenID Shared Signals",
+   "answer": "Optional. Participants MAY exchange security events through the OpenID Shared Signals Framework, using CAEP for access changes and RISC for risk incidents (e.g. token replay suspected, risk elevated), and recipients SHOULD reduce access in response. The draft does not say who must send which events. Monitoring systems SHOULD also correlate events across agents, tools, services and models to detect misuse.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: signals between parties are named but optional; the calibration examples are red because they define none.",
+   "claims": [
+    {
+     "text": "Signals through SSF, CAEP or RISC.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Agent Monitoring, Observability and Remediation",
+     "quote": "Any participant in the system, including the Agent, Tool, System, LLM or other resources and service MAY subscribe to change notifications using eventing mechanisms such as the OpenID Shared Signals Framework {{SSF}}",
+     "check": "OK",
+     "check_fp": "cf3fe510bf"
+    },
+    {
+     "text": "Recipients should remediate.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Agent Monitoring, Observability and Remediation",
+     "quote": "the recipient SHOULD remediate by attenuating access",
+     "check": "OK",
+     "check_fp": "b8864ea1ce"
+    },
+    {
+     "text": "Cross-party correlation is recommended.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Agent Monitoring, Observability and Remediation",
+     "quote": "Monitoring / Observability systems SHOULD correlate events across Agents, Tools, Services, Resources and LLMs to detect misuse patterns",
+     "check": "OK",
+     "check_fp": "c6a83480a8"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. The draft treats the language model as a separate resource the agent calls and must authenticate to; it defines no claim telling a service which model drives the agent. Credentials MAY carry extra attributes (e.g. attestation evidence or workload metadata), and posture checks may use software or supply-chain signals, but model identity is not named among them.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model to the service (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Credentials may carry extra attributes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7. Agent Credentials",
+     "quote": "MAY carry additional attributes relevant to the agent (for example trust domain, attestation evidence, or workload metadata).",
+     "check": "OK",
+     "check_fp": "0f878581ca"
+    },
+    {
+     "text": "Searched all sections for model identifier, model version and model provenance. No model identity.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched all sections for model identifier, model version and model provenance",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The service authenticates the agent by its own key and receives an OAuth token naming the agent, the user it acts for and the approved scopes, with user approval and step-up for sensitive actions.",
+  "incident_response": "Access ends mainly through short credential lifetimes; services that subscribe to Shared Signals can cut off sessions, users or agents promptly, but subscription is optional and there is no contact channel or instance-level cut-off.",
+  "accountability": "Mandatory tamper-evident audit logs record the authenticated agent, the delegated user or system, the action and the decision, so actions can be traced to the agent workload and the user, but not to a specific running copy or model."
+ },
+ "notes": [
+  "This is a best-practice framework rather than a wire protocol: it composes existing standards. Ratings count what the draft itself requires or recommends; capabilities of the referenced standards that the draft does not invoke are not counted.",
+  "The analysed text was taken from the authors' repository at the tag draft-klrc-aiagent-auth-03. Section numbers follow the published -03 numbering, derived from the order of headings in the source.",
+  "The draft has been replaced by the WIMSE working-group draft draft-ietf-wimse-aims (latest -01, 2 November 2026). The successor's commit history shows additions such as a section on sender-constrained access tokens, which could change several ratings; it was not analysed.",
+  "OpenID AuthZEN is listed as a normative reference in -03 but not used in the text.",
+  "The draft uses RFC 2119 keywords; lowercase 'may' in descriptive text (e.g. 'Agents may authenticate using a variety of mechanisms') was not treated as a requirement. No instructions aimed at AI tools were found in the sources."
+ ],
+ "open_questions": [
+  "Does 'agent' in 'Agents MUST be uniquely identified' mean each running copy or the agent as a deployed service? The draft does not say; the identifier was rated yellow and the instance identifier red on that basis.",
+  "Authentication was rated green because every described mechanism uses the agent's own key, but the draft offers these as options rather than requiring one. Whether a deployment may skip agent authentication and rely on the access token alone is not stated.",
+  "Which parties transmit Shared Signals events about agents, and with what subject identifiers (WIMSE ID, client_id), is not specified, so how revocation reaches a given service is unclear.",
+  "How a receiving service in another trust domain obtains the keys to verify an agent's workload credential is not described."
+ ]
+}</script></body></html>

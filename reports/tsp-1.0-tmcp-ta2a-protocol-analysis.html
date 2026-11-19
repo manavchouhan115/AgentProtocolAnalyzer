@@ -1,0 +1,1035 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TSP + TMCP/TA2A: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>TSP + TMCP/TA2A<small>Trust Spanning Protocol (Trust over IP), with the TSP-Enabled AI Agent Protocols draft (TMCP, TA2A)</small></h1><ul class="facts"><li><b>Specification:</b> TSP Release 1.0 (tswg-tsp-specification commit ccda6b3); TSP-Enabled AI Agent Protocols v1.0 Draft (GitHub Pages, accessed 2026-11-19)</li><li><b>Date:</b> TSP 1.0 approved 2026-10-30; companion draft undated</li><li><b>Maintainer:</b> Trust over IP Foundation (LF Decentralized Trust): Technology Stack WG for TSP (authors Wenjing Chu, Samuel Smith); AI and Human Trust (AIM) WG for the agent-protocol draft</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> TSP 1.0 is the latest release. The companion draft&#x27;s source repository shows no commits, so only its published page was analysed; it may change without notice and still references TSP Rev 2.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent communication</span><span class="chip"><b>Also:</b> Credentials trust</span><span class="chip"><b>Also:</b> Agent authorization</span><span class="chip"><b>Mechanism:</b> DID, Verifiable credential, Other</span><span class="chip"><b>Venue:</b> Foundation</span><span class="chip"><b>Maturity:</b> Stable</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>The Trust Spanning Protocol (TSP) is a general-purpose messaging layer from the Trust over IP Foundation, part of LF Decentralized Trust. It lets two parties that identify themselves with different kinds of verifiable identifiers (e.g. DIDs) exchange messages that are always authentic and, if wanted, confidential and private, much as IP connects different networks. Version 1.0 was approved by the Technology Stack Working Group on 30 October 2026. A separate ToIP draft, TSP-Enabled AI Agent Protocols, applies it to AI agents: TMCP runs MCP over TSP and TA2A runs A2A over TSP. That draft is incomplete, and TMCP exists mainly as an OpenWallet Foundation implementation.</p><p>Every TSP message names the sender&#x27;s and receiver&#x27;s identifiers (VIDs) and is signed with the sender&#x27;s key, optionally encrypted to the receiver; the receiver resolves and appraises the sender&#x27;s VID against its own policy before relying on it. TMCP wraps each MCP message in a TSP message over the normal MCP transport, and the draft makes each agent its own TSP endpoint, with authority delegated by signed credentials that can only narrow, must be revocable and must trace back to a person or organisation. TSP itself leaves out authorization, message freshness and trust decisions; the agent draft does not yet define the MCP binding, model identity, contact channels or warnings between services.</p><h2 id="how">How it works</h2><ol class="steps"><li>Setup: each agent or service (a TSP endpoint) controls one or more verifiable identifiers (VIDs), e.g. a did:webvh whose key history is published and supports key rotation. In the TMCP implementation, the MCP client and server each get their own DID.</li><li>Introduction: the client learns the server&#x27;s VID out of band and sends a relationship-forming message (TSP_RFI). The server resolves the client&#x27;s VID, verifies and appraises it against its own policy, and replies with TSP_RFA if it accepts.</li><li>Each message, e.g. an MCP JSON-RPC request in TMCP, is placed in a TSP message naming both VIDs, optionally encrypted to the receiver, and signed with the sender&#x27;s key. It travels over the usual transport (Streamable HTTP, SSE, WebSockets) or through intermediaries.</li><li>The receiving endpoint checks that the relationship exists, verifies the signature against the sender&#x27;s current key state, decrypts, checks that the sender VID inside matches, and passes the content up; anything that does not verify is silently dropped.</li><li>Under the draft agent companion, an agent exercising authority presents a chain of authorization credentials (ACDCs) from its principal. The receiver checks at that moment that every credential in the chain is valid and unrevoked and roots in an issuer it trusts, and computes the narrowed effective authority.</li><li>Afterwards, either side can cancel the relationship (TSP_RFD), a principal can revoke a delegation in its status registry, and a compromised key is rotated through the VID type.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>TSP + TMCP/TA2A</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Signed messages between verifiable identifiers; agent draft adds delegation</td></tr><tr><td class="prop">Use cases</td><td class="">Trust layer under MCP, A2A and other protocols</td></tr><tr><td class="prop">Parties involved</td><td class="">Endpoints, Support Systems, Intermediaries; TEAs and principals</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">TSP 1.0 approved; agent draft incomplete</td></tr><tr><td class="prop">Building blocks</td><td class="">DIDs/URNs, CESR, HPKE or sealed box, ACDC</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">Sender VID; per agent in the draft</td></tr><tr><td class="prop">Agent instance identifier</td><td class="yellow">Each agent&#x27;s own VID, in the draft</td></tr><tr><td class="prop">Acting for (authority)</td><td class="yellow">Principal via delegation chain, in the draft</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Sender signature on every message</td></tr><tr><td class="prop">Credential lifetime</td><td class="red">None for messages; left to higher layers</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="yellow">Genuine and unaltered; freshness not checked</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="yellow">Agent&#x27;s own key, if agent is an endpoint</td></tr><tr><td class="prop">Scoped authorization</td><td class="yellow">Attenuating delegation credentials, in the draft</td></tr><tr><td class="prop">Human approval</td><td class="red">No (delegation is issued, not approved)</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="yellow">Receiver&#x27;s own appraisal; credential chains in draft</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="yellow">Per-delegation revocation, in the draft</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>Core TSP lets a service accept or drop messages per sender VID and relationship, by its own policy. The draft adds delegation credentials whose narrowing authority a service can enforce, but the MCP binding that would map them to tool calls is not yet written.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>A service can cancel or block a relationship with one VID, which is one agent where each agent is its own endpoint. The draft adds per-delegation revocation checked at each use; key compromise is handled by VID rotation, which reaches each peer when it re-resolves.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Every message is signed and binds both sender and receiver VIDs, so the sender cannot disown it. The draft requires every authority to trace back to a natural person or organisation; the AI model and a contact are not identified.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Credential lifetime:</b> None for messages; left to higher layers (explicitly out of scope)</li><li><b>Human approval:</b> No (delegation is issued, not approved) (not addressed by the specification)</li><li><b>Contact and escalation:</b> No (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>TSP + TMCP/TA2A</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">A Trust over IP messaging layer where every message between two endpoints is signed, and optionally encrypted, under each side&#x27;s verifiable identifier (e.g. a DID); a companion draft makes each AI agent its own endpoint with delegated, revocable authority, and TMCP/TA2A carry MCP and A2A messages inside TSP.<details><summary>Evidence (2)</summary><div class="claim">TSP&#x27;s own description. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Overview. <span class="chk">(quote verified against the source)</span><blockquote>“As long as the endpoints use identifiers based on public key cryptography (PKC) with a verifiable trust root, TSP ensures their messages are authentic and if required, confidential.”</blockquote></div><div class="claim">Agents as TSP endpoints. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Terms and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">A general trust layer under higher-level protocols (agents, wallets, messaging), carried inside the message rather than in HTTP headers, so it works over HTTP, QUIC, queues or intermediaries. For agents, TMCP seals each MCP JSON-RPC message as a TSP message and sends it over the usual MCP transport, and TA2A does the same for A2A. The receiving endpoint verifies messages itself; intermediaries can route them but cannot forge them.<details><summary>Evidence (3)</summary><div class="claim">TSP sits under task-level protocols. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Overview. <span class="chk">(quote verified against the source)</span><blockquote>“Task level protocols or applications, intended to operate atop of TSP mirror the roles of TCP or UDP”</blockquote></div><div class="claim">Existing agent protocols run as trust tasks over TSP. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Layering Existing Protocols over TSP as Trust Tasks. <span class="chk">(quote verified against the source)</span><blockquote>“Such trust tasks MAY be existing commonly used protocols ported over to TSP, e.g. MCP,”</blockquote></div><div class="claim">What TMCP is in the implementation. <i>Source states</i> <a href="https://openwallet-foundation-labs.github.io/tsp/tmcp.html">TSP SDK book (OpenWallet Foundation Labs), TMCP: TSP x MCP</a>, TMCP: TSP x MCP. <span class="chk">(quote verified against the source)</span><blockquote>“TMCP is a fork of the MCP Python SDK that integrates TSP to encrypt and sign MCP messages.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">TSP defines Endpoints (secure systems that run TSP and hold VIDs), Support Systems (which manage VIDs and help verify them) and Intermediaries (which forward messages and need not be trusted). The agent draft adds the TSP-Enabled Agent (TEA), an agent that is itself a TSP endpoint, built around a Controller with a wallet and a TSP gateway, and principals (a natural person or organisation) who delegate authority to it.<details><summary>Evidence (5)</summary><div class="claim">Endpoint. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A TSP Endpoint is a secure computational system that runs the Trust Spanning Protocol.”</blockquote></div><div class="claim">Support System. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A TSP Support System is a computational system that supports the management of”</blockquote></div><div class="claim">Intermediaries need not be trusted. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Reference Architecture. <span class="chk">(quote verified against the source)</span><blockquote>“It&#x27;s important to note that intermediaries are not necessarily trustworthy.”</blockquote></div><div class="claim">TEA. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Terms and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint”</blockquote></div><div class="claim">Principals. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Accountability. <span class="chk">(quote verified against the source)</span><blockquote>“The accountability chain of any authority a TEA holds or exercises MUST terminate in a principal”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Mixed. TSP Release 1.0 was approved by the ToIP Technology Stack Working Group on 30 October 2026. The agent companion (TMCP/TA2A) is a v1.0 Draft whose MCP binding, signed-payload scheme and security sections are still TODO, and it references TSP Rev 2. Implementations exist (the OpenWallet Foundation TSP SDK, Affinidi&#x27;s Rust libraries, and a Python TMCP hook built on a fork of the MCP SDK), but no named production deployment was found from a deployer.<div class="meta">Why this rating: TSP itself is released, but the agent-protocol part is an incomplete draft and only implementations, not named deployments, were found.</div><details><summary>Evidence (9)</summary><div class="claim">TSP status. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Header. <span class="chk">(quote verified against the source)</span><blockquote>“Specification Status: Release 1.0”</blockquote></div><div class="claim">Approval by the working group. <i>Source states</i> <a href="https://www.lfdecentralizedtrust.org/blog/tsp-1.0-a-trust-layer-for-the-age-of-ai-agents">LF Decentralized Trust blog, TSP 1.0: A Trust Layer for the Age of AI Agents</a>, Blog post. <span class="chk">(quote verified against the source)</span><blockquote>“TSP (Trust Spanning Protocol) 1.0 has been formally approved by the Trust Over IP Technology Stack Working Group.”</blockquote></div><div class="claim">Approval date. <i>Source states</i> <a href="https://www.lfdecentralizedtrust.org/blog/tsp-1.0-a-trust-layer-for-the-age-of-ai-agents">LF Decentralized Trust blog, TSP 1.0: A Trust Layer for the Age of AI Agents</a>, Blog post. <span class="chk">(quote verified against the source)</span><blockquote>“October 30, 2026: TSP 1.0 formally approved by the Technology Stack Working Group”</blockquote></div><div class="claim">Agent companion status. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Header. <span class="chk">(quote verified against the source)</span><blockquote>“Specification Status: v1.0 Draft”</blockquote></div><div class="claim">The companion references TSP Rev 2. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Normative references. <span class="chk">(quote verified against the source)</span><blockquote>“Trust Spanning Protocol (TSP) Specification, Implementor’s Draft, Rev 2”</blockquote></div><div class="claim">TMCP implementation. <i>Source states</i> <a href="https://github.com/openwallet-foundation-labs/tmcp-python">openwallet-foundation-labs/tmcp-python, README (TMCP transport hook)</a>, TMCP Transport Hook. <span class="chk">(quote verified against the source)</span><blockquote>“This Python project implements the TMCP transport hook, allowing you to use MCP over TSP.”</blockquote></div><div class="claim">Other implementations. <i>Source states</i> <a href="https://www.lfdecentralizedtrust.org/blog/tsp-1.0-a-trust-layer-for-the-age-of-ai-agents">LF Decentralized Trust blog, TSP 1.0: A Trust Layer for the Age of AI Agents</a>, Blog post. <span class="chk">(quote verified against the source)</span><blockquote>“Affinidi built its own open source TSP libraries in Rust”</blockquote></div><div class="claim">The SDK&#x27;s own tool is not for production. <i>Source states</i> <a href="https://github.com/openwallet-foundation-labs/tsp">openwallet-foundation-labs/tsp, README (TSP SDK)</a>, Try it. <span class="chk">(quote verified against the source)</span><blockquote>“This tool is for illustration and testing only, not intended for production use.”</blockquote></div><div class="claim">TMCP builds on a fork of the MCP Python SDK. <i>Source states</i> <a href="https://openwallet-foundation-labs.github.io/tsp/tmcp.html">TSP SDK book (OpenWallet Foundation Labs), TMCP: TSP x MCP</a>, TMCP: TSP x MCP. <span class="chk">(quote verified against the source)</span><blockquote>“TMCP is a fork of the MCP Python SDK that integrates TSP to encrypt and sign MCP messages.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">VIDs in W3C DID or URN (RFC 8141) syntax, e.g. KERI identifiers, did:webs, did:webvh and did:peer; CESR encoding; HPKE-base or libsodium sealed-box encryption with the ESSR construction; Ed25519 signatures and experimental ML-DSA-65 post-quantum signatures. The agent draft adds did:webvh with pre-rotation as the required identifier, ACDC credentials for delegation, and MCP and A2A as the carried protocols.<details><summary>Evidence (3)</summary><div class="claim">VID syntax. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, VID Syntax. <span class="chk">(quote verified against the source)</span><blockquote>“we require that the VID format be either compliant DID format”</blockquote></div><div class="claim">CESR encoding. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Serialization and Encoding. <span class="chk">(quote verified against the source)</span><blockquote>“This version of TSP uses the CESR code table at genus AAA, Version 2.00”</blockquote></div><div class="claim">ACDC delegation in the agent draft. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Delegation of Authorization and Duty. <span class="chk">(quote verified against the source)</span><blockquote>“A delegated authority MUST be expressed as an authorization ACDC issued by the Delegator (as Issuer) to the Delegate”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Every TSP message names the sender&#x27;s and receiver&#x27;s VIDs (a DID or URN that resolves to keys), and the sender proves control of its VID. Core TSP does not say whether an endpoint is a provider&#x27;s service or a single agent, and an endpoint may hold many VIDs. The agent draft makes each agent its own endpoint (a TEA) with durable public VIDs, including an Authorization VID, and the TMCP implementation gives each MCP client and server its own DID.<div class="meta">Only in an extension or companion specification · requirement level: MUST</div><div class="meta">Why this rating: The core identifier names whichever endpoint controls the VID; only the draft companion and the implementation make that the individual agent. Unlike the calibration examples, nothing ties it to a provider-wide key.</div><details><summary>Evidence (5)</summary><div class="claim">Envelope contents. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, TSP Envelope. <span class="chk">(quote verified against the source)</span><blockquote>“The TSP envelope part of a TSP message contains: TSP Version, Sender VID, Receiver VID.”</blockquote></div><div class="claim">An endpoint can hold many VIDs. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Cryptographic Non-Correlation. <span class="chk">(quote verified against the source)</span><blockquote>“An endpoint can control multiple VIDs simultaneously and over extended periods.”</blockquote></div><div class="claim">Agents as endpoints in the draft. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Terms and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint”</blockquote></div><div class="claim">Authorization VID. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, TEAs. <span class="chk">(quote verified against the source)</span><blockquote>“It MUST also designate at least one public VID as the Authorization VID (AVID)”</blockquote></div><div class="claim">Per-client identity in TMCP. <i>Source states</i> <a href="https://openwallet-foundation-labs.github.io/tsp/tmcp.html">TSP SDK book (OpenWallet Foundation Labs), TMCP: TSP x MCP</a>, Transport Security with TSP. <span class="chk">(quote verified against the source)</span><blockquote>“This TSP integration works by giving the clients and servers their own TSP identity (either a DID Web or a DID WebVH)”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly, through the draft. A TEA is an agent that is itself a TSP endpoint with durable identifiers, so the VID on each message identifies that agent rather than its provider. Core TSP has no notion of an agent: relationship digests identify relationships, and one endpoint may use different, unlinkable VIDs with different peers. Whether each running agent really gets its own VID depends on the deployment.<div class="meta">Only in an extension or companion specification · requirement level: MUST</div><div class="meta">Why this rating: Per-agent identifiers are defined only in the draft companion, not in core TSP; the three calibration examples define none (red).</div><details><summary>Evidence (3)</summary><div class="claim">TEA definition. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Terms and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint”</blockquote></div><div class="claim">Durable identifiers. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Verifiable Identifiers (VIDs). <span class="chk">(quote verified against the source)</span><blockquote>“The TEA MUST use Verifiable Identifiers that are suitable for durable continuous identification.”</blockquote></div><div class="claim">Non-correlatable VIDs in core TSP. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Cryptographic Non-Correlation. <span class="chk">(quote verified against the source)</span><blockquote>“It is imperative that these VIDs are cryptographically non-correlatable”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly, in the draft only. Core TSP says nothing about whom an endpoint acts for. In the agent draft, authority reaches an agent through authorization credentials (ACDCs) issued by a delegator, and the accountability chain of any authority an agent holds must end in a principal, a natural person or organisation, never the agent itself. A service that verifies the chain learns that principal&#x27;s identifier.<div class="meta">Only in an extension or companion specification · requirement level: MUST</div><div class="meta">Why this rating: Defined only in the draft companion, not in TSP itself.</div><details><summary>Evidence (4)</summary><div class="claim">Delegation credentials. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Delegation of Authorization and Duty. <span class="chk">(quote verified against the source)</span><blockquote>“A delegated authority MUST be expressed as an authorization ACDC issued by the Delegator (as Issuer) to the Delegate”</blockquote></div><div class="claim">Chain ends in a principal. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Accountability. <span class="chk">(quote verified against the source)</span><blockquote>“The accountability chain of any authority a TEA holds or exercises MUST terminate in a principal”</blockquote></div><div class="claim">The agent cannot be the end of the chain. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Accountability. <span class="chk">(quote verified against the source)</span><blockquote>“A TEA MUST NOT be the terminal responsible party for an authority.”</blockquote></div><div class="claim">Searched the TSP 1.0 specification (Overview, Verifiable Identifiers, Messages, Control Messages, Security and Privacy Considerations) for a user, principal or on-behalf-of field. None is defined. <i>Not found in</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Whole specification.</div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>A signature by the sender over every TSP message (envelope and payload), made with the key bound to the sender&#x27;s VID, so it is proof of possession and covers the whole content. The payload can also be encrypted to the receiver, with the sender&#x27;s VID inside. The signature binds the receiver&#x27;s VID too, so a message cannot be redirected or disowned. In TMCP every MCP request, response and streamed event over Streamable HTTP is sealed this way.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A verifiable credential (signature) on every message (same as Web Bot Auth and Visa TAP, and stronger in that it covers the whole content).</div><details><summary>Evidence (4)</summary><div class="claim">Every message is signed. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, TSP Signature. <span class="chk">(quote verified against the source)</span><blockquote>“The third part of a TSP message is the message signature of the sender.”</blockquote></div><div class="claim">Authenticity always; confidentiality optional. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Authenticity, Confidentiality, and Metadata Privacy. <span class="chk">(quote verified against the source)</span><blockquote>“TSP messages always assure authenticity, optionally confidentiality, and if utilized, metadata privacy.”</blockquote></div><div class="claim">Both parties are bound. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Authenticity, Confidentiality, and Metadata Privacy. <span class="chk">(quote verified against the source)</span><blockquote>“a message attests not only that it was composed by the controller of the sender&#x27;s VID, but that it was composed for the controller of the receiver&#x27;s VID.”</blockquote></div><div class="claim">TMCP covers all MCP messages over Streamable HTTP. <i>Source states</i> <a href="https://openwallet-foundation-labs.github.io/tsp/tmcp.html">TSP SDK book (OpenWallet Foundation Labs), TMCP: TSP x MCP</a>, Transport Security with TSP. <span class="chk">(quote verified against the source)</span><blockquote>“Streamable HTTP: uses TSP for all POST requests, responses, and SSE messages.”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not defined for messages. A TSP message carries no creation time or expiry, and the specification leaves freshness and ordering to the layers above it. Endpoints must not treat stale key state as current. The agent draft requires each delegated authority to carry a validUntil bound, but sets no maximum.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: Message freshness is explicitly left to other layers; the draft&#x27;s validUntil applies to delegated authority and has no number.</div><details><summary>Evidence (3)</summary><div class="claim">Freshness belongs to other layers. <i>Out of scope per</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Security and Privacy Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Properties beyond these belong to the layers above and below TSP. An application requiring ordering, delivery, or freshness of its own obtains them from the layer that understands what its messages mean”</blockquote></div><div class="claim">Stale key state. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Handling Changes. <span class="chk">(quote verified against the source)</span><blockquote>“MUST NOT treat a stale cached key state as authoritative.”</blockquote></div><div class="claim">Delegations carry validUntil. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Delegation of Authorization and Duty. <span class="chk">(quote verified against the source)</span><blockquote>“A delegated authority MUST carry a validUntil validity bound and MUST be revocable through its credential status registry.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The receiving endpoint resolves the sender&#x27;s VID through its VID type (e.g. a did:webvh history log), verifies that the sender controls it and appraises its records against its own policy, then checks the signature and the sender VID inside the payload. No prior relationship is needed beyond an introduction and a relationship-forming exchange. Messages are proven genuine and unaltered, but TSP has no timestamps, so whether a message is current or replayed is left to higher layers.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Genuine and unaltered without a prior relationship, but message freshness is out of scope (as for UCP default signatures); the calibration examples (green) all check time.</div><details><summary>Evidence (4)</summary><div class="claim">Receiver verifies and appraises the sender&#x27;s VID. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Receiver Procedure. <span class="chk">(quote verified against the source)</span><blockquote>“Verify, and appraise VID_sndr using additional information and processes specific to the VID.”</blockquote></div><div class="claim">Appraisal against the receiver&#x27;s policy. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, VID General Requirements. <span class="chk">(quote verified against the source)</span><blockquote>“Appraisal is the assessing endpoint’s evaluation of the records a VID type publishes, such as its inception record and its rotation and pre-rotation events”</blockquote></div><div class="claim">A relationship-forming exchange comes first. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Direct Relationship Forming. <span class="chk">(quote verified against the source)</span><blockquote>“It is not permissible that one endpoint which has learned a VID of the other simply starts with an application level message without first having an exchange of TSP control messages.”</blockquote></div><div class="claim">Freshness is left to other layers. <i>Out of scope per</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Security and Privacy Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Properties beyond these belong to the layers above and below TSP. An application requiring ordering, delivery, or freshness of its own obtains them from the layer that understands what its messages mean”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. On every message the receiving endpoint itself verifies a signature made with the sender&#x27;s own VID key. Where the agent is its own TSP endpoint, as the agent draft requires and the TMCP implementation does, this authenticates the individual agent rather than a provider-wide key. Core TSP does not require that: one endpoint can sign for many agents. Users are not authenticated; the draft traces authority to a principal through delegation credentials instead.<div class="meta">Only in an extension or companion specification · requirement level: MUST</div><div class="meta">Why this rating: Per-agent proof on each message holds only where each agent is its own endpoint (draft companion, implementation), not as a core TSP requirement; stronger than the calibration examples (red), which verify provider keys or tokens. Borderline with green.</div><details><summary>Evidence (4)</summary><div class="claim">Messages are attributable to the sender VID&#x27;s controller. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Authenticity, Confidentiality, and Metadata Privacy. <span class="chk">(quote verified against the source)</span><blockquote>“a message attests not only that it was composed by the controller of the sender&#x27;s VID, but that it was composed for the controller of the receiver&#x27;s VID.”</blockquote></div><div class="claim">TSP defines an endpoint as any secure system running TSP and says nothing about one endpoint per agent, so one endpoint (e.g. a provider&#x27;s service) could sign for many agents. <i>Inferred from</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A TSP Endpoint is a secure computational system that runs the Trust Spanning Protocol.”</blockquote></div><div class="claim">Each agent is an endpoint in the draft. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Terms and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint”</blockquote></div><div class="claim">Per-client identity in TMCP. <i>Source states</i> <a href="https://openwallet-foundation-labs.github.io/tsp/tmcp.html">TSP SDK book (OpenWallet Foundation Labs), TMCP: TSP x MCP</a>, Transport Security with TSP. <span class="chk">(quote verified against the source)</span><blockquote>“This TSP integration works by giving the clients and servers their own TSP identity (either a DID Web or a DID WebVH)”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly, in the draft. Core TSP carries no permissions. The agent draft expresses delegated authority as authorization credentials (ACDCs) from a delegator to the agent, and re-delegation must be strictly attenuating, so authority can only narrow along a chain. How MCP tool calls or A2A tasks map to these capabilities is not yet written, because the draft&#x27;s MCP over TSP section is still a TODO.<div class="meta">Only in an extension or companion specification · requirement level: MUST</div><div class="meta">Why this rating: Scoped, enforceable authority is defined only in an incomplete companion draft; TSP itself has none.</div><details><summary>Evidence (4)</summary><div class="claim">Delegated authority as ACDCs. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Delegation of Authorization and Duty. <span class="chk">(quote verified against the source)</span><blockquote>“A delegated authority MUST be expressed as an authorization ACDC issued by the Delegator (as Issuer) to the Delegate”</blockquote></div><div class="claim">Attenuation. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Attenuated Re-delegation. <span class="chk">(quote verified against the source)</span><blockquote>“and MUST be strictly attenuating: authority can only narrow as it is re-delegated.”</blockquote></div><div class="claim">The draft&#x27;s MCP over TSP section contains only the word TODO, so no mapping from MCP operations to capabilities is defined yet. <i>Inferred from</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, MCP over TSP.</div><div class="claim">Searched the TSP 1.0 specification for permissions, scopes or authorization fields. None is defined; payloads for higher layers are carried opaquely. <i>Not found in</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Messages; Control Messages.</div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. TSP defines no approval step. The agent draft requires that an agent&#x27;s authority trace back to a principal, who may be a person or an organisation, through signed delegation credentials, but it defines no moment where a person approves an agent&#x27;s access or a specific action, and issuing a credential can be automated.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No human approval step is defined; delegation by a principal is related but is not specified as a person&#x27;s approval (tie between red and yellow, lower colour chosen).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the TSP 1.0 specification and the agent draft (Delegation of Authorization and Duty, Authenticated Exchange Protocol, Accountability) for consent, user approval or human-in-the-loop steps. None is defined. <i>Not found in</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Delegation of Authorization and Duty; Accountability.</div><div class="claim">Authority traces to a principal. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Accountability. <span class="chk">(quote verified against the source)</span><blockquote>“The accountability chain of any authority a TEA holds or exercises MUST terminate in a principal”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Core TSP leaves trust to each receiver, which appraises the sender&#x27;s VID against its own policy using whatever governance the VID type has, and states that it cannot create trust where none exists. The agent draft adds credential chains: an agent&#x27;s authority counts only if its chain roots in an issuer the verifier already trusts for that resource. No central party vouches for agents.<div class="meta">Only in an extension or companion specification · requirement level: MUST</div><div class="meta">Why this rating: Vouching through credential chains is defined only in a companion draft; core TSP, like Web Bot Auth (red), leaves trust to each receiver.</div><details><summary>Evidence (3)</summary><div class="claim">TSP cannot create trust. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Verifiable Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“While TSP aids in transmitting trust signals between endpoints, it cannot instantiate trust where none exists.”</blockquote></div><div class="claim">Appraisal by the receiver. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, VID General Requirements. <span class="chk">(quote verified against the source)</span><blockquote>“Appraisal is the assessing endpoint’s evaluation of the records a VID type publishes, such as its inception record and its rotation and pre-rotation events”</blockquote></div><div class="claim">Credential chains root in issuers the verifier trusts. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Delegation of Authorization and Duty. <span class="chk">(quote verified against the source)</span><blockquote>“A verifier MUST accept a root issuance only when it roots trust in that Issuer for the resource in question.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly, in the draft. Each delegated authority must be revocable through its credential status registry, and the verifier must check at the time of use that every credential in the chain is still valid, so revoking one hop takes effect at the next check and can target one agent. Core TSP defines no revocation: a relationship can be cancelled with an optional TSP_RFD message, and a compromised key is rotated through the VID type, which reaches each peer only when it re-resolves.<div class="meta">Only in an extension or companion specification · requirement level: MUST</div><div class="meta">Why this rating: Prompt, per-delegation revocation is defined only in the draft companion; core TSP offers relationship cancellation and key rotation, which are not revocation.</div><details><summary>Evidence (4)</summary><div class="claim">Delegations must be revocable. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Delegation of Authorization and Duty. <span class="chk">(quote verified against the source)</span><blockquote>“A delegated authority MUST carry a validUntil validity bound and MUST be revocable through its credential status registry.”</blockquote></div><div class="claim">Status is checked at the time of use. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Delegation of Authorization and Duty. <span class="chk">(quote verified against the source)</span><blockquote>“Verification of a delegated authority MUST confirm, at the time of exercise, that every ACDC on the relevant chain”</blockquote></div><div class="claim">Relationship cancellation is optional. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Relationship Forming Decline or Cancel. <span class="chk">(quote verified against the source)</span><blockquote>“While sending explicit messages to cancel a relationship is not strictly necessary in TSP, such messages MAY be beneficial for upper-layer protocols that require a clear and definite termination of relationships.”</blockquote></div><div class="claim">Key recovery reaches peers one by one. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Key Compromise and Recovery. <span class="chk">(quote verified against the source)</span><blockquote>“Recovery is not global: it takes effect with respect to each peer independently, when that peer obtains the new key state.”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Neither TSP nor the agent draft defines a contact or escalation channel. A TSP relationship is itself a channel to the agent&#x27;s endpoint, and the draft&#x27;s accountability chain names the responsible principal by identifier, but how to reach that principal about an incident is not defined.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field or escalation channel is defined (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the TSP 1.0 specification and the agent draft for contact, abuse, escalation or support channels. None is defined. <i>Not found in</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Whole specification.</div><div class="claim">The principal is named, but not as a contact. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, Accountability. <span class="chk">(quote verified against the source)</span><blockquote>“The accountability chain of any authority a TEA holds or exercises MUST terminate in a principal”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. TSP carries trust signals between the two endpoints of a relationship, but defines no way for one service to warn others about a misbehaving agent. Its privacy design (non-correlatable VIDs, nesting, routing) works against linking an agent across services.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the TSP 1.0 specification and the agent draft for reputation, shared signals or reports between services. None is defined. <i>Not found in</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Whole specification.</div><div class="claim">VIDs are designed to be non-correlatable. <i>Source states</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Cryptographic Non-Correlation. <span class="chk">(quote verified against the source)</span><blockquote>“It is imperative that these VIDs are cryptographically non-correlatable”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The agent draft notes that an agent may include or interact with AI models, but neither TSP nor the draft defines a field naming the model or its version.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Models are mentioned, not identified. <i>Source states</i> <a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a>, TEAs. <span class="chk">(quote verified against the source)</span><blockquote>“The agent MAY also include or interact with one or more AI models”</blockquote></div><div class="claim">Searched TSP envelope and payload fields and the agent draft (TEAs, TEA Signed Payload) for model, version or attestation fields. None is defined. <i>Not found in</i> <a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a>, Messages; Serialization and Encoding.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://trustoverip.github.io/tswg-tsp-specification/">Trust Spanning Protocol (TSP) Specification, Release 1.0</a> (Release 1.0 (commit ccda6b3), 2026-10-21)</li><li><a href="https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/">ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)</a> (v1.0 Draft, accessed 2026-11-19)</li><li><a href="https://github.com/openwallet-foundation-labs/tmcp-python">openwallet-foundation-labs/tmcp-python, README (TMCP transport hook)</a> (commit a399a6c, 2025-09-26)</li><li><a href="https://openwallet-foundation-labs.github.io/tsp/tmcp.html">TSP SDK book (OpenWallet Foundation Labs), TMCP: TSP x MCP</a> (accessed 2026-11-19)</li><li><a href="https://github.com/openwallet-foundation-labs/tsp">openwallet-foundation-labs/tsp, README (TSP SDK)</a> (commit d4c454d, 2026-10-21)</li><li><a href="https://www.lfdecentralizedtrust.org/blog/tsp-1.0-a-trust-layer-for-the-age-of-ai-agents">LF Decentralized Trust blog, TSP 1.0: A Trust Layer for the Age of AI Agents</a> (2026-11-04)</li></ul><h2>Notes</h2><ul class="plain"><li>Both specifications use RFC 2119 keywords in capitals; requirement levels in this analysis follow them.</li><li>This analysis covers two documents. Rows rated from the TSP-Enabled AI Agent Protocols draft are marked coverage &#x27;extension&#x27;, because that draft is a separate, incomplete companion: its MCP over TSP, TEA Signed Payload and Security and Trust Considerations sections are TODO, and it has no A2A section.</li><li>The companion draft&#x27;s GitHub repository showed no commits from this environment, so it was read only on its published GitHub Pages page; all quotes from it, and from the OWF book and LF Decentralized Trust blog, were checked with a web tool (WEB-OK).</li><li>TSP 1.0 was approved by the Technology Stack Working Group on 30 October 2026; the specification&#x27;s foreword still has a placeholder for the Steering Committee approval date.</li><li>TMCP is described from the OpenWallet Foundation implementation (a transport hook on a fork of the MCP Python SDK). No public TA2A specification text or code was found; TA2A appears only in presentations and as a goal of the draft.</li><li>The rubric assumes a service receiving requests. TSP is a peer-to-peer messaging layer, so &#x27;receiving service&#x27; is read as the receiving TSP endpoint (e.g. a TMCP server).</li><li>Venue is set to &#x27;foundation&#x27; (Trust over IP, part of LF Decentralized Trust); the TSP specification is published under the OWF Contributor License and OWFa 1.0.</li><li>Name collision: an unrelated &#x27;Trust Standard Protocol&#x27; (LexiTSP) for AI provenance also uses the abbreviation TSP. It was not used.</li></ul><h2>Open questions</h2><ul class="plain"><li>Will the agent draft be updated to reference TSP 1.0 instead of TSP Rev 2, and do any of its requirements depend on Rev 2 behaviour?</li><li>How does TMCP interact with MCP&#x27;s own OAuth-based authorization: does TSP replace it, or run underneath it? The draft&#x27;s MCP binding is not written yet.</li><li>Is there any TA2A specification or implementation beyond presentation slides?</li><li>In practice, do deployments give each agent its own VID (as the draft intends) or share one VID across a provider&#x27;s agents? This decides the identifier, instance and authentication ratings.</li><li>Who runs the credential status registries for delegation ACDCs, and how quickly do verifiers see a revocation?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (61 of 61 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "TSP + TMCP/TA2A",
+  "full_name": "Trust Spanning Protocol (Trust over IP), with the TSP-Enabled AI Agent Protocols draft (TMCP, TA2A)",
+  "spec_version": "TSP Release 1.0 (tswg-tsp-specification commit ccda6b3); TSP-Enabled AI Agent Protocols v1.0 Draft (GitHub Pages, accessed 2026-11-19)",
+  "spec_date": "TSP 1.0 approved 2026-10-30; companion draft undated",
+  "maintainer": "Trust over IP Foundation (LF Decentralized Trust): Technology Stack WG for TSP (authors Wenjing Chu, Samuel Smith); AI and Human Trust (AIM) WG for the agent-protocol draft",
+  "newer_version_note": "TSP 1.0 is the latest release. The companion draft's source repository shows no commits, so only its published page was analysed; it may change without notice and still references TSP Rev 2."
+ },
+ "profile": {
+  "id": "trust-spanning-protocol",
+  "category": "agent-communication",
+  "secondary_categories": [
+   "credentials-trust",
+   "agent-authorization"
+  ],
+  "mechanisms": [
+   "did",
+   "verifiable-credential",
+   "other"
+  ],
+  "venue": "foundation",
+  "maturity": "stable",
+  "openness": "open-standard",
+  "layers": [
+   "application-message",
+   "http-body"
+  ],
+  "building_blocks": [
+   "W3C DID",
+   "RFC 8141",
+   "CESR",
+   "KERI",
+   "did:webvh",
+   "HPKE",
+   "libsodium sealed box",
+   "Ed25519",
+   "ML-DSA-65",
+   "ESSR",
+   "ACDC",
+   "MCP",
+   "A2A"
+  ],
+  "website": "https://trustoverip.github.io/tswg-tsp-specification/",
+  "first_published": ""
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "The Trust Spanning Protocol (TSP) is a general-purpose messaging layer from the Trust over IP Foundation, part of LF Decentralized Trust. It lets two parties that identify themselves with different kinds of verifiable identifiers (e.g. DIDs) exchange messages that are always authentic and, if wanted, confidential and private, much as IP connects different networks. Version 1.0 was approved by the Technology Stack Working Group on 30 October 2026. A separate ToIP draft, TSP-Enabled AI Agent Protocols, applies it to AI agents: TMCP runs MCP over TSP and TA2A runs A2A over TSP. That draft is incomplete, and TMCP exists mainly as an OpenWallet Foundation implementation.",
+  "Every TSP message names the sender's and receiver's identifiers (VIDs) and is signed with the sender's key, optionally encrypted to the receiver; the receiver resolves and appraises the sender's VID against its own policy before relying on it. TMCP wraps each MCP message in a TSP message over the normal MCP transport, and the draft makes each agent its own TSP endpoint, with authority delegated by signed credentials that can only narrow, must be revocable and must trace back to a person or organisation. TSP itself leaves out authorization, message freshness and trust decisions; the agent draft does not yet define the MCP binding, model identity, contact channels or warnings between services."
+ ],
+ "how_it_works": [
+  "Setup: each agent or service (a TSP endpoint) controls one or more verifiable identifiers (VIDs), e.g. a did:webvh whose key history is published and supports key rotation. In the TMCP implementation, the MCP client and server each get their own DID.",
+  "Introduction: the client learns the server's VID out of band and sends a relationship-forming message (TSP_RFI). The server resolves the client's VID, verifies and appraises it against its own policy, and replies with TSP_RFA if it accepts.",
+  "Each message, e.g. an MCP JSON-RPC request in TMCP, is placed in a TSP message naming both VIDs, optionally encrypted to the receiver, and signed with the sender's key. It travels over the usual transport (Streamable HTTP, SSE, WebSockets) or through intermediaries.",
+  "The receiving endpoint checks that the relationship exists, verifies the signature against the sender's current key state, decrypts, checks that the sender VID inside matches, and passes the content up; anything that does not verify is silently dropped.",
+  "Under the draft agent companion, an agent exercising authority presents a chain of authorization credentials (ACDCs) from its principal. The receiver checks at that moment that every credential in the chain is valid and unrevoked and roots in an issuer it trusts, and computes the narrowed effective authority.",
+  "Afterwards, either side can cancel the relationship (TSP_RFD), a principal can revoke a delegation in its status registry, and a compromised key is rotated through the VID type."
+ ],
+ "sources": [
+  {
+   "id": "tsp",
+   "title": "Trust Spanning Protocol (TSP) Specification, Release 1.0",
+   "url": "https://trustoverip.github.io/tswg-tsp-specification/",
+   "fetch_url": "https://raw.githubusercontent.com/trustoverip/tswg-tsp-specification/ccda6b33159d860f05c328eb436dabe83548b705/spec/spec.md",
+   "version": "Release 1.0 (commit ccda6b3)",
+   "date": "2026-10-21",
+   "kind": "primary"
+  },
+  {
+   "id": "tea",
+   "title": "ToIP AIM WG, TSP-Enabled AI Agent Protocols (v1.0 Draft)",
+   "url": "https://trustoverip.github.io/aimwg-tsp-enabled-ai-agent-protocols/",
+   "version": "v1.0 Draft",
+   "date": "accessed 2026-11-19",
+   "kind": "primary"
+  },
+  {
+   "id": "tmcp-readme",
+   "title": "openwallet-foundation-labs/tmcp-python, README (TMCP transport hook)",
+   "url": "https://github.com/openwallet-foundation-labs/tmcp-python",
+   "fetch_url": "https://raw.githubusercontent.com/openwallet-foundation-labs/tmcp-python/a399a6ca5bca473d3a58c970fbca5bc886a4c344/README.md",
+   "version": "commit a399a6c",
+   "date": "2025-09-26",
+   "kind": "primary"
+  },
+  {
+   "id": "owf-tmcp",
+   "title": "TSP SDK book (OpenWallet Foundation Labs), TMCP: TSP x MCP",
+   "url": "https://openwallet-foundation-labs.github.io/tsp/tmcp.html",
+   "version": "",
+   "date": "accessed 2026-11-19",
+   "kind": "primary"
+  },
+  {
+   "id": "owf-sdk",
+   "title": "openwallet-foundation-labs/tsp, README (TSP SDK)",
+   "url": "https://github.com/openwallet-foundation-labs/tsp",
+   "fetch_url": "https://raw.githubusercontent.com/openwallet-foundation-labs/tsp/d4c454da35bfd04547afcf6cc087643907e5d6fd/README.md",
+   "version": "commit d4c454d",
+   "date": "2026-10-21",
+   "kind": "primary"
+  },
+  {
+   "id": "lfdt-blog",
+   "title": "LF Decentralized Trust blog, TSP 1.0: A Trust Layer for the Age of AI Agents",
+   "url": "https://www.lfdecentralizedtrust.org/blog/tsp-1.0-a-trust-layer-for-the-age-of-ai-agents",
+   "version": "",
+   "date": "2026-11-04",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Signed messages between verifiable identifiers; agent draft adds delegation",
+   "answer": "A Trust over IP messaging layer where every message between two endpoints is signed, and optionally encrypted, under each side's verifiable identifier (e.g. a DID); a companion draft makes each AI agent its own endpoint with delegated, revocable authority, and TMCP/TA2A carry MCP and A2A messages inside TSP.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "TSP's own description.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Overview",
+     "quote": "As long as the endpoints use identifiers based on public key cryptography (PKC) with a verifiable trust root, TSP ensures their messages are authentic and if required, confidential.",
+     "check": "OK",
+     "check_fp": "e98589933b"
+    },
+    {
+     "text": "Agents as TSP endpoints.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Terms and Definitions",
+     "quote": "A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint",
+     "check": "WEB-OK",
+     "check_fp": "93349f0870"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Trust layer under MCP, A2A and other protocols",
+   "answer": "A general trust layer under higher-level protocols (agents, wallets, messaging), carried inside the message rather than in HTTP headers, so it works over HTTP, QUIC, queues or intermediaries. For agents, TMCP seals each MCP JSON-RPC message as a TSP message and sends it over the usual MCP transport, and TA2A does the same for A2A. The receiving endpoint verifies messages itself; intermediaries can route them but cannot forge them.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "TSP sits under task-level protocols.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Overview",
+     "quote": "Task level protocols or applications, intended to operate atop of TSP mirror the roles of TCP or UDP",
+     "check": "OK",
+     "check_fp": "1278015da3"
+    },
+    {
+     "text": "Existing agent protocols run as trust tasks over TSP.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Layering Existing Protocols over TSP as Trust Tasks",
+     "quote": "Such trust tasks MAY be existing commonly used protocols ported over to TSP, e.g. MCP,",
+     "check": "WEB-OK",
+     "check_fp": "18727291d1"
+    },
+    {
+     "text": "What TMCP is in the implementation.",
+     "type": "fact",
+     "source": "owf-tmcp",
+     "section": "TMCP: TSP x MCP",
+     "quote": "TMCP is a fork of the MCP Python SDK that integrates TSP to encrypt and sign MCP messages.",
+     "check": "WEB-OK",
+     "check_fp": "1bb27d79ab"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Endpoints, Support Systems, Intermediaries; TEAs and principals",
+   "answer": "TSP defines Endpoints (secure systems that run TSP and hold VIDs), Support Systems (which manage VIDs and help verify them) and Intermediaries (which forward messages and need not be trusted). The agent draft adds the TSP-Enabled Agent (TEA), an agent that is itself a TSP endpoint, built around a Controller with a wallet and a TSP gateway, and principals (a natural person or organisation) who delegate authority to it.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Endpoint.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Terminology",
+     "quote": "A TSP Endpoint is a secure computational system that runs the Trust Spanning Protocol.",
+     "check": "OK",
+     "check_fp": "12097ee516"
+    },
+    {
+     "text": "Support System.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Terminology",
+     "quote": "A TSP Support System is a computational system that supports the management of",
+     "check": "OK",
+     "check_fp": "32229f9661"
+    },
+    {
+     "text": "Intermediaries need not be trusted.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Reference Architecture",
+     "quote": "It's important to note that intermediaries are not necessarily trustworthy.",
+     "check": "OK",
+     "check_fp": "80f65a824d"
+    },
+    {
+     "text": "TEA.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Terms and Definitions",
+     "quote": "A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint",
+     "check": "WEB-OK",
+     "check_fp": "93349f0870"
+    },
+    {
+     "text": "Principals.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Accountability",
+     "quote": "The accountability chain of any authority a TEA holds or exercises MUST terminate in a principal",
+     "check": "WEB-OK",
+     "check_fp": "de55868b57"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "TSP 1.0 approved; agent draft incomplete",
+   "answer": "Mixed. TSP Release 1.0 was approved by the ToIP Technology Stack Working Group on 30 October 2026. The agent companion (TMCP/TA2A) is a v1.0 Draft whose MCP binding, signed-payload scheme and security sections are still TODO, and it references TSP Rev 2. Implementations exist (the OpenWallet Foundation TSP SDK, Affinidi's Rust libraries, and a Python TMCP hook built on a fork of the MCP SDK), but no named production deployment was found from a deployer.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: TSP itself is released, but the agent-protocol part is an incomplete draft and only implementations, not named deployments, were found.",
+   "claims": [
+    {
+     "text": "TSP status.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Header",
+     "quote": "Specification Status: Release 1.0",
+     "check": "OK",
+     "check_fp": "a72e5fb8a7"
+    },
+    {
+     "text": "Approval by the working group.",
+     "type": "fact",
+     "source": "lfdt-blog",
+     "section": "Blog post",
+     "quote": "TSP (Trust Spanning Protocol) 1.0 has been formally approved by the Trust Over IP Technology Stack Working Group.",
+     "check": "WEB-OK",
+     "check_fp": "c5497a01a0"
+    },
+    {
+     "text": "Approval date.",
+     "type": "fact",
+     "source": "lfdt-blog",
+     "section": "Blog post",
+     "quote": "October 30, 2026: TSP 1.0 formally approved by the Technology Stack Working Group",
+     "check": "WEB-OK",
+     "check_fp": "d31f4e6e33"
+    },
+    {
+     "text": "Agent companion status.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Header",
+     "quote": "Specification Status: v1.0 Draft",
+     "check": "WEB-OK",
+     "check_fp": "cb38370d7b"
+    },
+    {
+     "text": "The companion references TSP Rev 2.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Normative references",
+     "quote": "Trust Spanning Protocol (TSP) Specification, Implementor’s Draft, Rev 2",
+     "check": "WEB-OK",
+     "check_fp": "8f661a83ff"
+    },
+    {
+     "text": "TMCP implementation.",
+     "type": "fact",
+     "source": "tmcp-readme",
+     "section": "TMCP Transport Hook",
+     "quote": "This Python project implements the TMCP transport hook, allowing you to use MCP over TSP.",
+     "check": "OK",
+     "check_fp": "9c9768cc43"
+    },
+    {
+     "text": "Other implementations.",
+     "type": "fact",
+     "source": "lfdt-blog",
+     "section": "Blog post",
+     "quote": "Affinidi built its own open source TSP libraries in Rust",
+     "check": "WEB-OK",
+     "check_fp": "0821c23c99"
+    },
+    {
+     "text": "The SDK's own tool is not for production.",
+     "type": "fact",
+     "source": "owf-sdk",
+     "section": "Try it",
+     "quote": "This tool is for illustration and testing only, not intended for production use.",
+     "check": "OK",
+     "check_fp": "dad6c9bc42"
+    },
+    {
+     "text": "TMCP builds on a fork of the MCP Python SDK.",
+     "type": "fact",
+     "source": "owf-tmcp",
+     "section": "TMCP: TSP x MCP",
+     "quote": "TMCP is a fork of the MCP Python SDK that integrates TSP to encrypt and sign MCP messages.",
+     "check": "WEB-OK",
+     "check_fp": "1bb27d79ab"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "DIDs/URNs, CESR, HPKE or sealed box, ACDC",
+   "answer": "VIDs in W3C DID or URN (RFC 8141) syntax, e.g. KERI identifiers, did:webs, did:webvh and did:peer; CESR encoding; HPKE-base or libsodium sealed-box encryption with the ESSR construction; Ed25519 signatures and experimental ML-DSA-65 post-quantum signatures. The agent draft adds did:webvh with pre-rotation as the required identifier, ACDC credentials for delegation, and MCP and A2A as the carried protocols.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "VID syntax.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "VID Syntax",
+     "quote": "we require that the VID format be either compliant DID format",
+     "check": "OK",
+     "check_fp": "c5c4229570"
+    },
+    {
+     "text": "CESR encoding.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Serialization and Encoding",
+     "quote": "This version of TSP uses the CESR code table at genus AAA, Version 2.00",
+     "check": "OK",
+     "check_fp": "049252cebc"
+    },
+    {
+     "text": "ACDC delegation in the agent draft.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Delegation of Authorization and Duty",
+     "quote": "A delegated authority MUST be expressed as an authorization ACDC issued by the Delegator (as Issuer) to the Delegate",
+     "check": "WEB-OK",
+     "check_fp": "3992bb6e90"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Sender VID; per agent in the draft",
+   "answer": "Partly. Every TSP message names the sender's and receiver's VIDs (a DID or URN that resolves to keys), and the sender proves control of its VID. Core TSP does not say whether an endpoint is a provider's service or a single agent, and an endpoint may hold many VIDs. The agent draft makes each agent its own endpoint (a TEA) with durable public VIDs, including an Authorization VID, and the TMCP implementation gives each MCP client and server its own DID.",
+   "rating": "yellow",
+   "coverage": "extension",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: the core identifier names whichever endpoint controls the VID; only the draft companion and the implementation make that the individual agent. Unlike the calibration examples, nothing ties it to a provider-wide key.",
+   "claims": [
+    {
+     "text": "Envelope contents.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "TSP Envelope",
+     "quote": "The TSP envelope part of a TSP message contains: TSP Version, Sender VID, Receiver VID.",
+     "check": "OK",
+     "check_fp": "3232382c55"
+    },
+    {
+     "text": "An endpoint can hold many VIDs.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Cryptographic Non-Correlation",
+     "quote": "An endpoint can control multiple VIDs simultaneously and over extended periods.",
+     "check": "OK",
+     "check_fp": "a43d1eff7c"
+    },
+    {
+     "text": "Agents as endpoints in the draft.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Terms and Definitions",
+     "quote": "A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint",
+     "check": "WEB-OK",
+     "check_fp": "93349f0870"
+    },
+    {
+     "text": "Authorization VID.",
+     "type": "fact",
+     "source": "tea",
+     "section": "TEAs",
+     "quote": "It MUST also designate at least one public VID as the Authorization VID (AVID)",
+     "check": "WEB-OK",
+     "check_fp": "965e99f8e1"
+    },
+    {
+     "text": "Per-client identity in TMCP.",
+     "type": "fact",
+     "source": "owf-tmcp",
+     "section": "Transport Security with TSP",
+     "quote": "This TSP integration works by giving the clients and servers their own TSP identity (either a DID Web or a DID WebVH)",
+     "check": "WEB-OK",
+     "check_fp": "dfd9767216"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Each agent's own VID, in the draft",
+   "answer": "Partly, through the draft. A TEA is an agent that is itself a TSP endpoint with durable identifiers, so the VID on each message identifies that agent rather than its provider. Core TSP has no notion of an agent: relationship digests identify relationships, and one endpoint may use different, unlinkable VIDs with different peers. Whether each running agent really gets its own VID depends on the deployment.",
+   "rating": "yellow",
+   "coverage": "extension",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: per-agent identifiers are defined only in the draft companion, not in core TSP; the three calibration examples define none (red).",
+   "claims": [
+    {
+     "text": "TEA definition.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Terms and Definitions",
+     "quote": "A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint",
+     "check": "WEB-OK",
+     "check_fp": "93349f0870"
+    },
+    {
+     "text": "Durable identifiers.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Verifiable Identifiers (VIDs)",
+     "quote": "The TEA MUST use Verifiable Identifiers that are suitable for durable continuous identification.",
+     "check": "WEB-OK",
+     "check_fp": "e6a65a06e0"
+    },
+    {
+     "text": "Non-correlatable VIDs in core TSP.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Cryptographic Non-Correlation",
+     "quote": "It is imperative that these VIDs are cryptographically non-correlatable",
+     "check": "OK",
+     "check_fp": "94f5c09a08"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Principal via delegation chain, in the draft",
+   "answer": "Partly, in the draft only. Core TSP says nothing about whom an endpoint acts for. In the agent draft, authority reaches an agent through authorization credentials (ACDCs) issued by a delegator, and the accountability chain of any authority an agent holds must end in a principal, a natural person or organisation, never the agent itself. A service that verifies the chain learns that principal's identifier.",
+   "rating": "yellow",
+   "coverage": "extension",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: defined only in the draft companion, not in TSP itself.",
+   "claims": [
+    {
+     "text": "Delegation credentials.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Delegation of Authorization and Duty",
+     "quote": "A delegated authority MUST be expressed as an authorization ACDC issued by the Delegator (as Issuer) to the Delegate",
+     "check": "WEB-OK",
+     "check_fp": "3992bb6e90"
+    },
+    {
+     "text": "Chain ends in a principal.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Accountability",
+     "quote": "The accountability chain of any authority a TEA holds or exercises MUST terminate in a principal",
+     "check": "WEB-OK",
+     "check_fp": "de55868b57"
+    },
+    {
+     "text": "The agent cannot be the end of the chain.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Accountability",
+     "quote": "A TEA MUST NOT be the terminal responsible party for an authority.",
+     "check": "WEB-OK",
+     "check_fp": "7372f7990b"
+    },
+    {
+     "text": "Searched the TSP 1.0 specification (Overview, Verifiable Identifiers, Messages, Control Messages, Security and Privacy Considerations) for a user, principal or on-behalf-of field. None is defined.",
+     "type": "silent",
+     "source": "tsp",
+     "section": "Whole specification",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Sender signature on every message",
+   "answer": "A signature by the sender over every TSP message (envelope and payload), made with the key bound to the sender's VID, so it is proof of possession and covers the whole content. The payload can also be encrypted to the receiver, with the sender's VID inside. The signature binds the receiver's VID too, so a message cannot be redirected or disowned. In TMCP every MCP request, response and streamed event over Streamable HTTP is sealed this way.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a verifiable credential (signature) on every message (same as Web Bot Auth and Visa TAP, and stronger in that it covers the whole content).",
+   "claims": [
+    {
+     "text": "Every message is signed.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "TSP Signature",
+     "quote": "The third part of a TSP message is the message signature of the sender.",
+     "check": "OK",
+     "check_fp": "a719c9226d"
+    },
+    {
+     "text": "Authenticity always; confidentiality optional.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Authenticity, Confidentiality, and Metadata Privacy",
+     "quote": "TSP messages always assure authenticity, optionally confidentiality, and if utilized, metadata privacy.",
+     "check": "OK",
+     "check_fp": "29c4300ef5"
+    },
+    {
+     "text": "Both parties are bound.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Authenticity, Confidentiality, and Metadata Privacy",
+     "quote": "a message attests not only that it was composed by the controller of the sender's VID, but that it was composed for the controller of the receiver's VID.",
+     "check": "OK",
+     "check_fp": "64508d48a2"
+    },
+    {
+     "text": "TMCP covers all MCP messages over Streamable HTTP.",
+     "type": "fact",
+     "source": "owf-tmcp",
+     "section": "Transport Security with TSP",
+     "quote": "Streamable HTTP: uses TSP for all POST requests, responses, and SSE messages.",
+     "check": "WEB-OK",
+     "check_fp": "34e0efd209"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "None for messages; left to higher layers",
+   "answer": "Not defined for messages. A TSP message carries no creation time or expiry, and the specification leaves freshness and ordering to the layers above it. Endpoints must not treat stale key state as current. The agent draft requires each delegated authority to carry a validUntil bound, but sets no maximum.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: message freshness is explicitly left to other layers; the draft's validUntil applies to delegated authority and has no number.",
+   "claims": [
+    {
+     "text": "Freshness belongs to other layers.",
+     "type": "out_of_scope",
+     "source": "tsp",
+     "section": "Security and Privacy Considerations",
+     "quote": "Properties beyond these belong to the layers above and below TSP. An application requiring ordering, delivery, or freshness of its own obtains them from the layer that understands what its messages mean",
+     "check": "OK",
+     "check_fp": "09caa13064"
+    },
+    {
+     "text": "Stale key state.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Handling Changes",
+     "quote": "MUST NOT treat a stale cached key state as authoritative.",
+     "check": "OK",
+     "check_fp": "6e9f6658f8"
+    },
+    {
+     "text": "Delegations carry validUntil.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Delegation of Authorization and Duty",
+     "quote": "A delegated authority MUST carry a validUntil validity bound and MUST be revocable through its credential status registry.",
+     "check": "WEB-OK",
+     "check_fp": "a8921ac0ea"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Genuine and unaltered; freshness not checked",
+   "answer": "Partly. The receiving endpoint resolves the sender's VID through its VID type (e.g. a did:webvh history log), verifies that the sender controls it and appraises its records against its own policy, then checks the signature and the sender VID inside the payload. No prior relationship is needed beyond an introduction and a relationship-forming exchange. Messages are proven genuine and unaltered, but TSP has no timestamps, so whether a message is current or replayed is left to higher layers.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: genuine and unaltered without a prior relationship, but message freshness is out of scope (as for UCP default signatures); the calibration examples (green) all check time.",
+   "claims": [
+    {
+     "text": "Receiver verifies and appraises the sender's VID.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Receiver Procedure",
+     "quote": "Verify, and appraise VID_sndr using additional information and processes specific to the VID.",
+     "check": "OK",
+     "check_fp": "96b248ec7c"
+    },
+    {
+     "text": "Appraisal against the receiver's policy.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "VID General Requirements",
+     "quote": "Appraisal is the assessing endpoint’s evaluation of the records a VID type publishes, such as its inception record and its rotation and pre-rotation events",
+     "check": "OK",
+     "check_fp": "8f90f4b488"
+    },
+    {
+     "text": "A relationship-forming exchange comes first.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Direct Relationship Forming",
+     "quote": "It is not permissible that one endpoint which has learned a VID of the other simply starts with an application level message without first having an exchange of TSP control messages.",
+     "check": "OK",
+     "check_fp": "f5f99f5a66"
+    },
+    {
+     "text": "Freshness is left to other layers.",
+     "type": "out_of_scope",
+     "source": "tsp",
+     "section": "Security and Privacy Considerations",
+     "quote": "Properties beyond these belong to the layers above and below TSP. An application requiring ordering, delivery, or freshness of its own obtains them from the layer that understands what its messages mean",
+     "check": "OK",
+     "check_fp": "09caa13064"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Agent's own key, if agent is an endpoint",
+   "answer": "Partly. On every message the receiving endpoint itself verifies a signature made with the sender's own VID key. Where the agent is its own TSP endpoint, as the agent draft requires and the TMCP implementation does, this authenticates the individual agent rather than a provider-wide key. Core TSP does not require that: one endpoint can sign for many agents. Users are not authenticated; the draft traces authority to a principal through delegation credentials instead.",
+   "rating": "yellow",
+   "coverage": "extension",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: per-agent proof on each message holds only where each agent is its own endpoint (draft companion, implementation), not as a core TSP requirement; stronger than the calibration examples (red), which verify provider keys or tokens. Borderline with green.",
+   "claims": [
+    {
+     "text": "Messages are attributable to the sender VID's controller.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Authenticity, Confidentiality, and Metadata Privacy",
+     "quote": "a message attests not only that it was composed by the controller of the sender's VID, but that it was composed for the controller of the receiver's VID.",
+     "check": "OK",
+     "check_fp": "64508d48a2"
+    },
+    {
+     "text": "TSP defines an endpoint as any secure system running TSP and says nothing about one endpoint per agent, so one endpoint (e.g. a provider's service) could sign for many agents.",
+     "type": "inference",
+     "source": "tsp",
+     "section": "Terminology",
+     "quote": "A TSP Endpoint is a secure computational system that runs the Trust Spanning Protocol.",
+     "check": "OK",
+     "check_fp": "12097ee516"
+    },
+    {
+     "text": "Each agent is an endpoint in the draft.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Terms and Definitions",
+     "quote": "A TSP-Enabled Agent, or TEA, is an agent that is a TSP endpoint",
+     "check": "WEB-OK",
+     "check_fp": "93349f0870"
+    },
+    {
+     "text": "Per-client identity in TMCP.",
+     "type": "fact",
+     "source": "owf-tmcp",
+     "section": "Transport Security with TSP",
+     "quote": "This TSP integration works by giving the clients and servers their own TSP identity (either a DID Web or a DID WebVH)",
+     "check": "WEB-OK",
+     "check_fp": "dfd9767216"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Attenuating delegation credentials, in the draft",
+   "answer": "Partly, in the draft. Core TSP carries no permissions. The agent draft expresses delegated authority as authorization credentials (ACDCs) from a delegator to the agent, and re-delegation must be strictly attenuating, so authority can only narrow along a chain. How MCP tool calls or A2A tasks map to these capabilities is not yet written, because the draft's MCP over TSP section is still a TODO.",
+   "rating": "yellow",
+   "coverage": "extension",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: scoped, enforceable authority is defined only in an incomplete companion draft; TSP itself has none.",
+   "claims": [
+    {
+     "text": "Delegated authority as ACDCs.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Delegation of Authorization and Duty",
+     "quote": "A delegated authority MUST be expressed as an authorization ACDC issued by the Delegator (as Issuer) to the Delegate",
+     "check": "WEB-OK",
+     "check_fp": "3992bb6e90"
+    },
+    {
+     "text": "Attenuation.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Attenuated Re-delegation",
+     "quote": "and MUST be strictly attenuating: authority can only narrow as it is re-delegated.",
+     "check": "WEB-OK",
+     "check_fp": "15c9efd1a5"
+    },
+    {
+     "text": "The draft's MCP over TSP section contains only the word TODO, so no mapping from MCP operations to capabilities is defined yet.",
+     "type": "inference",
+     "source": "tea",
+     "section": "MCP over TSP",
+     "quote": ""
+    },
+    {
+     "text": "Searched the TSP 1.0 specification for permissions, scopes or authorization fields. None is defined; payloads for higher layers are carried opaquely.",
+     "type": "silent",
+     "source": "tsp",
+     "section": "Messages; Control Messages",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "No (delegation is issued, not approved)",
+   "answer": "No. TSP defines no approval step. The agent draft requires that an agent's authority trace back to a principal, who may be a person or an organisation, through signed delegation credentials, but it defines no moment where a person approves an agent's access or a specific action, and issuing a credential can be automated.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no human approval step is defined; delegation by a principal is related but is not specified as a person's approval (tie between red and yellow, lower colour chosen).",
+   "claims": [
+    {
+     "text": "Searched the TSP 1.0 specification and the agent draft (Delegation of Authorization and Duty, Authenticated Exchange Protocol, Accountability) for consent, user approval or human-in-the-loop steps. None is defined.",
+     "type": "silent",
+     "source": "tea",
+     "section": "Delegation of Authorization and Duty; Accountability",
+     "quote": ""
+    },
+    {
+     "text": "Authority traces to a principal.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Accountability",
+     "quote": "The accountability chain of any authority a TEA holds or exercises MUST terminate in a principal",
+     "check": "WEB-OK",
+     "check_fp": "de55868b57"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Receiver's own appraisal; credential chains in draft",
+   "answer": "Partly. Core TSP leaves trust to each receiver, which appraises the sender's VID against its own policy using whatever governance the VID type has, and states that it cannot create trust where none exists. The agent draft adds credential chains: an agent's authority counts only if its chain roots in an issuer the verifier already trusts for that resource. No central party vouches for agents.",
+   "rating": "yellow",
+   "coverage": "extension",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: vouching through credential chains is defined only in a companion draft; core TSP, like Web Bot Auth (red), leaves trust to each receiver.",
+   "claims": [
+    {
+     "text": "TSP cannot create trust.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Verifiable Identifiers",
+     "quote": "While TSP aids in transmitting trust signals between endpoints, it cannot instantiate trust where none exists.",
+     "check": "OK",
+     "check_fp": "22b7b0a9a3"
+    },
+    {
+     "text": "Appraisal by the receiver.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "VID General Requirements",
+     "quote": "Appraisal is the assessing endpoint’s evaluation of the records a VID type publishes, such as its inception record and its rotation and pre-rotation events",
+     "check": "OK",
+     "check_fp": "8f90f4b488"
+    },
+    {
+     "text": "Credential chains root in issuers the verifier trusts.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Delegation of Authorization and Duty",
+     "quote": "A verifier MUST accept a root issuance only when it roots trust in that Issuer for the resource in question.",
+     "check": "WEB-OK",
+     "check_fp": "cc78f9ed8f"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Per-delegation revocation, in the draft",
+   "answer": "Partly, in the draft. Each delegated authority must be revocable through its credential status registry, and the verifier must check at the time of use that every credential in the chain is still valid, so revoking one hop takes effect at the next check and can target one agent. Core TSP defines no revocation: a relationship can be cancelled with an optional TSP_RFD message, and a compromised key is rotated through the VID type, which reaches each peer only when it re-resolves.",
+   "rating": "yellow",
+   "coverage": "extension",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: prompt, per-delegation revocation is defined only in the draft companion; core TSP offers relationship cancellation and key rotation, which are not revocation.",
+   "claims": [
+    {
+     "text": "Delegations must be revocable.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Delegation of Authorization and Duty",
+     "quote": "A delegated authority MUST carry a validUntil validity bound and MUST be revocable through its credential status registry.",
+     "check": "WEB-OK",
+     "check_fp": "a8921ac0ea"
+    },
+    {
+     "text": "Status is checked at the time of use.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Delegation of Authorization and Duty",
+     "quote": "Verification of a delegated authority MUST confirm, at the time of exercise, that every ACDC on the relevant chain",
+     "check": "WEB-OK",
+     "check_fp": "1a2c89362c"
+    },
+    {
+     "text": "Relationship cancellation is optional.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Relationship Forming Decline or Cancel",
+     "quote": "While sending explicit messages to cancel a relationship is not strictly necessary in TSP, such messages MAY be beneficial for upper-layer protocols that require a clear and definite termination of relationships.",
+     "check": "OK",
+     "check_fp": "8658a9613f"
+    },
+    {
+     "text": "Key recovery reaches peers one by one.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Key Compromise and Recovery",
+     "quote": "Recovery is not global: it takes effect with respect to each peer independently, when that peer obtains the new key state.",
+     "check": "OK",
+     "check_fp": "dc3b9018c4"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No. Neither TSP nor the agent draft defines a contact or escalation channel. A TSP relationship is itself a channel to the agent's endpoint, and the draft's accountability chain names the responsible principal by identifier, but how to reach that principal about an incident is not defined.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field or escalation channel is defined (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the TSP 1.0 specification and the agent draft for contact, abuse, escalation or support channels. None is defined.",
+     "type": "silent",
+     "source": "tsp",
+     "section": "Whole specification",
+     "quote": ""
+    },
+    {
+     "text": "The principal is named, but not as a contact.",
+     "type": "fact",
+     "source": "tea",
+     "section": "Accountability",
+     "quote": "The accountability chain of any authority a TEA holds or exercises MUST terminate in a principal",
+     "check": "WEB-OK",
+     "check_fp": "de55868b57"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. TSP carries trust signals between the two endpoints of a relationship, but defines no way for one service to warn others about a misbehaving agent. Its privacy design (non-correlatable VIDs, nesting, routing) works against linking an agent across services.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the TSP 1.0 specification and the agent draft for reputation, shared signals or reports between services. None is defined.",
+     "type": "silent",
+     "source": "tsp",
+     "section": "Whole specification",
+     "quote": ""
+    },
+    {
+     "text": "VIDs are designed to be non-correlatable.",
+     "type": "fact",
+     "source": "tsp",
+     "section": "Cryptographic Non-Correlation",
+     "quote": "It is imperative that these VIDs are cryptographically non-correlatable",
+     "check": "OK",
+     "check_fp": "94f5c09a08"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. The agent draft notes that an agent may include or interact with AI models, but neither TSP nor the draft defines a field naming the model or its version.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Models are mentioned, not identified.",
+     "type": "fact",
+     "source": "tea",
+     "section": "TEAs",
+     "quote": "The agent MAY also include or interact with one or more AI models",
+     "check": "WEB-OK",
+     "check_fp": "49a0be6d82"
+    },
+    {
+     "text": "Searched TSP envelope and payload fields and the agent draft (TEAs, TEA Signed Payload) for model, version or attestation fields. None is defined.",
+     "type": "silent",
+     "source": "tsp",
+     "section": "Messages; Serialization and Encoding",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "Core TSP lets a service accept or drop messages per sender VID and relationship, by its own policy. The draft adds delegation credentials whose narrowing authority a service can enforce, but the MCP binding that would map them to tool calls is not yet written.",
+  "incident_response": "A service can cancel or block a relationship with one VID, which is one agent where each agent is its own endpoint. The draft adds per-delegation revocation checked at each use; key compromise is handled by VID rotation, which reaches each peer when it re-resolves.",
+  "accountability": "Every message is signed and binds both sender and receiver VIDs, so the sender cannot disown it. The draft requires every authority to trace back to a natural person or organisation; the AI model and a contact are not identified."
+ },
+ "notes": [
+  "Both specifications use RFC 2119 keywords in capitals; requirement levels in this analysis follow them.",
+  "This analysis covers two documents. Rows rated from the TSP-Enabled AI Agent Protocols draft are marked coverage 'extension', because that draft is a separate, incomplete companion: its MCP over TSP, TEA Signed Payload and Security and Trust Considerations sections are TODO, and it has no A2A section.",
+  "The companion draft's GitHub repository showed no commits from this environment, so it was read only on its published GitHub Pages page; all quotes from it, and from the OWF book and LF Decentralized Trust blog, were checked with a web tool (WEB-OK).",
+  "TSP 1.0 was approved by the Technology Stack Working Group on 30 October 2026; the specification's foreword still has a placeholder for the Steering Committee approval date.",
+  "TMCP is described from the OpenWallet Foundation implementation (a transport hook on a fork of the MCP Python SDK). No public TA2A specification text or code was found; TA2A appears only in presentations and as a goal of the draft.",
+  "The rubric assumes a service receiving requests. TSP is a peer-to-peer messaging layer, so 'receiving service' is read as the receiving TSP endpoint (e.g. a TMCP server).",
+  "Venue is set to 'foundation' (Trust over IP, part of LF Decentralized Trust); the TSP specification is published under the OWF Contributor License and OWFa 1.0.",
+  "Name collision: an unrelated 'Trust Standard Protocol' (LexiTSP) for AI provenance also uses the abbreviation TSP. It was not used."
+ ],
+ "open_questions": [
+  "Will the agent draft be updated to reference TSP 1.0 instead of TSP Rev 2, and do any of its requirements depend on Rev 2 behaviour?",
+  "How does TMCP interact with MCP's own OAuth-based authorization: does TSP replace it, or run underneath it? The draft's MCP binding is not written yet.",
+  "Is there any TA2A specification or implementation beyond presentation slides?",
+  "In practice, do deployments give each agent its own VID (as the draft intends) or share one VID across a provider's agents? This decides the identifier, instance and authentication ratings.",
+  "Who runs the credential status registries for delegation ACDCs, and how quickly do verifiers see a revocation?"
+ ]
+}</script></body></html>

@@ -1,0 +1,1178 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Poppy: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>Poppy<small>Personal Agent Protocol (Poppy)</small></h1><ul class="facts"><li><b>Specification:</b> Personal Agent Protocol 1.0 (published, frozen), repository commit 589743a</li><li><b>Date:</b> 2026-11-14</li><li><b>Maintainer:</b> Sierra (spec authors), developed with Meta and design partners; published on GitHub under Apache 2.0</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> A 1.1 draft is in progress in the same repository and was not analysed. Version 1.0 has not changed since it was frozen on 2026-11-14 (commit 8c02b42).</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent authorization</span><span class="chip"><b>Also:</b> Agentic commerce</span><span class="chip"><b>Also:</b> Web bot identity</span><span class="chip"><b>Also:</b> Agent communication</span><span class="chip"><b>Mechanism:</b> HTTP Message Signatures, Bearer token, Proof-of-possession token</span><span class="chip"><b>Venue:</b> Vendor</span><span class="chip"><b>Maturity:</b> Stable</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>Personal Agent Protocol, known as Poppy, defines how a person&#x27;s own AI agent (e.g. Meta&#x27;s Muse) works with a company on that person&#x27;s behalf: finding what the company offers, identifying itself, signing the person in, and using the company&#x27;s APIs, website or company agent. It aims to replace today&#x27;s all-or-nothing choice, in which agents either pass as the user or are blocked. Sierra leads the work with Meta and more than 100 design partners, and publishes it openly on GitHub under Apache 2.0, outside any standards body. Version 1.0 was published on 14 November 2026. Meta&#x27;s Muse supports it, and Sierra says Shopify has enabled it for every merchant.</p><p>Every request carries a Session JWT, signed for that one request with a short-lived delegated key, that names the agent (its client_id, the URL of its metadata document), a pseudonymous User ID that differs at every company, and the Session. Account access is plain OAuth: the person signs in and approves scopes on the company&#x27;s own page, and the agent then sends an access token alongside the Session JWT. Extensions add approval of an action&#x27;s exact terms, a link to UCP for checkout, and a transitional sign-in with the user&#x27;s password. Poppy does not identify individual agent instances or the AI model, defines no contact channel or warnings between companies, and leaves the choice of which agents to accept to each company.</p><h2 id="how">How it works</h2><ol class="steps"><li>Setup: the Company publishes /.well-known/poppy.json listing its channels (APIs, website, Company Agent) and, if it offers sign-in, points to its OAuth issuer and scopes. The Personal Agent&#x27;s operator publishes a client metadata document at an HTTPS URL, which is its client_id, with its public keys (jwks_uri).</li><li>For each request, the Personal Agent signs a Session JWT with a short-lived delegated key, vouched for by a delegation signed with a key from its jwks_uri. The JWT names the Personal Agent, a pairwise User ID, the Session, the method and URL, and goes in the Poppy-Session header. A Web Bot Auth operator signature is recommended on top.</li><li>The Company, or a gateway in front of it, fetches the client metadata and keys, verifies the delegation and signature, the audience, method, URL and freshness, and then starts or continues a signed-out Session for that pseudonymous User.</li><li>When a task needs the User&#x27;s account, the Personal Agent sends the User to the Company&#x27;s own sign-in and consent page (Direct Sign-In, or Device Sign-In with a code). The User approves some or all of the requested scopes, and the Personal Agent exchanges the result for access and refresh tokens, authenticating with a client assertion.</li><li>Signed-in requests carry the access token together with the Session JWT, whose ath claim binds the two. The Company checks the token, its scopes and that both belong to the same client_id, then decides. With the Operations extension, a consequential action first returns its exact terms, which the User, or the agent on the User&#x27;s instruction, approves before the Company performs it.</li><li>To end access, the Personal Agent revokes its refresh tokens (sign-out), or the User disconnects it in the Company&#x27;s account settings; the Company can also refuse a client_id altogether.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Poppy</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Personal agents sign each request; users sign in via OAuth</td></tr><tr><td class="prop">Use cases</td><td class="">Personal agents at companies: APIs, web, chat</td></tr><tr><td class="prop">Parties involved</td><td class="">User, Personal Agent, Company (plus Company Agent)</td></tr><tr><td class="prop">Status and adoption</td><td class="green">Released 1.0 (Nov 2026); Muse, Shopify</td></tr><tr><td class="prop">Building blocks</td><td class="">OAuth 2.0, CIMD, JWT, DPoP, RFC 9421, RFC 9474</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">client_id URL of the Personal Agent</td></tr><tr><td class="prop">Agent instance identifier</td><td class="yellow">Optional Agent ID per agent of a User</td></tr><tr><td class="prop">Acting for (authority)</td><td class="green">Pseudonymous User ID always; account when signed in</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Per-request signed Session JWT, plus OAuth token</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Verifier-chosen window; 24-hour key delegation</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, via agent&#x27;s published keys</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="yellow">User, when signed in on Company&#x27;s own page</td></tr><tr><td class="prop">Scoped authorization</td><td class="green">OAuth scopes the User approves, with hints</td></tr><tr><td class="prop">Human approval</td><td class="green">Consent page at sign-in; optional per action</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="yellow">User consent when signed in; else nobody</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="yellow">Refresh-token revocation, sign-out, disconnect</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>A Company can let accepted Personal Agents use signed-out APIs and pages, and gate account actions by OAuth scopes the User approves on its own page, with per-action approval of exact terms through the Operations extension. Which agents it accepts is its own policy, outside the protocol.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>The Company can revoke refresh tokens per account and Personal Agent, the User can disconnect an agent in account settings, and the Company can refuse a client_id, which cuts off every User of that Personal Agent. One agent instance cannot be cut off, and a delegated key stays usable until its delegation expires (up to 24 hours).</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Every verified request names the Personal Agent (client_id), a stable pseudonymous User, the Session and optionally an Agent ID, and signed-in requests name the Company&#x27;s own account. Approvals can carry a reference to the operator&#x27;s record, but the AI model and an operator contact are not identified.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Contact and escalation:</b> No (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Poppy</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An open protocol, led by Sierra with Meta, where a person&#x27;s AI agent signs every request to a company with a per-request Session JWT naming itself and a pseudonymous user, and gets account access through OAuth sign-in on the company&#x27;s own page.<details><summary>Evidence (2)</summary><div class="claim">The specification&#x27;s own description of its purpose. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“defines how a Personal Agent, acting for one User, works with a Company on that User&#x27;s behalf.”</blockquote></div><div class="claim">Sessions and account access are separate layers. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 1.1 Protocol layers. <span class="chk">(quote verified against the source)</span><blockquote>“Poppy separates request identity, Session continuity, and account access.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Consumer personal agents doing tasks at companies (e.g. shopping, bookings, account changes) through the company&#x27;s APIs (OpenAPI or MCP), its website, or conversations with the company&#x27;s own agent. Identity travels in HTTP headers: a signed Session JWT and, once signed in, an OAuth access token. The company&#x27;s application or a gateway in front of it verifies them, and an optional Web Bot Auth signature lets CDNs and bot defenses recognise the operator earlier.<details><summary>Evidence (3)</summary><div class="claim">Scope of interactions covered. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“It covers discovery, identity, account access, and interactions across APIs, web browsing, and conversations with the Company Agent.”</blockquote></div><div class="claim">Verification can be done at a gateway. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/guides">Personal Agent Protocol 1.0, Guides (non-normative recommendations)</a>, Verifying the Session header. <span class="chk">(quote verified against the source)</span><blockquote>“Verify the Session header in one place, such as a gateway in front of your APIs, conversation endpoint, and browser-session /authorize endpoint”</blockquote></div><div class="claim">Operator signature for traffic-management infrastructure. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.3 Verifying the Session header &gt; Operator signatures. <span class="chk">(quote verified against the source)</span><blockquote>“so traffic-management infrastructure can authenticate the operator before the request reaches the Company&#x27;s application.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">The spec defines three parties. User: the person a Personal Agent acts for. Personal Agent: software acting for the User, run by an operator. Company: an entity that implements the protocol so Personal Agents can work with it, with its own OAuth issuer when it offers sign-in. It also defines the Company Agent, the company&#x27;s own agent reached through a conversation protocol.<details><summary>Evidence (5)</summary><div class="claim">User. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 2. Terms. <span class="chk">(quote verified against the source)</span><blockquote>“The person a Personal Agent acts for.”</blockquote></div><div class="claim">Personal Agent. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 2. Terms. <span class="chk">(quote verified against the source)</span><blockquote>“Software acting for the User.”</blockquote></div><div class="claim">Company. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 2. Terms. <span class="chk">(quote verified against the source)</span><blockquote>“An entity that implements the protocol so Personal Agents can work with it.”</blockquote></div><div class="claim">Company Agent. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 2. Terms. <span class="chk">(quote verified against the source)</span><blockquote>“A Company&#x27;s own agent, reached through a supported conversation protocol.”</blockquote></div><div class="claim">A Company that offers sign-in has its own OAuth issuer. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 3.2 OAuth server. <span class="chk">(quote verified against the source)</span><blockquote>“A Company that offers sign-in MUST have an OAuth issuer.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="green"><span class="badge">Addressed</span><br>Released. Version 1.0 was published and frozen on 14 November 2026; a 1.1 draft is in progress. Sierra leads it, developed with Meta and design partners, and it is published under Apache 2.0, not through a standards body. Meta says Muse is the first personal agent to support it, and Sierra says Shopify has enabled it for every merchant.<div class="meta">Why this rating: A released version its maintainers mark as published, with a named deployment confirmed by the deployer (Meta&#x27;s Muse). Shopify&#x27;s enablement is stated by Sierra, not by Shopify.</div><details><summary>Evidence (6)</summary><div class="claim">Publication date of 1.0. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/changelog">Personal Agent Protocol, Changelog</a>, Version 1.0. <span class="chk">(quote verified against the source)</span><blockquote>“Published November 14, 2026.”</blockquote></div><div class="claim">Developed by Meta and Sierra with partners. <i>Source states</i> <a href="https://sierra.ai/blog/introducing-personal-agent-protocol">Sierra blog, Introducing Personal Agent Protocol</a>, Blog post. <span class="chk">(quote verified against the source)</span><blockquote>“an open standard Meta and Sierra are developing”</blockquote></div><div class="claim">Licence. <i>Source states</i> <a href="https://github.com/personal-agent-protocol/personal-agent-protocol/blob/main/LICENSE">personal-agent-protocol repository, LICENSE</a>, LICENSE. <span class="chk">(quote verified against the source)</span><blockquote>“Version 2.0, January 2004”</blockquote></div><div class="claim">Agent-side deployment, stated by the deployer. <i>Source states</i> <a href="https://muse.ai/blog/poppy-personal-agent-protocol">Muse (Meta) blog, More Ways for Muse to Work With Businesses</a>, Blog post. <span class="chk">(quote verified against the source)</span><blockquote>“Muse is the first personal agent to support Poppy”</blockquote></div><div class="claim">muse.ai is Meta&#x27;s site for Muse. <i>Source states</i> <a href="https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/">Meta Newsroom, Introducing Muse: The World&#x27;s First Personal AI Agent Built for Everyone</a>, Press release. <span class="chk">(quote verified against the source)</span><blockquote>“Muse is rolling out in the US on iOS, Android, and muse.ai”</blockquote></div><div class="claim">Company-side deployment, stated by the maintainer (Sierra). <i>Source states</i> <a href="https://sierra.ai/blog/releasing-poppy">Sierra blog, Releasing Personal Agent Protocol 1.0</a>, Blog post. <span class="chk">(quote verified against the source)</span><blockquote>“Shopify has enabled Poppy for every merchant on its platform.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">OAuth 2.0 (RFC 6749) following the security best practice RFC 9700, with PKCE (RFC 7636), device grant (RFC 8628), RFC 9207, RFC 8414 and RFC 9728 metadata, RFC 7009 revocation, RFC 8707 resource indicators and optional PAR (RFC 9126). Agent identity uses Client ID Metadata Documents (an IETF draft) and private_key_jwt (RFC 7523). Session JWTs reuse DPoP ideas (RFC 9449), with delegated keys (RFC 7800, RFC 7638) and optional RSA blind signatures (RFC 9474); operator signatures use RFC 9421 and the Web Bot Auth draft. APIs are OpenAPI or MCP.<details><summary>Evidence (4)</summary><div class="claim">Account access is standard OAuth. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4. OAuth. <span class="chk">(quote verified against the source)</span><blockquote>“Poppy uses standard OAuth for account access.”</blockquote></div><div class="claim">Agent identity follows the CIMD draft. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.1 Agent identity. <span class="chk">(quote verified against the source)</span><blockquote>“This follows the OAuth Client ID Metadata Document (CIMD) draft.”</blockquote></div><div class="claim">Blind signatures. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 10.7 Delegated keys. <span class="chk">(quote verified against the source)</span><blockquote>“It uses RSA blind signatures (RFC 9474).”</blockquote></div><div class="claim">Method and URL claims as in DPoP. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.2 The Session header. <span class="chk">(quote verified against the source)</span><blockquote>“htm and htu are the request&#x27;s method and URL, without the query or fragment, as in a DPoP proof”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Every Session JWT names the Personal Agent by its client_id, an HTTPS URL that returns the agent&#x27;s metadata document (name, logo, keys, redirect addresses), published by its operator. Every User and every running copy of that Personal Agent shares this client_id, so it names the agent product and its operator, not one agent. The same JWT also carries a pairwise User ID and, optionally, an Agent ID (see the next rows).<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the client application, shared by all its instances (same as MCP Authorization&#x27;s client_id).</div><details><summary>Evidence (3)</summary><div class="claim">The client_id is a metadata URL. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.1 Agent identity. <span class="chk">(quote verified against the source)</span><blockquote>“A Personal Agent&#x27;s client_id MUST be an HTTPS URL that returns its metadata document.”</blockquote></div><div class="claim">The Session JWT&#x27;s issuer is the client_id. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.2 The Session header. <span class="chk">(quote verified against the source)</span><blockquote>“iss is the Personal Agent&#x27;s client_id (4.1).”</blockquote></div><div class="claim">All Users share it. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 10.8 Sign-ins someone else started. <span class="chk">(quote verified against the source)</span><blockquote>“Every User of a Personal Agent shares one client_id”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly, and optional. A Personal Agent that acts for one User through several agents (e.g. a travel agent and a shopping agent) MAY add an Agent ID to the Session JWT, a stable opaque ID that differs at each Company, so the Company can tell those agents apart. It names one of the User&#x27;s agents, not a running process, and a Personal Agent with one agent leaves it out. The Session ID (sid) is random per Session and identifies a stretch of activity, not the agent.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: A per-agent identifier is defined but optional (MAY) and covers only agents of one operator for one User; the three calibration examples define nothing comparable (red). Borderline with red, since it is not a per-process instance ID.</div><details><summary>Evidence (4)</summary><div class="claim">Agent ID is optional. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.1 User IDs and Agent IDs. <span class="chk">(quote verified against the source)</span><blockquote>“A Personal Agent that acts for a User through several agents, such as a travel agent and a shopping agent, MAY say which one a Session is for with an Agent ID.”</blockquote></div><div class="claim">Single-agent Personal Agents omit it. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.1 User IDs and Agent IDs. <span class="chk">(quote verified against the source)</span><blockquote>“A Personal Agent with one agent leaves it out.”</blockquote></div><div class="claim">The Agent ID is not a separate party. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.1 User IDs and Agent IDs. <span class="chk">(quote verified against the source)</span><blockquote>“An Agent ID doesn&#x27;t name a separate party: the Personal Agent is still the client the Company deals with (4.1).”</blockquote></div><div class="claim">The sid is a random Session identifier, not an agent identifier. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.2 The Session header. <span class="chk">(quote verified against the source)</span><blockquote>“sid is the Session ID. The Personal Agent MUST choose it at random, so it can&#x27;t be guessed”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, as a pseudonym, and as an account once signed in. Every Session JWT must carry sub, a User ID the Personal Agent assigns for that User at that Company: stable, so the Company recognises a returning User, but opaque and different at each Company. After sign-in, requests also carry an access token from the Company&#x27;s own issuer, so the Company knows which of its accounts the agent acts for. A Personal Agent MAY instead use a fresh User ID for each anonymous browsing session.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The protocol requires a User identifier on every request, and signed-in requests identify the Company&#x27;s own account; differs from Visa TAP (optional consumer object) and MCP Authorization (not defined).</div><details><summary>Evidence (4)</summary><div class="claim">User IDs are required, per Company. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.1 User IDs and Agent IDs. <span class="chk">(quote verified against the source)</span><blockquote>“The Personal Agent MUST give each of its Users a User ID for each Company”</blockquote></div><div class="claim">sub is a mandatory claim. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.2 The Session header. <span class="chk">(quote verified against the source)</span><blockquote>“The Personal Agent MUST include every claim except agent_id, and ath when there&#x27;s no access token.”</blockquote></div><div class="claim">The access token identifies the account. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5. Sessions. <span class="chk">(quote verified against the source)</span><blockquote>“the access token says which account it can act on, with which scopes.”</blockquote></div><div class="claim">Anonymous per-browsing-session IDs are allowed. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.1 User IDs and Agent IDs. <span class="chk">(quote verified against the source)</span><blockquote>“A Personal Agent MAY instead give a User a new User ID for each anonymous browsing session, like a private browser window.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>A Session JWT in the Poppy-Session header of every request to the Company&#x27;s APIs and protocol endpoints, signed for that one request with a delegated key, so it is proof of possession; a browser on the website carries a Session cookie instead, after joining. The JWT covers the method and URL (without query), the time, a unique ID, the Company as audience and, when signed in, a hash of the access token, but not the body. Signed-in requests add an OAuth access token, bearer or DPoP-bound as the Company chooses, and an operator signature (Web Bot Auth, RFC 9421) is recommended.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A defined, verifiable credential on every request (same as the three calibration examples).</div><details><summary>Evidence (5)</summary><div class="claim">The header is required on every request to Company endpoints. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.2 The Session header. <span class="chk">(quote verified against the source)</span><blockquote>“The Personal Agent MUST send a Poppy-Session header on every request to a Company&#x27;s APIs, conversations, and other resource endpoints this protocol or an extension defines.”</blockquote></div><div class="claim">What the JWT covers, and what it does not. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/guides">Personal Agent Protocol 1.0, Guides (non-normative recommendations)</a>, Operator signatures and bot defenses. <span class="chk">(quote verified against the source)</span><blockquote>“The JWT covers method, URL without query, and access token, not the request body”</blockquote></div><div class="claim">DPoP binding of access tokens is the Company&#x27;s choice. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.5 Access tokens. <span class="chk">(quote verified against the source)</span><blockquote>“Whether a Company binds its access tokens with DPoP is its choice, as in OAuth.”</blockquote></div><div class="claim">Operator signature is recommended. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.3 Verifying the Session header &gt; Operator signatures. <span class="chk">(quote verified against the source)</span><blockquote>“A Personal Agent SHOULD also sign requests carrying the Session header with an HTTP Message Signature”</blockquote></div><div class="claim">Browsers use a cookie after browser join. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.6 Sending requests. <span class="chk">(quote verified against the source)</span><blockquote>“A browser on the website carries a cookie instead (section 6).”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Short in practice, but the spec sets no fixed maximum for the per-request JWT. A Session JWT has no expiry; the Company must check that its signing time is within an acceptance window it chooses (the spec&#x27;s example is one minute). The delegation that vouches for the signing key must expire within 24 hours, which verifiers check, and client assertions within 5 minutes. Access token lifetimes are left to the Company; the non-normative guides suggest hours, not days.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Verifiers must check freshness, but no specific short maximum is set for the per-request JWT (one minute is only an example), the enforced delegation limit is 24 hours, and access token lifetimes are unspecified; closer to MCP Authorization than to Visa TAP&#x27;s fixed 8 minutes.</div><details><summary>Evidence (4)</summary><div class="claim">Freshness window chosen by the verifier. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.3 Verifying the Session header. <span class="chk">(quote verified against the source)</span><blockquote>“iat is within an acceptance window it chooses, such as one minute.”</blockquote></div><div class="claim">Delegations are limited to 24 hours, checked by the verifier. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.2 The Session header &gt; Delegated keys. <span class="chk">(quote verified against the source)</span><blockquote>“it hasn&#x27;t expired, and its exp is at most 24 hours after its iat.”</blockquote></div><div class="claim">Client assertions are limited to 5 minutes. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.1 Agent identity. <span class="chk">(quote verified against the source)</span><blockquote>“MUST set exp at most 5 minutes after iat.”</blockquote></div><div class="claim">Access token lifetime is only a guide recommendation. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/guides">Personal Agent Protocol 1.0, Guides (non-normative recommendations)</a>, Token lifetimes and sign-out. <span class="chk">(quote verified against the source)</span><blockquote>“Give access tokens a lifetime of hours, not days.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The Company fetches the Personal Agent&#x27;s metadata from the iss URL and its public keys from jwks_uri, verifies the delegation and the JWT signature, and checks the audience, method, URL, freshness and, when present, that ath matches an access token issued to the same client_id. No prior relationship with the agent is needed. Verification is a SHOULD on every request but a MUST before relying on any Session claim; access tokens are validated as in OAuth.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Verifiable against published keys with no prior relationship (same as the three calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">Verification is recommended on every request. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.3 Verifying the Session header. <span class="chk">(quote verified against the source)</span><blockquote>“Companies SHOULD verify the Session header on every request that carries it.”</blockquote></div><div class="claim">Verification is required before relying on Session claims. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.3 Verifying the Session header. <span class="chk">(quote verified against the source)</span><blockquote>“The Company MUST complete the following checks before relying on Session claims for client or User identity”</blockquote></div><div class="claim">Keys come from the agent&#x27;s own metadata. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.3 Verifying the Session header. <span class="chk">(quote verified against the source)</span><blockquote>“Fetches the client metadata from iss without following redirects, as the CIMD draft (§5) requires, and the public keys from its jwks_uri (4.1)”</blockquote></div><div class="claim">Binding to the access token. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.3 Verifying the Session header. <span class="chk">(quote verified against the source)</span><blockquote>“If the request carries an access token, checks that ath matches it, and that the token was issued to the same client_id as iss.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. When the User signs in, the Company authenticates the User itself: in Direct or Device Sign-In the User signs in on the Company&#x27;s own page, and later requests carry an access token tied to the Session JWT and the same client_id. On each request the Company also verifies possession of a delegated key that the Personal Agent may use for one User ID only, but that key is issued by the operator, and anyone holding it can sign for any User ID until it expires. Signed-out requests authenticate only the Personal Agent product and a pseudonymous User ID.<div class="meta">Optional in the specification</div><div class="meta">Why this rating: Unlike MCP Authorization (red), the receiving Company runs the sign-in on its own page, so it authenticates the User itself, but only in signed-in Sessions, which are optional; the per-request key is per User and Company, not per agent instance. Borderline with red.</div><details><summary>Evidence (6)</summary><div class="claim">Direct Sign-In happens on the Company&#x27;s own page. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 2. Terms. <span class="chk">(quote verified against the source)</span><blockquote>“The User signs in on the Company&#x27;s own page in their browser and approves access”</blockquote></div><div class="claim">Sign-in is optional. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.4 Signing in. <span class="chk">(quote verified against the source)</span><blockquote>“A Session does not require sign-in.”</blockquote></div><div class="claim">Delegated keys are per User ID. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.2 The Session header &gt; Delegated keys. <span class="chk">(quote verified against the source)</span><blockquote>“The Personal Agent MUST use each delegated key, and its delegation, for one User ID only”</blockquote></div><div class="claim">The key itself is not bound to a User. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 10.7 Delegated keys. <span class="chk">(quote verified against the source)</span><blockquote>“Nothing in a delegation ties it to a User, so whoever holds a delegated key can sign Session JWTs for any User ID they know until the delegation expires”</blockquote></div><div class="claim">The access token is tied to the Session JWT and the same client_id. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.3 Verifying the Session header. <span class="chk">(quote verified against the source)</span><blockquote>“If the request carries an access token, checks that ath matches it, and that the token was issued to the same client_id as iss.”</blockquote></div><div class="claim">Delegated keys are vouched for by the operator&#x27;s keys. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.2 The Session header &gt; Delegated keys. <span class="chk">(quote verified against the source)</span><blockquote>“A key in jwks_uri signs a delegation: a short-lived JWT that names a delegated key and vouches for it.”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Account access uses OAuth scopes the Company defines (e.g. orders:read), which the User approves on the Company&#x27;s page; every sign-in request must name its scopes and the Company must not grant more than requested. The Company enforces scopes across its APIs and Company Agent, and may publish hints saying whether a scope makes irreversible changes or touches personal data. A website may not apply scopes, so a signed-in browser can get full account access; the Operations extension adds approval of an action&#x27;s exact terms.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Scoped permissions the service enforces are part of the core flow (same as MCP Authorization).</div><details><summary>Evidence (6)</summary><div class="claim">Scopes are required on sign-in requests. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.7 Scopes and token responses. <span class="chk">(quote verified against the source)</span><blockquote>“Each sign-in request MUST include scope, except where an extension continues an earlier request”</blockquote></div><div class="claim">No grant beyond what was requested. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.7 Scopes and token responses. <span class="chk">(quote verified against the source)</span><blockquote>“The Company MUST NOT grant scopes beyond those requested.”</blockquote></div><div class="claim">Enforcement by the Company. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.7 Scopes and token responses. <span class="chk">(quote verified against the source)</span><blockquote>“Companies decide which actions require each scope and enforce them across APIs and actions performed by the Company Agent.”</blockquote></div><div class="claim">Websites may not apply scopes. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.7 Scopes and token responses. <span class="chk">(quote verified against the source)</span><blockquote>“A website may not be able to apply them.”</blockquote></div><div class="claim">Scope hints. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.7 Scopes and token responses. <span class="chk">(quote verified against the source)</span><blockquote>“A Company MAY give hints about any scope in auth.scope_hints, so a Personal Agent can tell how consequential a scope is before requesting it.”</blockquote></div><div class="claim">Exact-terms approval in the Operations extension. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/extensions/operations">Personal Agent Protocol 1.0, Operations extension (version 3)</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“A Company can ask for approval of the exact terms before it performs one.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, for account access. Direct and Device Sign-In send the User to the Company&#x27;s own consent page, which must list every scope it will grant, and a Personal Agent may use them only when the User signs in themselves. For single actions, the Operations extension lets a Company ask for approval of exact terms, but the agent may approve on the User&#x27;s earlier instruction and the Company relies on the agent&#x27;s word. The transitional Mediated Sign-In extension lets the agent sign in with credentials the User gave it.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A user approval step at the Company is part of the defined sign-in flows (same as MCP Authorization); per-action approval is only in an extension and can be delegated to the agent.</div><details><summary>Evidence (6)</summary><div class="claim">The consent page lists every scope. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 10.8 Sign-ins someone else started. <span class="chk">(quote verified against the source)</span><blockquote>“In Direct and Device Sign-In, the Company&#x27;s consent page MUST list every scope it will grant”</blockquote></div><div class="claim">The User must sign in themselves. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.4 Signing in. <span class="chk">(quote verified against the source)</span><blockquote>“A Personal Agent MUST use Direct or Device Sign-In only when the User signs in themselves.”</blockquote></div><div class="claim">Per-action approval can come from the agent. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/extensions/operations">Personal Agent Protocol 1.0, Operations extension (version 3)</a>, 5. Approving an operation. <span class="chk">(quote verified against the source)</span><blockquote>“Agent approved: the Personal Agent approves on an instruction the User gave it”</blockquote></div><div class="claim">The Company relies on the agent&#x27;s statement. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/extensions/operations">Personal Agent Protocol 1.0, Operations extension (version 3)</a>, 8.1 What an approval proves. <span class="chk">(quote verified against the source)</span><blockquote>“The Company can&#x27;t see the Personal Agent&#x27;s interface, so it relies on the Personal Agent for how the approval was given”</blockquote></div><div class="claim">Mediated Sign-In uses the User&#x27;s credentials. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/extensions/mediated-sign-in">Personal Agent Protocol 1.0, Mediated Sign-In extension (version 1)</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“In Mediated Sign-In, the Personal Agent signs in for the User with credentials the User has given it for this Company”</blockquote></div><div class="claim">Mediated Sign-In is transitional. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/extensions/mediated-sign-in">Personal Agent Protocol 1.0, Mediated Sign-In extension (version 1)</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“Mediated Sign-In is transitional.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Nobody vouches for the Personal Agent itself: its identity is a metadata document on its own domain, and which Personal Agents a Company accepts, and how, is outside the specification (the guides suggest allowlists or blocklists of client_id values). For signed-in requests, the Company&#x27;s own issuer granted the token after the User approved scopes for that Personal Agent, the same basis as MCP Authorization. Signed-out requests rest only on the agent&#x27;s own published keys.<div class="meta">Optional in the specification</div><div class="meta">Why this rating: The User&#x27;s consent at the Company&#x27;s issuer vouches for signed-in requests (as in MCP Authorization, green), but signed-out requests, where every Session starts, have no vouching party; the lower colour is chosen.</div><details><summary>Evidence (3)</summary><div class="claim">Accepting agents is outside the spec. <i>Out of scope per</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.1 Agent identity. <span class="chk">(quote verified against the source)</span><blockquote>“A Company decides which Personal Agents it accepts, and how it approves them is outside this specification.”</blockquote></div><div class="claim">Guide suggestion for accepting agents. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/guides">Personal Agent Protocol 1.0, Guides (non-normative recommendations)</a>, Verifying personal agents. <span class="chk">(quote verified against the source)</span><blockquote>“Keep allowlists or blocklists of client_id values, and rate-limit session creation and new client_id values”</blockquote></div><div class="claim">Signed-in access rests on the User&#x27;s approval on the Company&#x27;s page. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 10.5 Signing in with the User&#x27;s credentials. <span class="chk">(quote verified against the source)</span><blockquote>“Direct and Device Sign-In delegate access: the User approves scopes on the Company&#x27;s own page, and the Company knows which Personal Agent acts”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The issuer must publish a revocation endpoint, the Personal Agent signs out by revoking its refresh tokens there (RFC 7009), and the User can disconnect the Personal Agent in the Company&#x27;s account settings, which revokes them too; the Company may also revoke a whole client_id. Access tokens already issued follow RFC 7009, so they can keep working until they expire unless the Company invalidates them. A delegated key cannot be withdrawn before its delegation expires (at most 24 hours), except by the operator removing the signing key.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The protocol defines revocation (required revocation endpoint, sign-out, disconnect), unlike the three calibration examples (red), but its effect on issued access tokens depends on the Company and delegations cannot be withdrawn early.</div><details><summary>Evidence (6)</summary><div class="claim">The revocation endpoint is required in the issuer metadata. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 3.2 OAuth server. <span class="chk">(quote verified against the source)</span><blockquote>“revocation_endpoint revokes refresh tokens (4.6). Required.”</blockquote></div><div class="claim">Users can disconnect an agent. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.5 Ending Sessions and signing out. <span class="chk">(quote verified against the source)</span><blockquote>“The User can also disconnect the Personal Agent in the Company&#x27;s account settings. That revokes its refresh tokens for the account.”</blockquote></div><div class="claim">Companies may revoke a client_id. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.4 Signing in. <span class="chk">(quote verified against the source)</span><blockquote>“MAY revoke a client_id that doesn&#x27;t follow it (4.1).”</blockquote></div><div class="claim">Effect on access tokens follows RFC 7009. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.5 Ending Sessions and signing out. <span class="chk">(quote verified against the source)</span><blockquote>“What happens to access tokens issued under a revoked refresh token, including one that a new sign-in replaced (4.7), follows RFC 7009 §2.1”</blockquote></div><div class="claim">Delegations cannot be withdrawn. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 10.7 Delegated keys. <span class="chk">(quote verified against the source)</span><blockquote>“A delegation can&#x27;t be withdrawn before it expires, so its lifetime limits what a stolen delegated key can do.”</blockquote></div><div class="claim">The guides recommend invalidating access tokens at sign-out. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/guides">Personal Agent Protocol 1.0, Guides (non-normative recommendations)</a>, Token lifetimes and sign-out. <span class="chk">(quote verified against the source)</span><blockquote>“At sign-out, invalidate the access tokens issued under the revoked refresh token, as RFC 7009 §2.1 describes, or check on each request whether the authorization is still active”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Poppy defines no contact or escalation channel for the Personal Agent&#x27;s operator: the client metadata has a name, logo, keys and redirect addresses but no contact field. In the Operations extension an approval can carry a reference to the agent&#x27;s own record, so a Company and the operator can look into it later, but how to reach the operator is not defined. The feedback endpoint runs the other way, from agent to Company.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field is required or defined (same as the three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Searched 4.1 Agent identity (client metadata fields), 4.8, sections 9 and 10, the Operations extension and the guides for contact, abuse, support and security.txt. No contact field or escalation channel is defined. <i>Not found in</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.1 Agent identity; 9. Task coverage; 10. Security considerations.</div><div class="claim">Approval references support later investigation with the operator. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/extensions/operations">Personal Agent Protocol 1.0, Operations extension (version 3)</a>, 6. Sending the approval. <span class="chk">(quote verified against the source)</span><blockquote>“so the Company and the Personal Agent&#x27;s operator can look into the approval later.”</blockquote></div><div class="claim">Feedback goes from agent to Company. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 9.3 Feedback. <span class="chk">(quote verified against the source)</span><blockquote>“A Company can ask Personal Agents to tell it when a User&#x27;s task can&#x27;t be done through this protocol.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Poppy defines no way for one Company to warn others about a misbehaving Personal Agent. Pairwise User IDs and per-Company delegated keys are designed so Companies cannot match a User across Companies.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the specification, extensions and guides for reputation, shared signals, abuse reports and events between Companies. None is defined. <i>Not found in</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, Whole specification.</div><div class="claim">User IDs are designed against cross-Company matching. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 5.1 User IDs and Agent IDs. <span class="chk">(quote verified against the source)</span><blockquote>“It is opaque and different for each Company, so Companies can&#x27;t match Users with each other.”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The Company learns the Personal Agent&#x27;s client_id and display name, and in conversations each message says whether a person or an AI wrote it, but no field names the AI model or its version.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Human or AI marking in conversations. <i>Source states</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 8.8 Human or AI. <span class="chk">(quote verified against the source)</span><blockquote>“Both sides say whether a person or an AI is taking part.”</blockquote></div><div class="claim">Searched client metadata (4.1), Session JWT claims (5.2), message fields (8.4) and agent context (9.4) for model, version or attestation. None is defined. <i>Not found in</i> <a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a>, 4.1; 5.2; 8.4; 9.4.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://personalagentprotocol.org/docs/1.0/spec">Personal Agent Protocol, specification version 1.0</a> (1.0 (commit 589743a), 2026-11-14)</li><li><a href="https://personalagentprotocol.org/docs/1.0/extensions/operations">Personal Agent Protocol 1.0, Operations extension (version 3)</a> (1.0, extension v3 (commit 589743a), 2026-11-14)</li><li><a href="https://personalagentprotocol.org/docs/1.0/extensions/mediated-sign-in">Personal Agent Protocol 1.0, Mediated Sign-In extension (version 1)</a> (1.0, extension v1 (commit 589743a), 2026-11-14)</li><li><a href="https://personalagentprotocol.org/docs/1.0/guides">Personal Agent Protocol 1.0, Guides (non-normative recommendations)</a> (1.0 (commit 589743a), 2026-11-14)</li><li><a href="https://personalagentprotocol.org/docs/changelog">Personal Agent Protocol, Changelog</a> (commit 589743a, 2026-11-18)</li><li><a href="https://github.com/personal-agent-protocol/personal-agent-protocol/blob/main/LICENSE">personal-agent-protocol repository, LICENSE</a> (commit 589743a, 2026-11-18)</li><li><a href="https://sierra.ai/blog/introducing-personal-agent-protocol">Sierra blog, Introducing Personal Agent Protocol</a> (2026-10-06)</li><li><a href="https://sierra.ai/blog/releasing-poppy">Sierra blog, Releasing Personal Agent Protocol 1.0</a> (2026-11-13)</li><li><a href="https://muse.ai/blog/poppy-personal-agent-protocol">Muse (Meta) blog, More Ways for Muse to Work With Businesses</a> (2026-11-13)</li><li><a href="https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/">Meta Newsroom, Introducing Muse: The World&#x27;s First Personal AI Agent Built for Everyone</a> (2026-09-08)</li></ul><h2>Notes</h2><ul class="plain"><li>The specification uses RFC 2119 keywords in capitals; requirement levels in this analysis follow those capitals.</li><li>Version 1.0 was announced by Sierra and Meta on 13 November 2026; the repository marked it published and froze it on 14 November 2026 (commit 8c02b42). Some third-party pages still call it &#x27;draft 1.0&#x27;, and the repository README still says the site publishes a draft specification; the 1.0 page itself says &#x27;This is version 1.0.&#x27;</li><li>Venue is set to &#x27;vendor&#x27;: the specification is written in a repository run by Sierra, with Meta and design partners contributing feedback, and no standards body or foundation governs it.</li><li>The guides are non-normative recommendations; claims quoted from them are marked as guidance in the answers.</li><li>The repository contains AGENTS.md files with instructions aimed at AI coding tools (for contributors editing the site). They were treated as data and not followed.</li><li>Name collision: &#x27;PAP&#x27; is also the PPP Password Authentication Protocol (RFC 1334), which is unrelated. poppy.md is an unofficial third-party site and was not used as a source.</li><li>Quotes from sierra.ai, muse.ai and about.fb.com were checked with a web tool (WEB-OK) because those sites could not be downloaded by script from this environment.</li></ul><h2>Open questions</h2><ul class="plain"><li>Shopify&#x27;s enablement for every merchant is stated by Sierra; no Shopify documentation was found that says what Shopify&#x27;s poppy.json files offer (signed-out Sessions only, sign-in, UCP extension).</li><li>How many Companies actually verify the Session header (a SHOULD) rather than ignoring it, and how short their acceptance windows are.</li><li>Whether Muse sends an Agent ID, and whether it uses blind signing or holds delegated keys on Meta&#x27;s servers.</li><li>Whether Companies invalidate access tokens at sign-out in practice, which decides how quickly revocation takes effect.</li><li>The spec says the Company is identified by its domain; it does not say how a Personal Agent operator&#x27;s keys used for Web Bot Auth relate to its client_id beyond &#x27;a shared origin alone does not establish&#x27; the link.</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (75 of 75 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "Poppy",
+  "full_name": "Personal Agent Protocol (Poppy)",
+  "spec_version": "Personal Agent Protocol 1.0 (published, frozen), repository commit 589743a",
+  "spec_date": "2026-11-14",
+  "maintainer": "Sierra (spec authors), developed with Meta and design partners; published on GitHub under Apache 2.0",
+  "newer_version_note": "A 1.1 draft is in progress in the same repository and was not analysed. Version 1.0 has not changed since it was frozen on 2026-11-14 (commit 8c02b42)."
+ },
+ "profile": {
+  "id": "personal-agent-protocol",
+  "category": "agent-authorization",
+  "secondary_categories": [
+   "agentic-commerce",
+   "web-bot-identity",
+   "agent-communication"
+  ],
+  "mechanisms": [
+   "http-message-signature",
+   "bearer-token",
+   "pop-token"
+  ],
+  "venue": "vendor",
+  "maturity": "stable",
+  "openness": "open-specification",
+  "layers": [
+   "http-header",
+   "token",
+   "metadata-document",
+   "application-message"
+  ],
+  "building_blocks": [
+   "OAuth 2.0",
+   "RFC 6749",
+   "RFC 7636",
+   "RFC 8628",
+   "RFC 9700",
+   "RFC 8414",
+   "RFC 9728",
+   "RFC 7009",
+   "RFC 7523",
+   "CIMD",
+   "RFC 9449",
+   "RFC 8707",
+   "RFC 9126",
+   "RFC 7800",
+   "RFC 7638",
+   "RFC 9474",
+   "RFC 9421",
+   "Web Bot Auth",
+   "JWT",
+   "OpenAPI",
+   "MCP"
+  ],
+  "website": "https://personalagentprotocol.org",
+  "first_published": "2026-10"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "Personal Agent Protocol, known as Poppy, defines how a person's own AI agent (e.g. Meta's Muse) works with a company on that person's behalf: finding what the company offers, identifying itself, signing the person in, and using the company's APIs, website or company agent. It aims to replace today's all-or-nothing choice, in which agents either pass as the user or are blocked. Sierra leads the work with Meta and more than 100 design partners, and publishes it openly on GitHub under Apache 2.0, outside any standards body. Version 1.0 was published on 14 November 2026. Meta's Muse supports it, and Sierra says Shopify has enabled it for every merchant.",
+  "Every request carries a Session JWT, signed for that one request with a short-lived delegated key, that names the agent (its client_id, the URL of its metadata document), a pseudonymous User ID that differs at every company, and the Session. Account access is plain OAuth: the person signs in and approves scopes on the company's own page, and the agent then sends an access token alongside the Session JWT. Extensions add approval of an action's exact terms, a link to UCP for checkout, and a transitional sign-in with the user's password. Poppy does not identify individual agent instances or the AI model, defines no contact channel or warnings between companies, and leaves the choice of which agents to accept to each company."
+ ],
+ "how_it_works": [
+  "Setup: the Company publishes /.well-known/poppy.json listing its channels (APIs, website, Company Agent) and, if it offers sign-in, points to its OAuth issuer and scopes. The Personal Agent's operator publishes a client metadata document at an HTTPS URL, which is its client_id, with its public keys (jwks_uri).",
+  "For each request, the Personal Agent signs a Session JWT with a short-lived delegated key, vouched for by a delegation signed with a key from its jwks_uri. The JWT names the Personal Agent, a pairwise User ID, the Session, the method and URL, and goes in the Poppy-Session header. A Web Bot Auth operator signature is recommended on top.",
+  "The Company, or a gateway in front of it, fetches the client metadata and keys, verifies the delegation and signature, the audience, method, URL and freshness, and then starts or continues a signed-out Session for that pseudonymous User.",
+  "When a task needs the User's account, the Personal Agent sends the User to the Company's own sign-in and consent page (Direct Sign-In, or Device Sign-In with a code). The User approves some or all of the requested scopes, and the Personal Agent exchanges the result for access and refresh tokens, authenticating with a client assertion.",
+  "Signed-in requests carry the access token together with the Session JWT, whose ath claim binds the two. The Company checks the token, its scopes and that both belong to the same client_id, then decides. With the Operations extension, a consequential action first returns its exact terms, which the User, or the agent on the User's instruction, approves before the Company performs it.",
+  "To end access, the Personal Agent revokes its refresh tokens (sign-out), or the User disconnects it in the Company's account settings; the Company can also refuse a client_id altogether."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "Personal Agent Protocol, specification version 1.0",
+   "url": "https://personalagentprotocol.org/docs/1.0/spec",
+   "fetch_url": "https://raw.githubusercontent.com/personal-agent-protocol/personal-agent-protocol/589743afa56ee02bea71d1509c29b0b4ca5b3e50/content/versions/1.0/spec.mdx",
+   "version": "1.0 (commit 589743a)",
+   "date": "2026-11-14",
+   "kind": "primary"
+  },
+  {
+   "id": "ops",
+   "title": "Personal Agent Protocol 1.0, Operations extension (version 3)",
+   "url": "https://personalagentprotocol.org/docs/1.0/extensions/operations",
+   "fetch_url": "https://raw.githubusercontent.com/personal-agent-protocol/personal-agent-protocol/589743afa56ee02bea71d1509c29b0b4ca5b3e50/content/versions/1.0/extensions/operations.mdx",
+   "version": "1.0, extension v3 (commit 589743a)",
+   "date": "2026-11-14",
+   "kind": "primary"
+  },
+  {
+   "id": "msi",
+   "title": "Personal Agent Protocol 1.0, Mediated Sign-In extension (version 1)",
+   "url": "https://personalagentprotocol.org/docs/1.0/extensions/mediated-sign-in",
+   "fetch_url": "https://raw.githubusercontent.com/personal-agent-protocol/personal-agent-protocol/589743afa56ee02bea71d1509c29b0b4ca5b3e50/content/versions/1.0/extensions/mediated-sign-in.mdx",
+   "version": "1.0, extension v1 (commit 589743a)",
+   "date": "2026-11-14",
+   "kind": "primary"
+  },
+  {
+   "id": "guides",
+   "title": "Personal Agent Protocol 1.0, Guides (non-normative recommendations)",
+   "url": "https://personalagentprotocol.org/docs/1.0/guides",
+   "fetch_url": "https://raw.githubusercontent.com/personal-agent-protocol/personal-agent-protocol/589743afa56ee02bea71d1509c29b0b4ca5b3e50/content/versions/1.0/guides.mdx",
+   "version": "1.0 (commit 589743a)",
+   "date": "2026-11-14",
+   "kind": "primary"
+  },
+  {
+   "id": "changelog",
+   "title": "Personal Agent Protocol, Changelog",
+   "url": "https://personalagentprotocol.org/docs/changelog",
+   "fetch_url": "https://raw.githubusercontent.com/personal-agent-protocol/personal-agent-protocol/589743afa56ee02bea71d1509c29b0b4ca5b3e50/content/shared/changelog.mdx",
+   "version": "commit 589743a",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "license",
+   "title": "personal-agent-protocol repository, LICENSE",
+   "url": "https://github.com/personal-agent-protocol/personal-agent-protocol/blob/main/LICENSE",
+   "fetch_url": "https://raw.githubusercontent.com/personal-agent-protocol/personal-agent-protocol/589743afa56ee02bea71d1509c29b0b4ca5b3e50/LICENSE",
+   "version": "commit 589743a",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "sierra-intro",
+   "title": "Sierra blog, Introducing Personal Agent Protocol",
+   "url": "https://sierra.ai/blog/introducing-personal-agent-protocol",
+   "version": "",
+   "date": "2026-10-06",
+   "kind": "primary"
+  },
+  {
+   "id": "sierra-release",
+   "title": "Sierra blog, Releasing Personal Agent Protocol 1.0",
+   "url": "https://sierra.ai/blog/releasing-poppy",
+   "version": "",
+   "date": "2026-11-13",
+   "kind": "primary"
+  },
+  {
+   "id": "muse-blog",
+   "title": "Muse (Meta) blog, More Ways for Muse to Work With Businesses",
+   "url": "https://muse.ai/blog/poppy-personal-agent-protocol",
+   "version": "",
+   "date": "2026-11-13",
+   "kind": "primary"
+  },
+  {
+   "id": "meta-muse",
+   "title": "Meta Newsroom, Introducing Muse: The World's First Personal AI Agent Built for Everyone",
+   "url": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/",
+   "version": "",
+   "date": "2026-09-08",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Personal agents sign each request; users sign in via OAuth",
+   "answer": "An open protocol, led by Sierra with Meta, where a person's AI agent signs every request to a company with a per-request Session JWT naming itself and a pseudonymous user, and gets account access through OAuth sign-in on the company's own page.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The specification's own description of its purpose.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "defines how a Personal Agent, acting for one User, works with a Company on that User's behalf.",
+     "check": "OK",
+     "check_fp": "d6d70eb500"
+    },
+    {
+     "text": "Sessions and account access are separate layers.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1.1 Protocol layers",
+     "quote": "Poppy separates request identity, Session continuity, and account access.",
+     "check": "OK",
+     "check_fp": "b1b6c82a18"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Personal agents at companies: APIs, web, chat",
+   "answer": "Consumer personal agents doing tasks at companies (e.g. shopping, bookings, account changes) through the company's APIs (OpenAPI or MCP), its website, or conversations with the company's own agent. Identity travels in HTTP headers: a signed Session JWT and, once signed in, an OAuth access token. The company's application or a gateway in front of it verifies them, and an optional Web Bot Auth signature lets CDNs and bot defenses recognise the operator earlier.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Scope of interactions covered.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "It covers discovery, identity, account access, and interactions across APIs, web browsing, and conversations with the Company Agent.",
+     "check": "OK",
+     "check_fp": "a261fa4f6a"
+    },
+    {
+     "text": "Verification can be done at a gateway.",
+     "type": "fact",
+     "source": "guides",
+     "section": "Verifying the Session header",
+     "quote": "Verify the Session header in one place, such as a gateway in front of your APIs, conversation endpoint, and browser-session /authorize endpoint",
+     "check": "OK",
+     "check_fp": "3196ee8e58"
+    },
+    {
+     "text": "Operator signature for traffic-management infrastructure.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Verifying the Session header > Operator signatures",
+     "quote": "so traffic-management infrastructure can authenticate the operator before the request reaches the Company's application.",
+     "check": "OK",
+     "check_fp": "a5dc4288c3"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "User, Personal Agent, Company (plus Company Agent)",
+   "answer": "The spec defines three parties. User: the person a Personal Agent acts for. Personal Agent: software acting for the User, run by an operator. Company: an entity that implements the protocol so Personal Agents can work with it, with its own OAuth issuer when it offers sign-in. It also defines the Company Agent, the company's own agent reached through a conversation protocol.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "User.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terms",
+     "quote": "The person a Personal Agent acts for.",
+     "check": "OK",
+     "check_fp": "25786922b5"
+    },
+    {
+     "text": "Personal Agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terms",
+     "quote": "Software acting for the User.",
+     "check": "OK",
+     "check_fp": "6a54c7b7c5"
+    },
+    {
+     "text": "Company.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terms",
+     "quote": "An entity that implements the protocol so Personal Agents can work with it.",
+     "check": "OK",
+     "check_fp": "63888d912d"
+    },
+    {
+     "text": "Company Agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terms",
+     "quote": "A Company's own agent, reached through a supported conversation protocol.",
+     "check": "OK",
+     "check_fp": "0cdec474b7"
+    },
+    {
+     "text": "A Company that offers sign-in has its own OAuth issuer.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.2 OAuth server",
+     "quote": "A Company that offers sign-in MUST have an OAuth issuer.",
+     "check": "OK",
+     "check_fp": "66e3017af8"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Released 1.0 (Nov 2026); Muse, Shopify",
+   "answer": "Released. Version 1.0 was published and frozen on 14 November 2026; a 1.1 draft is in progress. Sierra leads it, developed with Meta and design partners, and it is published under Apache 2.0, not through a standards body. Meta says Muse is the first personal agent to support it, and Sierra says Shopify has enabled it for every merchant.",
+   "rating": "green",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Green: a released version its maintainers mark as published, with a named deployment confirmed by the deployer (Meta's Muse). Shopify's enablement is stated by Sierra, not by Shopify.",
+   "claims": [
+    {
+     "text": "Publication date of 1.0.",
+     "type": "fact",
+     "source": "changelog",
+     "section": "Version 1.0",
+     "quote": "Published November 14, 2026.",
+     "check": "OK",
+     "check_fp": "b9ab192e23"
+    },
+    {
+     "text": "Developed by Meta and Sierra with partners.",
+     "type": "fact",
+     "source": "sierra-intro",
+     "section": "Blog post",
+     "quote": "an open standard Meta and Sierra are developing",
+     "check": "WEB-OK",
+     "check_fp": "dadbb0419d"
+    },
+    {
+     "text": "Licence.",
+     "type": "fact",
+     "source": "license",
+     "section": "LICENSE",
+     "quote": "Version 2.0, January 2004",
+     "check": "OK",
+     "check_fp": "773aaad67b"
+    },
+    {
+     "text": "Agent-side deployment, stated by the deployer.",
+     "type": "fact",
+     "source": "muse-blog",
+     "section": "Blog post",
+     "quote": "Muse is the first personal agent to support Poppy",
+     "check": "WEB-OK",
+     "check_fp": "4ace8b6bc7"
+    },
+    {
+     "text": "muse.ai is Meta's site for Muse.",
+     "type": "fact",
+     "source": "meta-muse",
+     "section": "Press release",
+     "quote": "Muse is rolling out in the US on iOS, Android, and muse.ai",
+     "check": "WEB-OK",
+     "check_fp": "ce61a5de8c"
+    },
+    {
+     "text": "Company-side deployment, stated by the maintainer (Sierra).",
+     "type": "fact",
+     "source": "sierra-release",
+     "section": "Blog post",
+     "quote": "Shopify has enabled Poppy for every merchant on its platform.",
+     "check": "WEB-OK",
+     "check_fp": "c94bbd4ce3"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "OAuth 2.0, CIMD, JWT, DPoP, RFC 9421, RFC 9474",
+   "answer": "OAuth 2.0 (RFC 6749) following the security best practice RFC 9700, with PKCE (RFC 7636), device grant (RFC 8628), RFC 9207, RFC 8414 and RFC 9728 metadata, RFC 7009 revocation, RFC 8707 resource indicators and optional PAR (RFC 9126). Agent identity uses Client ID Metadata Documents (an IETF draft) and private_key_jwt (RFC 7523). Session JWTs reuse DPoP ideas (RFC 9449), with delegated keys (RFC 7800, RFC 7638) and optional RSA blind signatures (RFC 9474); operator signatures use RFC 9421 and the Web Bot Auth draft. APIs are OpenAPI or MCP.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Account access is standard OAuth.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. OAuth",
+     "quote": "Poppy uses standard OAuth for account access.",
+     "check": "OK",
+     "check_fp": "16a5800ab0"
+    },
+    {
+     "text": "Agent identity follows the CIMD draft.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1 Agent identity",
+     "quote": "This follows the OAuth Client ID Metadata Document (CIMD) draft.",
+     "check": "OK",
+     "check_fp": "2430b063ef"
+    },
+    {
+     "text": "Blind signatures.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.7 Delegated keys",
+     "quote": "It uses RSA blind signatures (RFC 9474).",
+     "check": "OK",
+     "check_fp": "3724e7bcf9"
+    },
+    {
+     "text": "Method and URL claims as in DPoP.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2 The Session header",
+     "quote": "htm and htu are the request's method and URL, without the query or fragment, as in a DPoP proof",
+     "check": "OK",
+     "check_fp": "ff4426ec6f"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "client_id URL of the Personal Agent",
+   "answer": "Partly. Every Session JWT names the Personal Agent by its client_id, an HTTPS URL that returns the agent's metadata document (name, logo, keys, redirect addresses), published by its operator. Every User and every running copy of that Personal Agent shares this client_id, so it names the agent product and its operator, not one agent. The same JWT also carries a pairwise User ID and, optionally, an Agent ID (see the next rows).",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: the identifier names the client application, shared by all its instances (same as MCP Authorization's client_id).",
+   "claims": [
+    {
+     "text": "The client_id is a metadata URL.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1 Agent identity",
+     "quote": "A Personal Agent's client_id MUST be an HTTPS URL that returns its metadata document.",
+     "check": "OK",
+     "check_fp": "3068cb9edb"
+    },
+    {
+     "text": "The Session JWT's issuer is the client_id.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2 The Session header",
+     "quote": "iss is the Personal Agent's client_id (4.1).",
+     "check": "OK",
+     "check_fp": "a5420a004b"
+    },
+    {
+     "text": "All Users share it.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.8 Sign-ins someone else started",
+     "quote": "Every User of a Personal Agent shares one client_id",
+     "check": "OK",
+     "check_fp": "8a8e619ace"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Optional Agent ID per agent of a User",
+   "answer": "Partly, and optional. A Personal Agent that acts for one User through several agents (e.g. a travel agent and a shopping agent) MAY add an Agent ID to the Session JWT, a stable opaque ID that differs at each Company, so the Company can tell those agents apart. It names one of the User's agents, not a running process, and a Personal Agent with one agent leaves it out. The Session ID (sid) is random per Session and identifies a stretch of activity, not the agent.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: a per-agent identifier is defined but optional (MAY) and covers only agents of one operator for one User; the three calibration examples define nothing comparable (red). Borderline with red, since it is not a per-process instance ID.",
+   "claims": [
+    {
+     "text": "Agent ID is optional.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1 User IDs and Agent IDs",
+     "quote": "A Personal Agent that acts for a User through several agents, such as a travel agent and a shopping agent, MAY say which one a Session is for with an Agent ID.",
+     "check": "OK",
+     "check_fp": "57bf5d43c8"
+    },
+    {
+     "text": "Single-agent Personal Agents omit it.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1 User IDs and Agent IDs",
+     "quote": "A Personal Agent with one agent leaves it out.",
+     "check": "OK",
+     "check_fp": "d1595ea406"
+    },
+    {
+     "text": "The Agent ID is not a separate party.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1 User IDs and Agent IDs",
+     "quote": "An Agent ID doesn't name a separate party: the Personal Agent is still the client the Company deals with (4.1).",
+     "check": "OK",
+     "check_fp": "7c654c1f42"
+    },
+    {
+     "text": "The sid is a random Session identifier, not an agent identifier.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2 The Session header",
+     "quote": "sid is the Session ID. The Personal Agent MUST choose it at random, so it can't be guessed",
+     "check": "OK",
+     "check_fp": "a3be9e3bd6"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Pseudonymous User ID always; account when signed in",
+   "answer": "Yes, as a pseudonym, and as an account once signed in. Every Session JWT must carry sub, a User ID the Personal Agent assigns for that User at that Company: stable, so the Company recognises a returning User, but opaque and different at each Company. After sign-in, requests also carry an access token from the Company's own issuer, so the Company knows which of its accounts the agent acts for. A Personal Agent MAY instead use a fresh User ID for each anonymous browsing session.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the protocol requires a User identifier on every request, and signed-in requests identify the Company's own account; differs from Visa TAP (optional consumer object) and MCP Authorization (not defined).",
+   "claims": [
+    {
+     "text": "User IDs are required, per Company.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1 User IDs and Agent IDs",
+     "quote": "The Personal Agent MUST give each of its Users a User ID for each Company",
+     "check": "OK",
+     "check_fp": "dd55c558ee"
+    },
+    {
+     "text": "sub is a mandatory claim.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2 The Session header",
+     "quote": "The Personal Agent MUST include every claim except agent_id, and ath when there's no access token.",
+     "check": "OK",
+     "check_fp": "471da10aed"
+    },
+    {
+     "text": "The access token identifies the account.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5. Sessions",
+     "quote": "the access token says which account it can act on, with which scopes.",
+     "check": "OK",
+     "check_fp": "760e9303ce"
+    },
+    {
+     "text": "Anonymous per-browsing-session IDs are allowed.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1 User IDs and Agent IDs",
+     "quote": "A Personal Agent MAY instead give a User a new User ID for each anonymous browsing session, like a private browser window.",
+     "check": "OK",
+     "check_fp": "9ed6e93367"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Per-request signed Session JWT, plus OAuth token",
+   "answer": "A Session JWT in the Poppy-Session header of every request to the Company's APIs and protocol endpoints, signed for that one request with a delegated key, so it is proof of possession; a browser on the website carries a Session cookie instead, after joining. The JWT covers the method and URL (without query), the time, a unique ID, the Company as audience and, when signed in, a hash of the access token, but not the body. Signed-in requests add an OAuth access token, bearer or DPoP-bound as the Company chooses, and an operator signature (Web Bot Auth, RFC 9421) is recommended.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a defined, verifiable credential on every request (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "The header is required on every request to Company endpoints.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2 The Session header",
+     "quote": "The Personal Agent MUST send a Poppy-Session header on every request to a Company's APIs, conversations, and other resource endpoints this protocol or an extension defines.",
+     "check": "OK",
+     "check_fp": "88655f5a46"
+    },
+    {
+     "text": "What the JWT covers, and what it does not.",
+     "type": "fact",
+     "source": "guides",
+     "section": "Operator signatures and bot defenses",
+     "quote": "The JWT covers method, URL without query, and access token, not the request body",
+     "check": "OK",
+     "check_fp": "c4b7536a67"
+    },
+    {
+     "text": "DPoP binding of access tokens is the Company's choice.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.5 Access tokens",
+     "quote": "Whether a Company binds its access tokens with DPoP is its choice, as in OAuth.",
+     "check": "OK",
+     "check_fp": "9e1fb2227f"
+    },
+    {
+     "text": "Operator signature is recommended.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Verifying the Session header > Operator signatures",
+     "quote": "A Personal Agent SHOULD also sign requests carrying the Session header with an HTTP Message Signature",
+     "check": "OK",
+     "check_fp": "45f0142e96"
+    },
+    {
+     "text": "Browsers use a cookie after browser join.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.6 Sending requests",
+     "quote": "A browser on the website carries a cookie instead (section 6).",
+     "check": "OK",
+     "check_fp": "36ec3ca1dd"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Verifier-chosen window; 24-hour key delegation",
+   "answer": "Short in practice, but the spec sets no fixed maximum for the per-request JWT. A Session JWT has no expiry; the Company must check that its signing time is within an acceptance window it chooses (the spec's example is one minute). The delegation that vouches for the signing key must expire within 24 hours, which verifiers check, and client assertions within 5 minutes. Access token lifetimes are left to the Company; the non-normative guides suggest hours, not days.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: verifiers must check freshness, but no specific short maximum is set for the per-request JWT (one minute is only an example), the enforced delegation limit is 24 hours, and access token lifetimes are unspecified; closer to MCP Authorization than to Visa TAP's fixed 8 minutes.",
+   "claims": [
+    {
+     "text": "Freshness window chosen by the verifier.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Verifying the Session header",
+     "quote": "iat is within an acceptance window it chooses, such as one minute.",
+     "check": "OK",
+     "check_fp": "5595aa9dd7"
+    },
+    {
+     "text": "Delegations are limited to 24 hours, checked by the verifier.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2 The Session header > Delegated keys",
+     "quote": "it hasn't expired, and its exp is at most 24 hours after its iat.",
+     "check": "OK",
+     "check_fp": "161e3295ee"
+    },
+    {
+     "text": "Client assertions are limited to 5 minutes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1 Agent identity",
+     "quote": "MUST set exp at most 5 minutes after iat.",
+     "check": "OK",
+     "check_fp": "9193ce0f35"
+    },
+    {
+     "text": "Access token lifetime is only a guide recommendation.",
+     "type": "fact",
+     "source": "guides",
+     "section": "Token lifetimes and sign-out",
+     "quote": "Give access tokens a lifetime of hours, not days.",
+     "check": "OK",
+     "check_fp": "c40c7ef4eb"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, via agent's published keys",
+   "answer": "Yes. The Company fetches the Personal Agent's metadata from the iss URL and its public keys from jwks_uri, verifies the delegation and the JWT signature, and checks the audience, method, URL, freshness and, when present, that ath matches an access token issued to the same client_id. No prior relationship with the agent is needed. Verification is a SHOULD on every request but a MUST before relying on any Session claim; access tokens are validated as in OAuth.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: verifiable against published keys with no prior relationship (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Verification is recommended on every request.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Verifying the Session header",
+     "quote": "Companies SHOULD verify the Session header on every request that carries it.",
+     "check": "OK",
+     "check_fp": "2fe0a36a62"
+    },
+    {
+     "text": "Verification is required before relying on Session claims.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Verifying the Session header",
+     "quote": "The Company MUST complete the following checks before relying on Session claims for client or User identity",
+     "check": "OK",
+     "check_fp": "c995c77eb0"
+    },
+    {
+     "text": "Keys come from the agent's own metadata.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Verifying the Session header",
+     "quote": "Fetches the client metadata from iss without following redirects, as the CIMD draft (§5) requires, and the public keys from its jwks_uri (4.1)",
+     "check": "OK",
+     "check_fp": "5f1191fd61"
+    },
+    {
+     "text": "Binding to the access token.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Verifying the Session header",
+     "quote": "If the request carries an access token, checks that ath matches it, and that the token was issued to the same client_id as iss.",
+     "check": "OK",
+     "check_fp": "62fdfcfbba"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "User, when signed in on Company's own page",
+   "answer": "Partly. When the User signs in, the Company authenticates the User itself: in Direct or Device Sign-In the User signs in on the Company's own page, and later requests carry an access token tied to the Session JWT and the same client_id. On each request the Company also verifies possession of a delegated key that the Personal Agent may use for one User ID only, but that key is issued by the operator, and anyone holding it can sign for any User ID until it expires. Signed-out requests authenticate only the Personal Agent product and a pseudonymous User ID.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "none",
+   "rating_reason": "Yellow: unlike MCP Authorization (red), the receiving Company runs the sign-in on its own page, so it authenticates the User itself, but only in signed-in Sessions, which are optional; the per-request key is per User and Company, not per agent instance. Borderline with red.",
+   "claims": [
+    {
+     "text": "Direct Sign-In happens on the Company's own page.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terms",
+     "quote": "The User signs in on the Company's own page in their browser and approves access",
+     "check": "OK",
+     "check_fp": "eb608e4cec"
+    },
+    {
+     "text": "Sign-in is optional.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.4 Signing in",
+     "quote": "A Session does not require sign-in.",
+     "check": "OK",
+     "check_fp": "7bfa3e86e3"
+    },
+    {
+     "text": "Delegated keys are per User ID.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2 The Session header > Delegated keys",
+     "quote": "The Personal Agent MUST use each delegated key, and its delegation, for one User ID only",
+     "check": "OK",
+     "check_fp": "5fcaebf6e3"
+    },
+    {
+     "text": "The key itself is not bound to a User.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.7 Delegated keys",
+     "quote": "Nothing in a delegation ties it to a User, so whoever holds a delegated key can sign Session JWTs for any User ID they know until the delegation expires",
+     "check": "OK",
+     "check_fp": "7e1fba7956"
+    },
+    {
+     "text": "The access token is tied to the Session JWT and the same client_id.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Verifying the Session header",
+     "quote": "If the request carries an access token, checks that ath matches it, and that the token was issued to the same client_id as iss.",
+     "check": "OK",
+     "check_fp": "62fdfcfbba"
+    },
+    {
+     "text": "Delegated keys are vouched for by the operator's keys.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2 The Session header > Delegated keys",
+     "quote": "A key in jwks_uri signs a delegation: a short-lived JWT that names a delegated key and vouches for it.",
+     "check": "OK",
+     "check_fp": "150b1d3609"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "OAuth scopes the User approves, with hints",
+   "answer": "Yes. Account access uses OAuth scopes the Company defines (e.g. orders:read), which the User approves on the Company's page; every sign-in request must name its scopes and the Company must not grant more than requested. The Company enforces scopes across its APIs and Company Agent, and may publish hints saying whether a scope makes irreversible changes or touches personal data. A website may not apply scopes, so a signed-in browser can get full account access; the Operations extension adds approval of an action's exact terms.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: scoped permissions the service enforces are part of the core flow (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Scopes are required on sign-in requests.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.7 Scopes and token responses",
+     "quote": "Each sign-in request MUST include scope, except where an extension continues an earlier request",
+     "check": "OK",
+     "check_fp": "8ab8aeb694"
+    },
+    {
+     "text": "No grant beyond what was requested.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.7 Scopes and token responses",
+     "quote": "The Company MUST NOT grant scopes beyond those requested.",
+     "check": "OK",
+     "check_fp": "4e10667511"
+    },
+    {
+     "text": "Enforcement by the Company.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.7 Scopes and token responses",
+     "quote": "Companies decide which actions require each scope and enforce them across APIs and actions performed by the Company Agent.",
+     "check": "OK",
+     "check_fp": "26cd91892e"
+    },
+    {
+     "text": "Websites may not apply scopes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.7 Scopes and token responses",
+     "quote": "A website may not be able to apply them.",
+     "check": "OK",
+     "check_fp": "fdd9854276"
+    },
+    {
+     "text": "Scope hints.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.7 Scopes and token responses",
+     "quote": "A Company MAY give hints about any scope in auth.scope_hints, so a Personal Agent can tell how consequential a scope is before requesting it.",
+     "check": "OK",
+     "check_fp": "e037922b7a"
+    },
+    {
+     "text": "Exact-terms approval in the Operations extension.",
+     "type": "fact",
+     "source": "ops",
+     "section": "1. Introduction",
+     "quote": "A Company can ask for approval of the exact terms before it performs one.",
+     "check": "OK",
+     "check_fp": "b8537c9744"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Consent page at sign-in; optional per action",
+   "answer": "Yes, for account access. Direct and Device Sign-In send the User to the Company's own consent page, which must list every scope it will grant, and a Personal Agent may use them only when the User signs in themselves. For single actions, the Operations extension lets a Company ask for approval of exact terms, but the agent may approve on the User's earlier instruction and the Company relies on the agent's word. The transitional Mediated Sign-In extension lets the agent sign in with credentials the User gave it.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a user approval step at the Company is part of the defined sign-in flows (same as MCP Authorization); per-action approval is only in an extension and can be delegated to the agent.",
+   "claims": [
+    {
+     "text": "The consent page lists every scope.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.8 Sign-ins someone else started",
+     "quote": "In Direct and Device Sign-In, the Company's consent page MUST list every scope it will grant",
+     "check": "OK",
+     "check_fp": "85362f8bef"
+    },
+    {
+     "text": "The User must sign in themselves.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.4 Signing in",
+     "quote": "A Personal Agent MUST use Direct or Device Sign-In only when the User signs in themselves.",
+     "check": "OK",
+     "check_fp": "6bc904af03"
+    },
+    {
+     "text": "Per-action approval can come from the agent.",
+     "type": "fact",
+     "source": "ops",
+     "section": "5. Approving an operation",
+     "quote": "Agent approved: the Personal Agent approves on an instruction the User gave it",
+     "check": "OK",
+     "check_fp": "cbeaf45a95"
+    },
+    {
+     "text": "The Company relies on the agent's statement.",
+     "type": "fact",
+     "source": "ops",
+     "section": "8.1 What an approval proves",
+     "quote": "The Company can't see the Personal Agent's interface, so it relies on the Personal Agent for how the approval was given",
+     "check": "OK",
+     "check_fp": "ebd1c9b009"
+    },
+    {
+     "text": "Mediated Sign-In uses the User's credentials.",
+     "type": "fact",
+     "source": "msi",
+     "section": "1. Introduction",
+     "quote": "In Mediated Sign-In, the Personal Agent signs in for the User with credentials the User has given it for this Company",
+     "check": "OK",
+     "check_fp": "eba99f1942"
+    },
+    {
+     "text": "Mediated Sign-In is transitional.",
+     "type": "fact",
+     "source": "msi",
+     "section": "1. Introduction",
+     "quote": "Mediated Sign-In is transitional.",
+     "check": "OK",
+     "check_fp": "cb4296fccb"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "User consent when signed in; else nobody",
+   "answer": "Partly. Nobody vouches for the Personal Agent itself: its identity is a metadata document on its own domain, and which Personal Agents a Company accepts, and how, is outside the specification (the guides suggest allowlists or blocklists of client_id values). For signed-in requests, the Company's own issuer granted the token after the User approved scopes for that Personal Agent, the same basis as MCP Authorization. Signed-out requests rest only on the agent's own published keys.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "none",
+   "rating_reason": "Yellow: the User's consent at the Company's issuer vouches for signed-in requests (as in MCP Authorization, green), but signed-out requests, where every Session starts, have no vouching party; the lower colour is chosen.",
+   "claims": [
+    {
+     "text": "Accepting agents is outside the spec.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "4.1 Agent identity",
+     "quote": "A Company decides which Personal Agents it accepts, and how it approves them is outside this specification.",
+     "check": "OK",
+     "check_fp": "bae0775c63"
+    },
+    {
+     "text": "Guide suggestion for accepting agents.",
+     "type": "fact",
+     "source": "guides",
+     "section": "Verifying personal agents",
+     "quote": "Keep allowlists or blocklists of client_id values, and rate-limit session creation and new client_id values",
+     "check": "OK",
+     "check_fp": "8b1e477280"
+    },
+    {
+     "text": "Signed-in access rests on the User's approval on the Company's page.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.5 Signing in with the User's credentials",
+     "quote": "Direct and Device Sign-In delegate access: the User approves scopes on the Company's own page, and the Company knows which Personal Agent acts",
+     "check": "OK",
+     "check_fp": "46933b8ffd"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Refresh-token revocation, sign-out, disconnect",
+   "answer": "Partly. The issuer must publish a revocation endpoint, the Personal Agent signs out by revoking its refresh tokens there (RFC 7009), and the User can disconnect the Personal Agent in the Company's account settings, which revokes them too; the Company may also revoke a whole client_id. Access tokens already issued follow RFC 7009, so they can keep working until they expire unless the Company invalidates them. A delegated key cannot be withdrawn before its delegation expires (at most 24 hours), except by the operator removing the signing key.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: the protocol defines revocation (required revocation endpoint, sign-out, disconnect), unlike the three calibration examples (red), but its effect on issued access tokens depends on the Company and delegations cannot be withdrawn early.",
+   "claims": [
+    {
+     "text": "The revocation endpoint is required in the issuer metadata.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.2 OAuth server",
+     "quote": "revocation_endpoint revokes refresh tokens (4.6). Required.",
+     "check": "OK",
+     "check_fp": "15192ae6a1"
+    },
+    {
+     "text": "Users can disconnect an agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.5 Ending Sessions and signing out",
+     "quote": "The User can also disconnect the Personal Agent in the Company's account settings. That revokes its refresh tokens for the account.",
+     "check": "OK",
+     "check_fp": "5c956d81b7"
+    },
+    {
+     "text": "Companies may revoke a client_id.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.4 Signing in",
+     "quote": "MAY revoke a client_id that doesn't follow it (4.1).",
+     "check": "OK",
+     "check_fp": "756f1d7164"
+    },
+    {
+     "text": "Effect on access tokens follows RFC 7009.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.5 Ending Sessions and signing out",
+     "quote": "What happens to access tokens issued under a revoked refresh token, including one that a new sign-in replaced (4.7), follows RFC 7009 §2.1",
+     "check": "OK",
+     "check_fp": "9f6d52678e"
+    },
+    {
+     "text": "Delegations cannot be withdrawn.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.7 Delegated keys",
+     "quote": "A delegation can't be withdrawn before it expires, so its lifetime limits what a stolen delegated key can do.",
+     "check": "OK",
+     "check_fp": "334a7be7ea"
+    },
+    {
+     "text": "The guides recommend invalidating access tokens at sign-out.",
+     "type": "fact",
+     "source": "guides",
+     "section": "Token lifetimes and sign-out",
+     "quote": "At sign-out, invalidate the access tokens issued under the revoked refresh token, as RFC 7009 §2.1 describes, or check on each request whether the authorization is still active",
+     "check": "OK",
+     "check_fp": "1986e0c5c9"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No. Poppy defines no contact or escalation channel for the Personal Agent's operator: the client metadata has a name, logo, keys and redirect addresses but no contact field. In the Operations extension an approval can carry a reference to the agent's own record, so a Company and the operator can look into it later, but how to reach the operator is not defined. The feedback endpoint runs the other way, from agent to Company.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field is required or defined (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched 4.1 Agent identity (client metadata fields), 4.8, sections 9 and 10, the Operations extension and the guides for contact, abuse, support and security.txt. No contact field or escalation channel is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "4.1 Agent identity; 9. Task coverage; 10. Security considerations",
+     "quote": ""
+    },
+    {
+     "text": "Approval references support later investigation with the operator.",
+     "type": "fact",
+     "source": "ops",
+     "section": "6. Sending the approval",
+     "quote": "so the Company and the Personal Agent's operator can look into the approval later.",
+     "check": "OK",
+     "check_fp": "4638faacd0"
+    },
+    {
+     "text": "Feedback goes from agent to Company.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.3 Feedback",
+     "quote": "A Company can ask Personal Agents to tell it when a User's task can't be done through this protocol.",
+     "check": "OK",
+     "check_fp": "845440b645"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. Poppy defines no way for one Company to warn others about a misbehaving Personal Agent. Pairwise User IDs and per-Company delegated keys are designed so Companies cannot match a User across Companies.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the specification, extensions and guides for reputation, shared signals, abuse reports and events between Companies. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole specification",
+     "quote": ""
+    },
+    {
+     "text": "User IDs are designed against cross-Company matching.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1 User IDs and Agent IDs",
+     "quote": "It is opaque and different for each Company, so Companies can't match Users with each other.",
+     "check": "OK",
+     "check_fp": "cf28f61701"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. The Company learns the Personal Agent's client_id and display name, and in conversations each message says whether a person or an AI wrote it, but no field names the AI model or its version.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Human or AI marking in conversations.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8.8 Human or AI",
+     "quote": "Both sides say whether a person or an AI is taking part.",
+     "check": "OK",
+     "check_fp": "a991d2a3bb"
+    },
+    {
+     "text": "Searched client metadata (4.1), Session JWT claims (5.2), message fields (8.4) and agent context (9.4) for model, version or attestation. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "4.1; 5.2; 8.4; 9.4",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "A Company can let accepted Personal Agents use signed-out APIs and pages, and gate account actions by OAuth scopes the User approves on its own page, with per-action approval of exact terms through the Operations extension. Which agents it accepts is its own policy, outside the protocol.",
+  "incident_response": "The Company can revoke refresh tokens per account and Personal Agent, the User can disconnect an agent in account settings, and the Company can refuse a client_id, which cuts off every User of that Personal Agent. One agent instance cannot be cut off, and a delegated key stays usable until its delegation expires (up to 24 hours).",
+  "accountability": "Every verified request names the Personal Agent (client_id), a stable pseudonymous User, the Session and optionally an Agent ID, and signed-in requests name the Company's own account. Approvals can carry a reference to the operator's record, but the AI model and an operator contact are not identified."
+ },
+ "notes": [
+  "The specification uses RFC 2119 keywords in capitals; requirement levels in this analysis follow those capitals.",
+  "Version 1.0 was announced by Sierra and Meta on 13 November 2026; the repository marked it published and froze it on 14 November 2026 (commit 8c02b42). Some third-party pages still call it 'draft 1.0', and the repository README still says the site publishes a draft specification; the 1.0 page itself says 'This is version 1.0.'",
+  "Venue is set to 'vendor': the specification is written in a repository run by Sierra, with Meta and design partners contributing feedback, and no standards body or foundation governs it.",
+  "The guides are non-normative recommendations; claims quoted from them are marked as guidance in the answers.",
+  "The repository contains AGENTS.md files with instructions aimed at AI coding tools (for contributors editing the site). They were treated as data and not followed.",
+  "Name collision: 'PAP' is also the PPP Password Authentication Protocol (RFC 1334), which is unrelated. poppy.md is an unofficial third-party site and was not used as a source.",
+  "Quotes from sierra.ai, muse.ai and about.fb.com were checked with a web tool (WEB-OK) because those sites could not be downloaded by script from this environment."
+ ],
+ "open_questions": [
+  "Shopify's enablement for every merchant is stated by Sierra; no Shopify documentation was found that says what Shopify's poppy.json files offer (signed-out Sessions only, sign-in, UCP extension).",
+  "How many Companies actually verify the Session header (a SHOULD) rather than ignoring it, and how short their acceptance windows are.",
+  "Whether Muse sends an Agent ID, and whether it uses blind signing or holds delegated keys on Meta's servers.",
+  "Whether Companies invalidate access tokens at sign-out in practice, which decides how quickly revocation takes effect.",
+  "The spec says the Company is identified by its domain; it does not say how a Personal Agent operator's keys used for Web Bot Auth relate to its client_id beyond 'a shared origin alone does not establish' the link."
+ ]
+}</script></body></html>

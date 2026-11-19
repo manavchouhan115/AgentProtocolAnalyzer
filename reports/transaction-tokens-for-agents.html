@@ -1,0 +1,1046 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Transaction Tokens For Agents: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>Transaction Tokens For Agents<small>Transaction Tokens For Agents (draft-araut-oauth-transaction-tokens-for-agents), an extension of OAuth Transaction Tokens</small></h1><ul class="facts"><li><b>Specification:</b> draft-araut-oauth-transaction-tokens-for-agents-03, building on draft-ietf-oauth-transaction-tokens-11</li><li><b>Date:</b> 2026-10-31</li><li><b>Maintainer:</b> Ashay Raut (individual Internet-Draft); the base Transaction Tokens draft is maintained by the IETF OAuth working group (editors from CrowdStrike, Practical Identity and Defakto Security)</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> -03 is the latest revision. Earlier versions were published as draft-oauth-transaction-tokens-for-agents-00 to -06 before the April 2026 rename. For the base draft, -11 is the latest revision; its repository already holds later edits from working-group last call that were not analysed.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent authorization</span><span class="chip"><b>Also:</b> Workload identity</span><span class="chip"><b>Mechanism:</b> Bearer token</span><span class="chip"><b>Venue:</b> IETF individual draft</span><span class="chip"><b>Maturity:</b> Proposal</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>Inside a company&#x27;s systems, one request often passes through many internal services, and when an AI agent started it, the services deep in that chain usually cannot tell. OAuth Transaction Tokens, an IETF OAuth working-group draft, already give each internal service a short-lived signed token describing who the transaction is for and what it is for. Transaction Tokens For Agents is an individual draft by Ashay Raut (version -03, October 2026) that adds agent context to those tokens, so internal services can tell agent-driven calls from direct human calls and audit them. No deployment is named.</p><p>A single Transaction Token Service in the trust domain issues the tokens. The extension adds an agentic_ctx claim naming the agent that started the chain and the agent at the current hop, a hop count, and an optional minimum assurance level, and fixes how the user (sub) and the delegated agent (act) are carried. Each time an agent hands work on, it gets a replacement token: identity stays fixed, the hop count rises and permissions can only shrink. The tokens are bearer-style and stay inside one trust domain. Neither draft defines revocation, contact channels, model identity or a way for services to warn each other.</p><h2 id="how">How it works</h2><ol class="steps"><li>A user asks an agent to do a task (or the agent starts on a schedule). The agent obtains an ordinary OAuth access token, through an authorization code flow for a user or client credentials when autonomous, and calls the trust domain&#x27;s external endpoint (e.g. an API gateway).</li><li>The gateway sends that access token and its own credentials to the Transaction Token Service in an OAuth token-exchange request, asking for a Transaction Token with a narrow scope for this transaction.</li><li>The Transaction Token Service authenticates the gateway, validates the access token, checks (e.g. by looking up the client_id in an Agent Attribute Store) whether the caller is an agent, and issues a short-lived signed token: sub (the user, or the agent itself), act copied from the access token, scope, a transaction ID (txn) and agentic_ctx (proximate and originating agent, hop count 1).</li><li>Each internal service receives the token in the Txn-Token HTTP header, checks its signature, trust-domain audience and expiry, and applies its own policy (e.g. restrict agent chains, or refuse beyond a hop limit).</li><li>When an internal agent takes over and calls further services, it asks for a replacement token: sub, act, txn and the originating agent stay fixed, the proximate agent changes, the hop count rises, and scope and assurance level can only go down.</li><li>The Transaction Token Service logs each issuance and replacement, so the full agent chain for a transaction ID can be reconstructed after an incident.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Transaction Tokens For Agents</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Agent chain context inside internal Transaction Tokens</td></tr><tr><td class="prop">Use cases</td><td class="">Internal call chains within one trust domain</td></tr><tr><td class="prop">Parties involved</td><td class="">Agent, gateway, Token Service, Attribute Store, workloads</td></tr><tr><td class="prop">Status and adoption</td><td class="red">Individual draft -03, no deployments</td></tr><tr><td class="prop">Building blocks</td><td class="">Transaction Tokens, Token Exchange, JWT/JWS</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">Agent ID from act.sub or client_id</td></tr><tr><td class="prop">Agent instance identifier</td><td class="yellow">Optional, self-asserted session_id only</td></tr><tr><td class="prop">Acting for (authority)</td><td class="green">Yes, sub names the principal</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Signed JWT in Txn-Token header, not bound</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Minutes expected, no enforced maximum</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, signature, audience and expiry</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="red">No, checks a token issued by the TTS</td></tr><tr><td class="prop">Scoped authorization</td><td class="green">Yes, narrow scope, only attenuated</td></tr><tr><td class="prop">Human approval</td><td class="red">No, outside the protocol</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="green">The trust domain&#x27;s Transaction Token Service</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="red">No; short lifetimes instead</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No contact field; txn for correlation</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No; audit logging only</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>Internal services get a narrow, required scope that can only shrink along the chain, the user (sub), the delegated agent (act) and, when agents are recognised, the originating and current agent and a hop count, so they can treat agent-driven calls differently from direct human calls.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>Nothing can be revoked in-band; tokens expire within minutes and new ones stop once the underlying access token is invalidated (if the service checks). Investigation is supported by the transaction ID and the Transaction Token Service&#x27;s audit log.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>An action inside the trust domain can be traced to the user, the agent that started the chain and the agent at the current hop (at application level), with the full chain reconstructable from the audit log; session identifiers are only self-asserted hints.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Status and adoption:</b> Individual draft -03, no deployments ()</li><li><b>Authentication of the agent or user:</b> No, checks a token issued by the TTS (handled outside the protocol)</li><li><b>Human approval:</b> No, outside the protocol (handled outside the protocol)</li><li><b>Revocation:</b> No; short lifetimes instead (not addressed by the specification)</li><li><b>Contact and escalation:</b> No contact field; txn for correlation (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No; audit logging only (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Transaction Tokens For Agents</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An individual-draft extension of OAuth Transaction Tokens: inside one trust domain, the Transaction Token Service adds an agentic_ctx claim naming the originating and current agent, a hop count and an optional minimum assurance level, so every internal service in a call chain can see that agents were involved.<details><summary>Evidence (2)</summary><div class="claim">The extension defines agentic_ctx. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“The extension defines the `agentic_ctx` claim, a structured JWT claim that carries chain-level metadata required for multi-agent flow integrity.”</blockquote></div><div class="claim">Downstream workloads use Transaction Tokens for authorization. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“Downstream workloads use Txn-tokens to apply authorization decisions based on this context within a specific transaction.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Internal service chains inside one organisation&#x27;s trust domain (e.g. microservices and data stores) when a request was started by an AI agent, either an outside agent entering through an API gateway or internal agents handing work to each other. The token travels in its own Txn-Token HTTP header and every internal workload verifies it itself. It must not be accepted outside its trust domain; the base draft points to Identity and Authorization Chaining for crossing domains.<details><summary>Evidence (4)</summary><div class="claim">Typical chains start with a third-party agent and pass through internal agents. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 4. Multi-Agent Flows. <span class="chk">(quote verified against the source)</span><blockquote>“In complex agentic workflows, a transaction often originates from a 3rd-party (3P) agent and propagates through one or more 1st-party (1P) agents within the local trust domain.”</blockquote></div><div class="claim">Tokens travel in a dedicated HTTP header. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 12.1. &quot;Txn-Token&quot; HTTP Header. <span class="chk">(quote verified against the source)</span><blockquote>“A workload that invokes another workload using HTTP and needs to present a Txn-Token to the invoked workload MUST use the HTTP Header &quot;Txn-Token&quot; to communicate the Txn-Token in the HTTP Request.”</blockquote></div><div class="claim">Tokens are bound to one trust domain. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 9.2. JWT Body Claims. <span class="chk">(quote verified against the source)</span><blockquote>“A Txn-Token MUST NOT be accepted outside the Trust Domain identified by the `aud` claim.”</blockquote></div><div class="claim">Crossing trust domains uses Identity Chaining. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 14. Preserving transaction context across Trust Domains. <span class="chk">(quote verified against the source)</span><blockquote>“it SHOULD use OAuth Identity and Authorization Chaining Across Domains {{I-D.ietf-oauth-identity-chaining}}.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Human subject: the user who starts a task (absent in autonomous flows). Agent application: external (3P) or internal (1P), split into an inference layer that runs the model and an infrastructure layer that handles tokens. External endpoint: the published interface (e.g. an API gateway) that first receives the request. Transaction Token Service (TTS): issues and replaces tokens, one per trust domain. Agent Attribute Store: a logical role recording which workloads are agents and their attributes. Workloads and resource servers: receive and check tokens.<details><summary>Evidence (5)</summary><div class="claim">Definition of the Transaction Token Service. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A special service within the Trust Domain that issues Txn-Tokens to requesting workloads.”</blockquote></div><div class="claim">Definition of the Agent Attribute Store. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A logical role — not a defined protocol interface — that MAY be realized as an agent registry, service catalog, policy engine, or any equivalent mechanism accessible within the trust domain.”</blockquote></div><div class="claim">Definition of the external endpoint. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“A published interface to a Trust Domain that results in the invocation of a workload within the Trust Domain.”</blockquote></div><div class="claim">Definition of the inference layer. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“The component of an agent system that runs the AI model (e.g., an LLM), processes inputs, generates plans, and produces tool calls or outputs.”</blockquote></div><div class="claim">Definition of the infrastructure layer. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 2. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“The component of an agent system that executes tool calls, manages network I/O, enforces security policies, and interacts with external services including the Transaction Token Service.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="red"><span class="badge">Not addressed</span><br>Early proposal. The extension is an individual, Informational Internet-Draft at version -03 (31 October 2026), not adopted by a working group; it was first published in November 2025 under the name draft-oauth-transaction-tokens-for-agents. Its base, Transaction Tokens, is an OAuth working-group draft at -11 and not yet an RFC. No named deployment of the agent extension was found.<div class="meta">Why this rating: An individual draft with no named deployments, built on a base that is itself still a draft.</div><details><summary>Evidence (3)</summary><div class="claim">Document name and revision. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, Front matter. <span class="chk">(quote verified against the source)</span><blockquote>“docname: draft-araut-oauth-transaction-tokens-for-agents-03”</blockquote></div><div class="claim">The base draft is a working-group document. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, Front matter. <span class="chk">(quote verified against the source)</span><blockquote>“wg: oauth”</blockquote></div><div class="claim">Searched all sections of both drafts, and the web for agentic_ctx implementations; no implementation or deployment is named. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, All sections.</div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">OAuth Transaction Tokens (draft-ietf-oauth-transaction-tokens) is the base: it defines the token, its claims, the Transaction Token Service and the Txn-Token header. Tokens are requested through OAuth 2.0 Token Exchange (RFC 8693), which also defines the act claim the extension reuses. Tokens are JWTs (RFC 7519) signed with JWS (RFC 7515); incoming access tokens follow RFC 9068; the transaction ID comes from Security Event Tokens (RFC 8417). The extension defines no new token or grant types.<details><summary>Evidence (4)</summary><div class="claim">The extension reuses act and sub. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“It does not define new token types or grant types; it operates entirely within the existing Transaction Token issuance and replacement mechanisms defined by the base specification.”</blockquote></div><div class="claim">Token requests use RFC 8693. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 5.1. Creation. <span class="chk">(quote verified against the source)</span><blockquote>“If the transaction token request is made via HTTP to a remote server, it MUST use {{RFC8693}} as described in this specification.”</blockquote></div><div class="claim">Tokens are JWS-signed JWTs. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 9. Txn-Token Format. <span class="chk">(quote verified against the source)</span><blockquote>“A Txn-Token is a JSON Web Token {{RFC7519}} protected by a JSON Web Signature {{RFC7515}}.”</blockquote></div><div class="claim">The txn claim comes from RFC 8417. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 9.2. JWT Body Claims. <span class="chk">(quote verified against the source)</span><blockquote>“REQUIRED A unique transaction identifier as defined in Section 2.2 of {{RFC8417}}.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly, and only when the caller is recognised as an agent. The Transaction Token Service then adds agentic_ctx with proximate_agent.id (the agent at the current hop) and originator.id (the agent that started the chain). The value comes from the access token&#x27;s act.sub, an Agent Attribute Store lookup or the OAuth client_id, in that order, so it names the agent as a client or registered agent, shared by all its running copies. How agents are recognised is left to each deployment.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: The identifier names the agent application or client, shared by its instances (same as MCP Authorization), and the claim carrying it is optional.</div><details><summary>Evidence (4)</summary><div class="claim">Where the agent identifier comes from. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5.1. Normative Fields. <span class="chk">(quote verified against the source)</span><blockquote>“At initial issuance, the TTS sets this field to the agent identifier derived from the access token (via `act.sub`, Agent Attribute Store lookup, or `client_id` — in that priority order).”</blockquote></div><div class="claim">agentic_ctx is optional overall. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5. Agentic Context. <span class="chk">(quote verified against the source)</span><blockquote>“The Txn-Token MAY contain an `agentic_ctx` claim.”</blockquote></div><div class="claim">It is mandatory once the caller is identified as a registered agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.6.1. Identification Mechanisms. <span class="chk">(quote verified against the source)</span><blockquote>“The TTS MUST populate the `agentic_ctx` claim with at minimum the normative fields defined in Section 3.6.1.”</blockquote></div><div class="claim">Agent identification is deployment-defined. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.6.1. Identification Mechanisms. <span class="chk">(quote verified against the source)</span><blockquote>“The specific mechanism for agent identification is deployment-defined.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. agentic_ctx can carry an optional session_id for the current and for the originating agent, identifying that agent&#x27;s session as known to its own runtime (e.g. assigned by its framework or SDK). The value is self-asserted by the agent&#x27;s infrastructure and unverified, and services and the Transaction Token Service must not use it for authorization. Its purpose is correlation: matching a transaction to the agent team&#x27;s own logs during an investigation.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: A per-session identifier for the running agent is defined but optional and unverified; the calibration examples are red because they define none. Red could be argued because the value is self-asserted (see open questions).</div><details><summary>Evidence (4)</summary><div class="claim">session_id identifies the agent&#x27;s runtime session. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5.1. Normative Fields. <span class="chk">(quote verified against the source)</span><blockquote>“A string identifying the session of the proximate agent as known to that agent&#x27;s own runtime or infrastructure”</blockquote></div><div class="claim">It is self-asserted. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5.1. Normative Fields. <span class="chk">(quote verified against the source)</span><blockquote>“This field is self-asserted by the agent&#x27;s infrastructure layer and is therefore informational only.”</blockquote></div><div class="claim">It must not be used for authorization. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5.1. Normative Fields. <span class="chk">(quote verified against the source)</span><blockquote>“Resource Servers and the TTS MUST NOT use this field as an authorization criterion.”</blockquote></div><div class="claim">It is unverified. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 5.15. Agent Session Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“Because these fields cannot be verified by the TTS or Resource Servers, a malicious agent could report a fabricated or another session&#x27;s identifier.”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Every Transaction Token must carry sub, the principal of the transaction: the user in a user-initiated flow, or typically the agent itself when it runs autonomously. When the original access token shows delegation, its act claim (the agent acting for the user) is copied into the token and can never be changed along the chain. The sub value is unique within the trust domain; its format is up to the Transaction Token Service.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The principal is a required claim the service receives in every token; MCP Authorization is red because it defines none.</div><details><summary>Evidence (4)</summary><div class="claim">sub is required and names the principal. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 9.2. JWT Body Claims. <span class="chk">(quote verified against the source)</span><blockquote>“REQUIRED This claim represents the principal of the transaction as defined by Section 4.1.2 of {{RFC7519}}.”</blockquote></div><div class="claim">In autonomous flows sub usually names the agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.2.2. Autonomous Flow. <span class="chk">(quote verified against the source)</span><blockquote>“For autonomous agents, the `sub` claim is determined based on the `subject_token` provided in the request, which typically represents the agent&#x27;s own identity.”</blockquote></div><div class="claim">act is copied from the access token. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.2.1. Subject-Initiated Flow. <span class="chk">(quote verified against the source)</span><blockquote>“If the access token contains an `act` claim, the Txn-Token Service copies the `act` claim value to the Txn-Token&#x27;s `act` field.”</blockquote></div><div class="claim">act is immutable. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.3.1. Replacement When Caller is Identified as an Agent. <span class="chk">(quote verified against the source)</span><blockquote>“The `act` claim is immutable throughout the entire transaction lifetime.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>A Transaction Token: a short-lived JWT signed by the Transaction Token Service, sent in its own Txn-Token HTTP header (not the Authorization header) on each call between workloads. The signature covers all claims (subject, scope, transaction ID, context and agentic_ctx), so they cannot be altered along the chain. It is not bound to the sender: the base draft says it is not resistant to replay, and it must not be used to authenticate a workload.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A defined credential on every call that the service can verify; the answer notes it is not proof of possession (as for MCP Authorization&#x27;s bearer token).</div><details><summary>Evidence (4)</summary><div class="claim">Dedicated header is mandatory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 12.1. &quot;Txn-Token&quot; HTTP Header. <span class="chk">(quote verified against the source)</span><blockquote>“A workload that invokes another workload using HTTP and needs to present a Txn-Token to the invoked workload MUST use the HTTP Header &quot;Txn-Token&quot; to communicate the Txn-Token in the HTTP Request.”</blockquote></div><div class="claim">Tokens are signed for integrity. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 5.3. Subject Context Protection. <span class="chk">(quote verified against the source)</span><blockquote>“Txn-Tokens are cryptographically signed to ensure integrity.”</blockquote></div><div class="claim">No replay resistance. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 13.1. Txn-Token Replay Risks. <span class="chk">(quote verified against the source)</span><blockquote>“A Txn-Token is not resistant to replay attacks.”</blockquote></div><div class="claim">Not an authentication credential. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 13.12. Transaction Tokens Are Not Authentication Credentials. <span class="chk">(quote verified against the source)</span><blockquote>“A workload MUST NOT use a transaction token to authenticate itself to another workload, service or the TTS.”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Short, but with no enforced maximum. The base draft expects tokens to live on the order of minutes or less and says their lifetime MUST be kept short; every receiving workload must reject expired tokens. There is no maximum for verifiers to enforce, and the Transaction Token Service may issue replacement tokens that outlive the input token if its policy allows. The agent extension only adds that implementations must enforce strict lifetime validation.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A short lifetime is required of the issuer but stated only as &#x27;on the order of minutes&#x27;, with no maximum that verifiers must enforce; lower than Visa TAP&#x27;s green (8-minute verifier rule), chosen under the tie rule.</div><details><summary>Evidence (4)</summary><div class="claim">Expected lifetime is minutes or less. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 6. Txn-Token Lifetime. <span class="chk">(quote verified against the source)</span><blockquote>“Txn-Tokens are expected to be short-lived (on the order of minutes or less), and as a result MUST be used only for the expected duration of an external or internal invocation.”</blockquote></div><div class="claim">Lifetime must be kept short. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 13.1. Txn-Token Replay Risks. <span class="chk">(quote verified against the source)</span><blockquote>“For this reason, a Txn-Token lifetime MUST be kept short and follow the guidance given in {{txn-token-lifetime}}.”</blockquote></div><div class="claim">Replacement can extend lifetime. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 13.15. Txn-Token as a subject_token. <span class="chk">(quote verified against the source)</span><blockquote>“MAY issue a replacement Txn-Token with a lifetime exceeding the lifetime of the input Txn-Token, subject to the policy of the TTS.”</blockquote></div><div class="claim">The extension requires strict lifetime validation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 5.1. Token Replay Protection. <span class="chk">(quote verified against the source)</span><blockquote>“Implementations MUST enforce strict token lifetime validation.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, within the trust domain. Each receiving workload must check the token&#x27;s signature, that its aud claim names the workload&#x27;s own trust domain, and that it has not expired; the agent extension repeats that services must verify the signature before using any claim. The token is signed by the domain&#x27;s single Transaction Token Service, whose signing keys are often known in advance; how they are distributed is not specified.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The service validates the token against its own trust domain&#x27;s issuer with expiry checks (same as MCP Authorization).</div><details><summary>Evidence (5)</summary><div class="claim">Signature check is mandatory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 12.2. Txn-Token Validation. <span class="chk">(quote verified against the source)</span><blockquote>“Validate the Txn-Token JWS signature.”</blockquote></div><div class="claim">Audience check is mandatory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 12.2. Txn-Token Validation. <span class="chk">(quote verified against the source)</span><blockquote>“Verify the `aud` claim identifies the Trust Domain of the workload.”</blockquote></div><div class="claim">Expiry check is mandatory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 12.2. Txn-Token Validation. <span class="chk">(quote verified against the source)</span><blockquote>“Verify the Txn-Token is not expired.”</blockquote></div><div class="claim">The extension repeats the signature requirement. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 5.4. Transaction Chain Integrity. <span class="chk">(quote verified against the source)</span><blockquote>“Services MUST verify the cryptographic signature of every Txn-Token before processing its claims.”</blockquote></div><div class="claim">Signing keys are often known in advance. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 9.2. JWT Body Claims. <span class="chk">(quote verified against the source)</span><blockquote>“is not required as Txn-Tokens are bound to a single Trust Domain as defined by the `aud` claim and often the signing keys are known.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. A receiving service checks a token issued by the Transaction Token Service, and the base draft forbids using these tokens to authenticate a workload. The Transaction Token Service authenticates the workload that requests each token, and the extension requires mutually authenticated channels between components, but these authenticate the immediate caller (often a gateway), which the drafts do not link to the agent named in agentic_ctx. The user signs in at the original OAuth authorization server, outside this protocol.<div class="meta">Handled outside the protocol</div><div class="meta">Why this rating: The service only checks a token issued elsewhere, and channel authentication covers the immediate caller rather than the agent (same as MCP Authorization).</div><details><summary>Evidence (5)</summary><div class="claim">Tokens are not authentication credentials. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 13.12. Transaction Tokens Are Not Authentication Credentials. <span class="chk">(quote verified against the source)</span><blockquote>“A workload MUST NOT use a transaction token to authenticate itself to another workload, service or the TTS.”</blockquote></div><div class="claim">The TTS authenticates the requesting workload. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 5.8. Infrastructure Security. <span class="chk">(quote verified against the source)</span><blockquote>“The TTS MUST authenticate the requesting workload before issuing or replacing a Txn-Token, using the access token presented in the exchange request.”</blockquote></div><div class="claim">Channels between components are mutually authenticated. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 5.8. Infrastructure Security. <span class="chk">(quote verified against the source)</span><blockquote>“All component communications MUST use mutually authenticated, encrypted channels (e.g., TLS with certificate validation).”</blockquote></div><div class="claim">User sign-in happens in an ordinary OAuth flow before the protocol. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.2.1. Subject-Initiated Flow. <span class="chk">(quote verified against the source)</span><blockquote>“The agent application authenticates using an OAuth 2.0 Authorization Code flow”</blockquote></div><div class="claim">Searched 3.5 Agentic Context, 3.6 Agent Identification and 5.8 Infrastructure Security for a rule tying the caller&#x27;s channel identity to proximate_agent.id: No link between the channel identity and agentic_ctx. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, Searched 3.5 Agentic Context, 3.6 Agent Identification and 5.8 Infrastructure Security for a rule tying the caller&#x27;s channel identity to proximate_agent.id.</div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Every token carries a required scope describing the narrow purpose of the transaction, and usually a tctx object with immutable transaction details (e.g. action, ticker and quantity of a trade). Scope can only be narrowed when a token is replaced, never widened, and the extension adds a hop count that services should check against a maximum. Scope values and how each service turns them into a decision are left to the deployment.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Scoped permissions are required in every token and the service can enforce them (same as MCP Authorization).</div><details><summary>Evidence (6)</summary><div class="claim">scope is a required claim. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 9.2. JWT Body Claims. <span class="chk">(quote verified against the source)</span><blockquote>“REQUIRED The scope claim is defined in {{Section 4.2 of RFC8693}}.”</blockquote></div><div class="claim">scope is the narrow purpose of the transaction. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 9.2.1. Scope claim. <span class="chk">(quote verified against the source)</span><blockquote>“The `scope` claim captures, as narrowly as possible, the purpose of this particular transaction.”</blockquote></div><div class="claim">tctx carries immutable transaction details. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 9.2. JWT Body Claims. <span class="chk">(quote verified against the source)</span><blockquote>“RECOMMENDED A JSON object that contains values that remain immutable throughout the Call Chain.”</blockquote></div><div class="claim">Scope can only be attenuated. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 5.5. AI Agent Specific Controls. <span class="chk">(quote verified against the source)</span><blockquote>“Implementations MUST enforce the `scope` attenuation rules defined in Section 3.4.1, ensuring agent operations cannot exceed the scopes granted at initial token issuance.”</blockquote></div><div class="claim">Services should check the hop count. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5.1. Normative Fields. <span class="chk">(quote verified against the source)</span><blockquote>“Resource Servers SHOULD evaluate this value against deployment-defined maximum hop limits when making authorization decisions.”</blockquote></div><div class="claim">The decision itself is left to the service. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 12.2. Txn-Token Validation. <span class="chk">(quote verified against the source)</span><blockquote>“How the workload determines this authorization is out of scope for this specification.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The protocol has no approval step; it addresses agents that act across multi-step workflows without human oversight at each step. In the user-initiated flow the agent first gets an ordinary OAuth access token through an authorization code flow, where the user may consent, but that happens at the authorization server, before and outside the token exchange. The only approval the extension mentions is by software: the agent&#x27;s infrastructure layer must check model output before using it in a token request.<div class="meta">Handled outside the protocol</div><div class="meta">Why this rating: Any user approval happens outside the protocol (same as Visa TAP).</div><details><summary>Evidence (3)</summary><div class="claim">Agents act without per-step human oversight. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“AI agents operate autonomously across multi-step workflows, making tool calls and accessing data stores without direct human oversight at each step.”</blockquote></div><div class="claim">User sign-in is an earlier OAuth flow. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.2.1. Subject-Initiated Flow. <span class="chk">(quote verified against the source)</span><blockquote>“The agent application authenticates using an OAuth 2.0 Authorization Code flow”</blockquote></div><div class="claim">Approval of model output is by the infrastructure layer. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.7. Token Exchange Isolation. <span class="chk">(quote verified against the source)</span><blockquote>“The LLM&#x27;s output MUST NOT be used as direct input to Txn-Token exchange requests without validation and approval by the infrastructure layer.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="green"><span class="badge">Addressed</span><br>The trust domain&#x27;s Transaction Token Service. There is exactly one logical service per trust domain; it decides which workloads may obtain tokens and with what content, and services accept only tokens signed for their domain. With the extension it also decides which callers count as agents, usually through an Agent Attribute Store whose posture and provenance attributes must come from the domain&#x27;s deployment pipelines, not from the agents. Outside agents get only the context the domain&#x27;s policy allows for unverified external actors.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The protocol names the party whose tokens services rely on (as MCP Authorization names the authorization server); the answer notes external agents are treated as unverified.</div><details><summary>Evidence (4)</summary><div class="claim">One TTS per trust domain. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 3. Terminology. <span class="chk">(quote verified against the source)</span><blockquote>“Each Trust Domain using Txn-Tokens MUST have exactly one logical TTS.”</blockquote></div><div class="claim">The TTS decides who gets tokens. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 13.10. TTS Issuance Policies. <span class="chk">(quote verified against the source)</span><blockquote>“A TTS should be selective in which workloads can successfully request a Txn-Token.”</blockquote></div><div class="claim">Attribute Store contents must not come from agents. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.6.2. Agent Attribute Store Contents. <span class="chk">(quote verified against the source)</span><blockquote>“These richer attributes are populated and maintained by the trust domain&#x27;s deployment pipelines and MUST NOT be sourced from agent self-assertion.”</blockquote></div><div class="claim">External agents get policy-limited context. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5. Agentic Context. <span class="chk">(quote verified against the source)</span><blockquote>“assigns context commensurate with the trust domain&#x27;s policy for unverified external actors.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Neither draft defines a way to revoke a Transaction Token or an agent&#x27;s access; the base draft relies on short lifetimes instead. Before issuing a token, the Transaction Token Service MAY check whether the presented access token was invalidated (e.g. through RFC 7662 introspection), which stops new tokens but not ones already issued, and it must not replace an expired token. The session_id helps an agent&#x27;s owning team find the session for debugging or revocation, outside the protocol.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Revocation is not defined (same as the three calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">Searched both drafts for revocation, revoke, invalidate and blocklist: No revocation mechanism. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, Searched both drafts for revocation, revoke, invalidate and blocklist.</div><div class="claim">The TTS may check if the access token was invalidated. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 13.4. Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“a TTS MAY, based on the risk profile of the deployment or transaction, verify whether the presented access token was invalidated.”</blockquote></div><div class="claim">Expired tokens cannot be replaced. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a>, 13.15. Txn-Token as a subject_token. <span class="chk">(quote verified against the source)</span><blockquote>“MUST NOT issue a new Txn-Token when the Txn-Token being replaced has expired.”</blockquote></div><div class="claim">session_id supports out-of-band revocation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5.1. Normative Fields. <span class="chk">(quote verified against the source)</span><blockquote>“enabling that team to locate the corresponding session in their own runtime logs for debugging or revocation.”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Neither draft defines a contact or escalation field. The extension expects a workload that sees unexpected behaviour to share the transaction ID (txn) and session_id with the agent&#x27;s owning team, and the Transaction Token Service operator can supply the full chain for a txn from its audit log. Who that team is and how to reach it is left to the organisation.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field is defined (same as the three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Sharing txn with the agent&#x27;s owning team. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5.1. Normative Fields. <span class="chk">(quote verified against the source)</span><blockquote>“a workload that observes unexpected behavior may share the `txn` claim and this value with the proximate agent&#x27;s owning team”</blockquote></div><div class="claim">The TTS operator can supply chain history. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.8. TTS Audit Logging. <span class="chk">(quote verified against the source)</span><blockquote>“A workload that shares the `txn` value with the TTS operator can obtain the full chain history”</blockquote></div><div class="claim">Searched both drafts for contact, escalation, abuse and owner fields: No contact field. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, Searched both drafts for contact, escalation, abuse and owner fields.</div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Neither draft defines a way for one service to warn others about a misbehaving agent. The extension recommends logging act, sub and agentic_ctx for behavioural monitoring and a persistent audit log at the Transaction Token Service, which support investigation after the fact inside the trust domain, but these are not signals between services.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as the three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Searched both drafts for signals, events, reputation and shared signals: No signals between services. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, Searched both drafts for signals, events, reputation and shared signals.</div><div class="claim">Monitoring through logging. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 5.5. AI Agent Specific Controls. <span class="chk">(quote verified against the source)</span><blockquote>“Systems SHOULD implement behavioral monitoring for AI agent activities by logging `act`, `sub`, and `agentic_ctx` claims in audit logs.”</blockquote></div><div class="claim">TTS audit log. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.8. TTS Audit Logging. <span class="chk">(quote verified against the source)</span><blockquote>“The TTS SHOULD maintain a persistent audit log.”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. No claim names the AI model. Services needing provenance (e.g. software version identifiers) or attestation status SHOULD look them up in the Agent Attribute Store by agent identifier, but the store&#x27;s interface is out of scope and model identity is not among the listed attributes.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model (same as the three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Provenance attributes listed for the store. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.6.2. Agent Attribute Store Contents. <span class="chk">(quote verified against the source)</span><blockquote>“Provenance: Software version identifiers, manifest references, source code references.”</blockquote></div><div class="claim">The store&#x27;s interface is out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, 3.5.2. Agent Attribute Store Queries for Richer Context. <span class="chk">(quote verified against the source)</span><blockquote>“The Agent Attribute Store interface, query protocol, and response format are out of scope for this specification.”</blockquote></div><div class="claim">Searched both drafts for model, LLM version and provenance claims in the token: No model claim. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a>, Searched both drafts for model, LLM version and provenance claims in the token.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/">Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03</a> (-03 (repository commit 5a40b0a), 2026-10-31)</li><li><a href="https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/">Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)</a> (-11 (repository commit 146e47d), 2026-07-30)</li></ul><h2>Notes</h2><ul class="plain"><li>The analysed text of the extension was taken from the author&#x27;s GitHub repository at commit 5a40b0a (merged 31 October 2026, the -03 publication date). Its section structure was compared with the published -03 table of contents on the IETF datatracker. The source file&#x27;s own heading numbers in Section 3 are offset by one from the published numbering (e.g. the file says 3.6 for what is published as 3.5 Agentic Context). Section labels in this report follow the published numbering. Quotes that cite sections (e.g. &#x27;Section 3.4.1&#x27;) keep the file&#x27;s own numbers.</li><li>The base Transaction Tokens draft was taken from the oauth-wg repository at commit 146e47d, whose document history matches -11. Later edits on main (working-group last call feedback, August 2026) were not analysed.</li><li>RFC 9396 (Rich Authorization Requests) is listed as a normative reference in -03 but no longer used in its text.</li><li>Both drafts use RFC 2119 keywords; requirement levels are quoted as written. No instructions aimed at AI tools were found in the sources.</li><li>The IETF datatracker lists the base draft&#x27;s working-group state as &#x27;WG Consensus: Waiting for Write-Up&#x27; (seen 19 November 2026); this was not used as evidence in the report.</li></ul><h2>Open questions</h2><ul class="plain"><li>Only the table of contents of the published -03 was compared with the repository text; small wording differences between the two cannot be ruled out.</li><li>How receiving workloads obtain the Transaction Token Service&#x27;s signing keys is not specified (the base draft says the keys are &#x27;often&#x27; known). This could affect validity in practice.</li><li>The agent instance identifier was rated yellow because session_id identifies the agent&#x27;s runtime session; it could be argued red because the value is self-asserted and may not be used for decisions.</li><li>Whether the extension&#x27;s MUST for mutually authenticated channels between all components lets a resource server link the calling workload to proximate_agent.id is not stated; authentication was rated red on that basis.</li><li>Credential lifetime was rated yellow because no verifier-enforced maximum exists; &#x27;on the order of minutes&#x27; could be read as a specific short limit (green).</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (68 of 68 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "Transaction Tokens For Agents",
+  "full_name": "Transaction Tokens For Agents (draft-araut-oauth-transaction-tokens-for-agents), an extension of OAuth Transaction Tokens",
+  "spec_version": "draft-araut-oauth-transaction-tokens-for-agents-03, building on draft-ietf-oauth-transaction-tokens-11",
+  "spec_date": "2026-10-31",
+  "maintainer": "Ashay Raut (individual Internet-Draft); the base Transaction Tokens draft is maintained by the IETF OAuth working group (editors from CrowdStrike, Practical Identity and Defakto Security)",
+  "newer_version_note": "-03 is the latest revision. Earlier versions were published as draft-oauth-transaction-tokens-for-agents-00 to -06 before the April 2026 rename. For the base draft, -11 is the latest revision; its repository already holds later edits from working-group last call that were not analysed."
+ },
+ "profile": {
+  "id": "transaction-tokens-for-agents",
+  "category": "agent-authorization",
+  "secondary_categories": [
+   "workload-identity"
+  ],
+  "mechanisms": [
+   "bearer-token"
+  ],
+  "venue": "ietf-individual",
+  "maturity": "proposal",
+  "openness": "open-standard",
+  "layers": [
+   "http-header",
+   "token"
+  ],
+  "building_blocks": [
+   "Transaction Tokens (draft-ietf-oauth-transaction-tokens)",
+   "RFC 8693",
+   "RFC 7519",
+   "RFC 7515",
+   "RFC 9068",
+   "RFC 6749",
+   "RFC 8417"
+  ],
+  "website": "https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/",
+  "first_published": "2025-11"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "Inside a company's systems, one request often passes through many internal services, and when an AI agent started it, the services deep in that chain usually cannot tell. OAuth Transaction Tokens, an IETF OAuth working-group draft, already give each internal service a short-lived signed token describing who the transaction is for and what it is for. Transaction Tokens For Agents is an individual draft by Ashay Raut (version -03, October 2026) that adds agent context to those tokens, so internal services can tell agent-driven calls from direct human calls and audit them. No deployment is named.",
+  "A single Transaction Token Service in the trust domain issues the tokens. The extension adds an agentic_ctx claim naming the agent that started the chain and the agent at the current hop, a hop count, and an optional minimum assurance level, and fixes how the user (sub) and the delegated agent (act) are carried. Each time an agent hands work on, it gets a replacement token: identity stays fixed, the hop count rises and permissions can only shrink. The tokens are bearer-style and stay inside one trust domain. Neither draft defines revocation, contact channels, model identity or a way for services to warn each other."
+ ],
+ "how_it_works": [
+  "A user asks an agent to do a task (or the agent starts on a schedule). The agent obtains an ordinary OAuth access token, through an authorization code flow for a user or client credentials when autonomous, and calls the trust domain's external endpoint (e.g. an API gateway).",
+  "The gateway sends that access token and its own credentials to the Transaction Token Service in an OAuth token-exchange request, asking for a Transaction Token with a narrow scope for this transaction.",
+  "The Transaction Token Service authenticates the gateway, validates the access token, checks (e.g. by looking up the client_id in an Agent Attribute Store) whether the caller is an agent, and issues a short-lived signed token: sub (the user, or the agent itself), act copied from the access token, scope, a transaction ID (txn) and agentic_ctx (proximate and originating agent, hop count 1).",
+  "Each internal service receives the token in the Txn-Token HTTP header, checks its signature, trust-domain audience and expiry, and applies its own policy (e.g. restrict agent chains, or refuse beyond a hop limit).",
+  "When an internal agent takes over and calls further services, it asks for a replacement token: sub, act, txn and the originating agent stay fixed, the proximate agent changes, the hop count rises, and scope and assurance level can only go down.",
+  "The Transaction Token Service logs each issuance and replacement, so the full agent chain for a transaction ID can be reconstructed after an incident."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03",
+   "url": "https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/",
+   "fetch_url": "https://raw.githubusercontent.com/ashayraut/oauth-transactiontokens-for-agents/5a40b0abe1936d65d94205150f1d2d875c9083a8/draft-oauth-transaction-tokens-for-agents.md",
+   "version": "-03 (repository commit 5a40b0a)",
+   "date": "2026-10-31",
+   "kind": "primary"
+  },
+  {
+   "id": "txn",
+   "title": "Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)",
+   "url": "https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/",
+   "fetch_url": "https://raw.githubusercontent.com/oauth-wg/oauth-transaction-tokens/146e47d47e9f0ee276033917aa2823298e05cc5f/draft-ietf-oauth-transaction-tokens.md",
+   "version": "-11 (repository commit 146e47d)",
+   "date": "2026-07-30",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Agent chain context inside internal Transaction Tokens",
+   "answer": "An individual-draft extension of OAuth Transaction Tokens: inside one trust domain, the Transaction Token Service adds an agentic_ctx claim naming the originating and current agent, a hop count and an optional minimum assurance level, so every internal service in a call chain can see that agents were involved.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The extension defines agentic_ctx.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "The extension defines the `agentic_ctx` claim, a structured JWT claim that carries chain-level metadata required for multi-agent flow integrity.",
+     "check": "OK",
+     "check_fp": "ec991d2065"
+    },
+    {
+     "text": "Downstream workloads use Transaction Tokens for authorization.",
+     "type": "fact",
+     "source": "txn",
+     "section": "1. Introduction",
+     "quote": "Downstream workloads use Txn-tokens to apply authorization decisions based on this context within a specific transaction.",
+     "check": "OK",
+     "check_fp": "1f8b74eed8"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Internal call chains within one trust domain",
+   "answer": "Internal service chains inside one organisation's trust domain (e.g. microservices and data stores) when a request was started by an AI agent, either an outside agent entering through an API gateway or internal agents handing work to each other. The token travels in its own Txn-Token HTTP header and every internal workload verifies it itself. It must not be accepted outside its trust domain; the base draft points to Identity and Authorization Chaining for crossing domains.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Typical chains start with a third-party agent and pass through internal agents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Multi-Agent Flows",
+     "quote": "In complex agentic workflows, a transaction often originates from a 3rd-party (3P) agent and propagates through one or more 1st-party (1P) agents within the local trust domain.",
+     "check": "OK",
+     "check_fp": "2be15d5c20"
+    },
+    {
+     "text": "Tokens travel in a dedicated HTTP header.",
+     "type": "fact",
+     "source": "txn",
+     "section": "12.1. \"Txn-Token\" HTTP Header",
+     "quote": "A workload that invokes another workload using HTTP and needs to present a Txn-Token to the invoked workload MUST use the HTTP Header \"Txn-Token\" to communicate the Txn-Token in the HTTP Request.",
+     "check": "OK",
+     "check_fp": "bfcbac4649"
+    },
+    {
+     "text": "Tokens are bound to one trust domain.",
+     "type": "fact",
+     "source": "txn",
+     "section": "9.2. JWT Body Claims",
+     "quote": "A Txn-Token MUST NOT be accepted outside the Trust Domain identified by the `aud` claim.",
+     "check": "OK",
+     "check_fp": "99c9974278"
+    },
+    {
+     "text": "Crossing trust domains uses Identity Chaining.",
+     "type": "fact",
+     "source": "txn",
+     "section": "14. Preserving transaction context across Trust Domains",
+     "quote": "it SHOULD use OAuth Identity and Authorization Chaining Across Domains {{I-D.ietf-oauth-identity-chaining}}.",
+     "check": "OK",
+     "check_fp": "df1efbc69a"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Agent, gateway, Token Service, Attribute Store, workloads",
+   "answer": "Human subject: the user who starts a task (absent in autonomous flows). Agent application: external (3P) or internal (1P), split into an inference layer that runs the model and an infrastructure layer that handles tokens. External endpoint: the published interface (e.g. an API gateway) that first receives the request. Transaction Token Service (TTS): issues and replaces tokens, one per trust domain. Agent Attribute Store: a logical role recording which workloads are agents and their attributes. Workloads and resource servers: receive and check tokens.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Definition of the Transaction Token Service.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology",
+     "quote": "A special service within the Trust Domain that issues Txn-Tokens to requesting workloads.",
+     "check": "OK",
+     "check_fp": "a7062b8083"
+    },
+    {
+     "text": "Definition of the Agent Attribute Store.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology",
+     "quote": "A logical role — not a defined protocol interface — that MAY be realized as an agent registry, service catalog, policy engine, or any equivalent mechanism accessible within the trust domain.",
+     "check": "OK",
+     "check_fp": "a5cc11a257"
+    },
+    {
+     "text": "Definition of the external endpoint.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology",
+     "quote": "A published interface to a Trust Domain that results in the invocation of a workload within the Trust Domain.",
+     "check": "OK",
+     "check_fp": "f9dd0df950"
+    },
+    {
+     "text": "Definition of the inference layer.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology",
+     "quote": "The component of an agent system that runs the AI model (e.g., an LLM), processes inputs, generates plans, and produces tool calls or outputs.",
+     "check": "OK",
+     "check_fp": "38f29295fe"
+    },
+    {
+     "text": "Definition of the infrastructure layer.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology",
+     "quote": "The component of an agent system that executes tool calls, manages network I/O, enforces security policies, and interacts with external services including the Transaction Token Service.",
+     "check": "OK",
+     "check_fp": "c3e48d56b0"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Individual draft -03, no deployments",
+   "answer": "Early proposal. The extension is an individual, Informational Internet-Draft at version -03 (31 October 2026), not adopted by a working group; it was first published in November 2025 under the name draft-oauth-transaction-tokens-for-agents. Its base, Transaction Tokens, is an OAuth working-group draft at -11 and not yet an RFC. No named deployment of the agent extension was found.",
+   "rating": "red",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Red: an individual draft with no named deployments, built on a base that is itself still a draft.",
+   "claims": [
+    {
+     "text": "Document name and revision.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Front matter",
+     "quote": "docname: draft-araut-oauth-transaction-tokens-for-agents-03",
+     "check": "OK",
+     "check_fp": "24acad3afb"
+    },
+    {
+     "text": "The base draft is a working-group document.",
+     "type": "fact",
+     "source": "txn",
+     "section": "Front matter",
+     "quote": "wg: oauth",
+     "check": "OK",
+     "check_fp": "f85e3c22e1"
+    },
+    {
+     "text": "Searched all sections of both drafts, and the web for agentic_ctx implementations; no implementation or deployment is named.",
+     "type": "silent",
+     "source": "spec",
+     "section": "All sections",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "Transaction Tokens, Token Exchange, JWT/JWS",
+   "answer": "OAuth Transaction Tokens (draft-ietf-oauth-transaction-tokens) is the base: it defines the token, its claims, the Transaction Token Service and the Txn-Token header. Tokens are requested through OAuth 2.0 Token Exchange (RFC 8693), which also defines the act claim the extension reuses. Tokens are JWTs (RFC 7519) signed with JWS (RFC 7515); incoming access tokens follow RFC 9068; the transaction ID comes from Security Event Tokens (RFC 8417). The extension defines no new token or grant types.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The extension reuses act and sub.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "It does not define new token types or grant types; it operates entirely within the existing Transaction Token issuance and replacement mechanisms defined by the base specification.",
+     "check": "OK",
+     "check_fp": "3e204a2cdd"
+    },
+    {
+     "text": "Token requests use RFC 8693.",
+     "type": "fact",
+     "source": "txn",
+     "section": "5.1. Creation",
+     "quote": "If the transaction token request is made via HTTP to a remote server, it MUST use {{RFC8693}} as described in this specification.",
+     "check": "OK",
+     "check_fp": "ae51a0d8a4"
+    },
+    {
+     "text": "Tokens are JWS-signed JWTs.",
+     "type": "fact",
+     "source": "txn",
+     "section": "9. Txn-Token Format",
+     "quote": "A Txn-Token is a JSON Web Token {{RFC7519}} protected by a JSON Web Signature {{RFC7515}}.",
+     "check": "OK",
+     "check_fp": "b780276dff"
+    },
+    {
+     "text": "The txn claim comes from RFC 8417.",
+     "type": "fact",
+     "source": "txn",
+     "section": "9.2. JWT Body Claims",
+     "quote": "REQUIRED A unique transaction identifier as defined in Section 2.2 of {{RFC8417}}.",
+     "check": "OK",
+     "check_fp": "544d20a1fc"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Agent ID from act.sub or client_id",
+   "answer": "Partly, and only when the caller is recognised as an agent. The Transaction Token Service then adds agentic_ctx with proximate_agent.id (the agent at the current hop) and originator.id (the agent that started the chain). The value comes from the access token's act.sub, an Agent Attribute Store lookup or the OAuth client_id, in that order, so it names the agent as a client or registered agent, shared by all its running copies. How agents are recognised is left to each deployment.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: the identifier names the agent application or client, shared by its instances (same as MCP Authorization), and the claim carrying it is optional.",
+   "claims": [
+    {
+     "text": "Where the agent identifier comes from.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5.1. Normative Fields",
+     "quote": "At initial issuance, the TTS sets this field to the agent identifier derived from the access token (via `act.sub`, Agent Attribute Store lookup, or `client_id` — in that priority order).",
+     "check": "OK",
+     "check_fp": "bdbd08008f"
+    },
+    {
+     "text": "agentic_ctx is optional overall.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5. Agentic Context",
+     "quote": "The Txn-Token MAY contain an `agentic_ctx` claim.",
+     "check": "OK",
+     "check_fp": "19f075915a"
+    },
+    {
+     "text": "It is mandatory once the caller is identified as a registered agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.6.1. Identification Mechanisms",
+     "quote": "The TTS MUST populate the `agentic_ctx` claim with at minimum the normative fields defined in Section 3.6.1.",
+     "check": "OK",
+     "check_fp": "b7ec9ef290"
+    },
+    {
+     "text": "Agent identification is deployment-defined.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.6.1. Identification Mechanisms",
+     "quote": "The specific mechanism for agent identification is deployment-defined.",
+     "check": "OK",
+     "check_fp": "94c37ae360"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Optional, self-asserted session_id only",
+   "answer": "Partly. agentic_ctx can carry an optional session_id for the current and for the originating agent, identifying that agent's session as known to its own runtime (e.g. assigned by its framework or SDK). The value is self-asserted by the agent's infrastructure and unverified, and services and the Transaction Token Service must not use it for authorization. Its purpose is correlation: matching a transaction to the agent team's own logs during an investigation.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: a per-session identifier for the running agent is defined but optional and unverified; the calibration examples are red because they define none. Red could be argued because the value is self-asserted (see open questions).",
+   "claims": [
+    {
+     "text": "session_id identifies the agent's runtime session.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5.1. Normative Fields",
+     "quote": "A string identifying the session of the proximate agent as known to that agent's own runtime or infrastructure",
+     "check": "OK",
+     "check_fp": "e50202459f"
+    },
+    {
+     "text": "It is self-asserted.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5.1. Normative Fields",
+     "quote": "This field is self-asserted by the agent's infrastructure layer and is therefore informational only.",
+     "check": "OK",
+     "check_fp": "7215de3771"
+    },
+    {
+     "text": "It must not be used for authorization.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5.1. Normative Fields",
+     "quote": "Resource Servers and the TTS MUST NOT use this field as an authorization criterion.",
+     "check": "OK",
+     "check_fp": "33e00fccfe"
+    },
+    {
+     "text": "It is unverified.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.15. Agent Session Identifiers",
+     "quote": "Because these fields cannot be verified by the TTS or Resource Servers, a malicious agent could report a fabricated or another session's identifier.",
+     "check": "OK",
+     "check_fp": "e3358ffba5"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Yes, sub names the principal",
+   "answer": "Yes. Every Transaction Token must carry sub, the principal of the transaction: the user in a user-initiated flow, or typically the agent itself when it runs autonomously. When the original access token shows delegation, its act claim (the agent acting for the user) is copied into the token and can never be changed along the chain. The sub value is unique within the trust domain; its format is up to the Transaction Token Service.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the principal is a required claim the service receives in every token; MCP Authorization is red because it defines none.",
+   "claims": [
+    {
+     "text": "sub is required and names the principal.",
+     "type": "fact",
+     "source": "txn",
+     "section": "9.2. JWT Body Claims",
+     "quote": "REQUIRED This claim represents the principal of the transaction as defined by Section 4.1.2 of {{RFC7519}}.",
+     "check": "OK",
+     "check_fp": "6dd81f47c1"
+    },
+    {
+     "text": "In autonomous flows sub usually names the agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.2.2. Autonomous Flow",
+     "quote": "For autonomous agents, the `sub` claim is determined based on the `subject_token` provided in the request, which typically represents the agent's own identity.",
+     "check": "OK",
+     "check_fp": "d7ca8172b7"
+    },
+    {
+     "text": "act is copied from the access token.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.2.1. Subject-Initiated Flow",
+     "quote": "If the access token contains an `act` claim, the Txn-Token Service copies the `act` claim value to the Txn-Token's `act` field.",
+     "check": "OK",
+     "check_fp": "fffeb85c73"
+    },
+    {
+     "text": "act is immutable.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.3.1. Replacement When Caller is Identified as an Agent",
+     "quote": "The `act` claim is immutable throughout the entire transaction lifetime.",
+     "check": "OK",
+     "check_fp": "3253da4728"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Signed JWT in Txn-Token header, not bound",
+   "answer": "A Transaction Token: a short-lived JWT signed by the Transaction Token Service, sent in its own Txn-Token HTTP header (not the Authorization header) on each call between workloads. The signature covers all claims (subject, scope, transaction ID, context and agentic_ctx), so they cannot be altered along the chain. It is not bound to the sender: the base draft says it is not resistant to replay, and it must not be used to authenticate a workload.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a defined credential on every call that the service can verify; the answer notes it is not proof of possession (as for MCP Authorization's bearer token).",
+   "claims": [
+    {
+     "text": "Dedicated header is mandatory.",
+     "type": "fact",
+     "source": "txn",
+     "section": "12.1. \"Txn-Token\" HTTP Header",
+     "quote": "A workload that invokes another workload using HTTP and needs to present a Txn-Token to the invoked workload MUST use the HTTP Header \"Txn-Token\" to communicate the Txn-Token in the HTTP Request.",
+     "check": "OK",
+     "check_fp": "bfcbac4649"
+    },
+    {
+     "text": "Tokens are signed for integrity.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3. Subject Context Protection",
+     "quote": "Txn-Tokens are cryptographically signed to ensure integrity.",
+     "check": "OK",
+     "check_fp": "2098e52a84"
+    },
+    {
+     "text": "No replay resistance.",
+     "type": "fact",
+     "source": "txn",
+     "section": "13.1. Txn-Token Replay Risks",
+     "quote": "A Txn-Token is not resistant to replay attacks.",
+     "check": "OK",
+     "check_fp": "97317e3609"
+    },
+    {
+     "text": "Not an authentication credential.",
+     "type": "fact",
+     "source": "txn",
+     "section": "13.12. Transaction Tokens Are Not Authentication Credentials",
+     "quote": "A workload MUST NOT use a transaction token to authenticate itself to another workload, service or the TTS.",
+     "check": "OK",
+     "check_fp": "c5e75ade3e"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Minutes expected, no enforced maximum",
+   "answer": "Short, but with no enforced maximum. The base draft expects tokens to live on the order of minutes or less and says their lifetime MUST be kept short; every receiving workload must reject expired tokens. There is no maximum for verifiers to enforce, and the Transaction Token Service may issue replacement tokens that outlive the input token if its policy allows. The agent extension only adds that implementations must enforce strict lifetime validation.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: a short lifetime is required of the issuer but stated only as 'on the order of minutes', with no maximum that verifiers must enforce; lower than Visa TAP's green (8-minute verifier rule), chosen under the tie rule.",
+   "claims": [
+    {
+     "text": "Expected lifetime is minutes or less.",
+     "type": "fact",
+     "source": "txn",
+     "section": "6. Txn-Token Lifetime",
+     "quote": "Txn-Tokens are expected to be short-lived (on the order of minutes or less), and as a result MUST be used only for the expected duration of an external or internal invocation.",
+     "check": "OK",
+     "check_fp": "06d97ec5e9"
+    },
+    {
+     "text": "Lifetime must be kept short.",
+     "type": "fact",
+     "source": "txn",
+     "section": "13.1. Txn-Token Replay Risks",
+     "quote": "For this reason, a Txn-Token lifetime MUST be kept short and follow the guidance given in {{txn-token-lifetime}}.",
+     "check": "OK",
+     "check_fp": "47d3dec414"
+    },
+    {
+     "text": "Replacement can extend lifetime.",
+     "type": "fact",
+     "source": "txn",
+     "section": "13.15. Txn-Token as a subject_token",
+     "quote": "MAY issue a replacement Txn-Token with a lifetime exceeding the lifetime of the input Txn-Token, subject to the policy of the TTS.",
+     "check": "OK",
+     "check_fp": "6ad4c4b3ae"
+    },
+    {
+     "text": "The extension requires strict lifetime validation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1. Token Replay Protection",
+     "quote": "Implementations MUST enforce strict token lifetime validation.",
+     "check": "OK",
+     "check_fp": "55ffcc9e75"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, signature, audience and expiry",
+   "answer": "Yes, within the trust domain. Each receiving workload must check the token's signature, that its aud claim names the workload's own trust domain, and that it has not expired; the agent extension repeats that services must verify the signature before using any claim. The token is signed by the domain's single Transaction Token Service, whose signing keys are often known in advance; how they are distributed is not specified.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the service validates the token against its own trust domain's issuer with expiry checks (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Signature check is mandatory.",
+     "type": "fact",
+     "source": "txn",
+     "section": "12.2. Txn-Token Validation",
+     "quote": "Validate the Txn-Token JWS signature.",
+     "check": "OK",
+     "check_fp": "4aa17b8058"
+    },
+    {
+     "text": "Audience check is mandatory.",
+     "type": "fact",
+     "source": "txn",
+     "section": "12.2. Txn-Token Validation",
+     "quote": "Verify the `aud` claim identifies the Trust Domain of the workload.",
+     "check": "OK",
+     "check_fp": "8051e03013"
+    },
+    {
+     "text": "Expiry check is mandatory.",
+     "type": "fact",
+     "source": "txn",
+     "section": "12.2. Txn-Token Validation",
+     "quote": "Verify the Txn-Token is not expired.",
+     "check": "OK",
+     "check_fp": "867a6a96b7"
+    },
+    {
+     "text": "The extension repeats the signature requirement.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.4. Transaction Chain Integrity",
+     "quote": "Services MUST verify the cryptographic signature of every Txn-Token before processing its claims.",
+     "check": "OK",
+     "check_fp": "0fe24bf366"
+    },
+    {
+     "text": "Signing keys are often known in advance.",
+     "type": "fact",
+     "source": "txn",
+     "section": "9.2. JWT Body Claims",
+     "quote": "is not required as Txn-Tokens are bound to a single Trust Domain as defined by the `aud` claim and often the signing keys are known.",
+     "check": "OK",
+     "check_fp": "36b46fd89d"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "No, checks a token issued by the TTS",
+   "answer": "No. A receiving service checks a token issued by the Transaction Token Service, and the base draft forbids using these tokens to authenticate a workload. The Transaction Token Service authenticates the workload that requests each token, and the extension requires mutually authenticated channels between components, but these authenticate the immediate caller (often a gateway), which the drafts do not link to the agent named in agentic_ctx. The user signs in at the original OAuth authorization server, outside this protocol.",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "none",
+   "rating_reason": "Red: the service only checks a token issued elsewhere, and channel authentication covers the immediate caller rather than the agent (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Tokens are not authentication credentials.",
+     "type": "fact",
+     "source": "txn",
+     "section": "13.12. Transaction Tokens Are Not Authentication Credentials",
+     "quote": "A workload MUST NOT use a transaction token to authenticate itself to another workload, service or the TTS.",
+     "check": "OK",
+     "check_fp": "c5e75ade3e"
+    },
+    {
+     "text": "The TTS authenticates the requesting workload.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.8. Infrastructure Security",
+     "quote": "The TTS MUST authenticate the requesting workload before issuing or replacing a Txn-Token, using the access token presented in the exchange request.",
+     "check": "OK",
+     "check_fp": "25fe12fbaf"
+    },
+    {
+     "text": "Channels between components are mutually authenticated.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.8. Infrastructure Security",
+     "quote": "All component communications MUST use mutually authenticated, encrypted channels (e.g., TLS with certificate validation).",
+     "check": "OK",
+     "check_fp": "d84dd7c2f9"
+    },
+    {
+     "text": "User sign-in happens in an ordinary OAuth flow before the protocol.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.2.1. Subject-Initiated Flow",
+     "quote": "The agent application authenticates using an OAuth 2.0 Authorization Code flow",
+     "check": "OK",
+     "check_fp": "39fdb8a819"
+    },
+    {
+     "text": "Searched 3.5 Agentic Context, 3.6 Agent Identification and 5.8 Infrastructure Security for a rule tying the caller's channel identity to proximate_agent.id: No link between the channel identity and agentic_ctx.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched 3.5 Agentic Context, 3.6 Agent Identification and 5.8 Infrastructure Security for a rule tying the caller's channel identity to proximate_agent.id",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Yes, narrow scope, only attenuated",
+   "answer": "Yes. Every token carries a required scope describing the narrow purpose of the transaction, and usually a tctx object with immutable transaction details (e.g. action, ticker and quantity of a trade). Scope can only be narrowed when a token is replaced, never widened, and the extension adds a hop count that services should check against a maximum. Scope values and how each service turns them into a decision are left to the deployment.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: scoped permissions are required in every token and the service can enforce them (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "scope is a required claim.",
+     "type": "fact",
+     "source": "txn",
+     "section": "9.2. JWT Body Claims",
+     "quote": "REQUIRED The scope claim is defined in {{Section 4.2 of RFC8693}}.",
+     "check": "OK",
+     "check_fp": "36db52eb32"
+    },
+    {
+     "text": "scope is the narrow purpose of the transaction.",
+     "type": "fact",
+     "source": "txn",
+     "section": "9.2.1. Scope claim",
+     "quote": "The `scope` claim captures, as narrowly as possible, the purpose of this particular transaction.",
+     "check": "OK",
+     "check_fp": "24282de90a"
+    },
+    {
+     "text": "tctx carries immutable transaction details.",
+     "type": "fact",
+     "source": "txn",
+     "section": "9.2. JWT Body Claims",
+     "quote": "RECOMMENDED A JSON object that contains values that remain immutable throughout the Call Chain.",
+     "check": "OK",
+     "check_fp": "e268e2a148"
+    },
+    {
+     "text": "Scope can only be attenuated.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.5. AI Agent Specific Controls",
+     "quote": "Implementations MUST enforce the `scope` attenuation rules defined in Section 3.4.1, ensuring agent operations cannot exceed the scopes granted at initial token issuance.",
+     "check": "OK",
+     "check_fp": "7f00eceaef"
+    },
+    {
+     "text": "Services should check the hop count.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5.1. Normative Fields",
+     "quote": "Resource Servers SHOULD evaluate this value against deployment-defined maximum hop limits when making authorization decisions.",
+     "check": "OK",
+     "check_fp": "7ae406ed68"
+    },
+    {
+     "text": "The decision itself is left to the service.",
+     "type": "fact",
+     "source": "txn",
+     "section": "12.2. Txn-Token Validation",
+     "quote": "How the workload determines this authorization is out of scope for this specification.",
+     "check": "OK",
+     "check_fp": "985aa5d0b2"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "No, outside the protocol",
+   "answer": "No. The protocol has no approval step; it addresses agents that act across multi-step workflows without human oversight at each step. In the user-initiated flow the agent first gets an ordinary OAuth access token through an authorization code flow, where the user may consent, but that happens at the authorization server, before and outside the token exchange. The only approval the extension mentions is by software: the agent's infrastructure layer must check model output before using it in a token request.",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "none",
+   "rating_reason": "Red: any user approval happens outside the protocol (same as Visa TAP).",
+   "claims": [
+    {
+     "text": "Agents act without per-step human oversight.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "AI agents operate autonomously across multi-step workflows, making tool calls and accessing data stores without direct human oversight at each step.",
+     "check": "OK",
+     "check_fp": "98011dc2fe"
+    },
+    {
+     "text": "User sign-in is an earlier OAuth flow.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.2.1. Subject-Initiated Flow",
+     "quote": "The agent application authenticates using an OAuth 2.0 Authorization Code flow",
+     "check": "OK",
+     "check_fp": "39fdb8a819"
+    },
+    {
+     "text": "Approval of model output is by the infrastructure layer.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.7. Token Exchange Isolation",
+     "quote": "The LLM's output MUST NOT be used as direct input to Txn-Token exchange requests without validation and approval by the infrastructure layer.",
+     "check": "OK",
+     "check_fp": "05848ee669"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "The trust domain's Transaction Token Service",
+   "answer": "The trust domain's Transaction Token Service. There is exactly one logical service per trust domain; it decides which workloads may obtain tokens and with what content, and services accept only tokens signed for their domain. With the extension it also decides which callers count as agents, usually through an Agent Attribute Store whose posture and provenance attributes must come from the domain's deployment pipelines, not from the agents. Outside agents get only the context the domain's policy allows for unverified external actors.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the protocol names the party whose tokens services rely on (as MCP Authorization names the authorization server); the answer notes external agents are treated as unverified.",
+   "claims": [
+    {
+     "text": "One TTS per trust domain.",
+     "type": "fact",
+     "source": "txn",
+     "section": "3. Terminology",
+     "quote": "Each Trust Domain using Txn-Tokens MUST have exactly one logical TTS.",
+     "check": "OK",
+     "check_fp": "cb2ded24b4"
+    },
+    {
+     "text": "The TTS decides who gets tokens.",
+     "type": "fact",
+     "source": "txn",
+     "section": "13.10. TTS Issuance Policies",
+     "quote": "A TTS should be selective in which workloads can successfully request a Txn-Token.",
+     "check": "OK",
+     "check_fp": "cb8dbcc676"
+    },
+    {
+     "text": "Attribute Store contents must not come from agents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.6.2. Agent Attribute Store Contents",
+     "quote": "These richer attributes are populated and maintained by the trust domain's deployment pipelines and MUST NOT be sourced from agent self-assertion.",
+     "check": "OK",
+     "check_fp": "078c156d4c"
+    },
+    {
+     "text": "External agents get policy-limited context.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5. Agentic Context",
+     "quote": "assigns context commensurate with the trust domain's policy for unverified external actors.",
+     "check": "OK",
+     "check_fp": "3460b64be4"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "No; short lifetimes instead",
+   "answer": "No. Neither draft defines a way to revoke a Transaction Token or an agent's access; the base draft relies on short lifetimes instead. Before issuing a token, the Transaction Token Service MAY check whether the presented access token was invalidated (e.g. through RFC 7662 introspection), which stops new tokens but not ones already issued, and it must not replace an expired token. The session_id helps an agent's owning team find the session for debugging or revocation, outside the protocol.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: revocation is not defined (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched both drafts for revocation, revoke, invalidate and blocklist: No revocation mechanism.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched both drafts for revocation, revoke, invalidate and blocklist",
+     "quote": ""
+    },
+    {
+     "text": "The TTS may check if the access token was invalidated.",
+     "type": "fact",
+     "source": "txn",
+     "section": "13.4. Access Tokens",
+     "quote": "a TTS MAY, based on the risk profile of the deployment or transaction, verify whether the presented access token was invalidated.",
+     "check": "OK",
+     "check_fp": "aecc8d5a4a"
+    },
+    {
+     "text": "Expired tokens cannot be replaced.",
+     "type": "fact",
+     "source": "txn",
+     "section": "13.15. Txn-Token as a subject_token",
+     "quote": "MUST NOT issue a new Txn-Token when the Txn-Token being replaced has expired.",
+     "check": "OK",
+     "check_fp": "3cadbdc22f"
+    },
+    {
+     "text": "session_id supports out-of-band revocation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5.1. Normative Fields",
+     "quote": "enabling that team to locate the corresponding session in their own runtime logs for debugging or revocation.",
+     "check": "OK",
+     "check_fp": "43dda3979e"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No contact field; txn for correlation",
+   "answer": "No. Neither draft defines a contact or escalation field. The extension expects a workload that sees unexpected behaviour to share the transaction ID (txn) and session_id with the agent's owning team, and the Transaction Token Service operator can supply the full chain for a txn from its audit log. Who that team is and how to reach it is left to the organisation.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field is defined (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Sharing txn with the agent's owning team.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.5.1. Normative Fields",
+     "quote": "a workload that observes unexpected behavior may share the `txn` claim and this value with the proximate agent's owning team",
+     "check": "OK",
+     "check_fp": "b3ceee0ed3"
+    },
+    {
+     "text": "The TTS operator can supply chain history.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.8. TTS Audit Logging",
+     "quote": "A workload that shares the `txn` value with the TTS operator can obtain the full chain history",
+     "check": "OK",
+     "check_fp": "d85a84d350"
+    },
+    {
+     "text": "Searched both drafts for contact, escalation, abuse and owner fields: No contact field.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched both drafts for contact, escalation, abuse and owner fields",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No; audit logging only",
+   "answer": "No. Neither draft defines a way for one service to warn others about a misbehaving agent. The extension recommends logging act, sub and agentic_ctx for behavioural monitoring and a persistent audit log at the Transaction Token Service, which support investigation after the fact inside the trust domain, but these are not signals between services.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched both drafts for signals, events, reputation and shared signals: No signals between services.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched both drafts for signals, events, reputation and shared signals",
+     "quote": ""
+    },
+    {
+     "text": "Monitoring through logging.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.5. AI Agent Specific Controls",
+     "quote": "Systems SHOULD implement behavioral monitoring for AI agent activities by logging `act`, `sub`, and `agentic_ctx` claims in audit logs.",
+     "check": "OK",
+     "check_fp": "936fa9c647"
+    },
+    {
+     "text": "TTS audit log.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.8. TTS Audit Logging",
+     "quote": "The TTS SHOULD maintain a persistent audit log.",
+     "check": "OK",
+     "check_fp": "c66ae85767"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. No claim names the AI model. Services needing provenance (e.g. software version identifiers) or attestation status SHOULD look them up in the Agent Attribute Store by agent identifier, but the store's interface is out of scope and model identity is not among the listed attributes.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Provenance attributes listed for the store.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.6.2. Agent Attribute Store Contents",
+     "quote": "Provenance: Software version identifiers, manifest references, source code references.",
+     "check": "OK",
+     "check_fp": "5fa562e09d"
+    },
+    {
+     "text": "The store's interface is out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "3.5.2. Agent Attribute Store Queries for Richer Context",
+     "quote": "The Agent Attribute Store interface, query protocol, and response format are out of scope for this specification.",
+     "check": "OK",
+     "check_fp": "681b5937bc"
+    },
+    {
+     "text": "Searched both drafts for model, LLM version and provenance claims in the token: No model claim.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched both drafts for model, LLM version and provenance claims in the token",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "Internal services get a narrow, required scope that can only shrink along the chain, the user (sub), the delegated agent (act) and, when agents are recognised, the originating and current agent and a hop count, so they can treat agent-driven calls differently from direct human calls.",
+  "incident_response": "Nothing can be revoked in-band; tokens expire within minutes and new ones stop once the underlying access token is invalidated (if the service checks). Investigation is supported by the transaction ID and the Transaction Token Service's audit log.",
+  "accountability": "An action inside the trust domain can be traced to the user, the agent that started the chain and the agent at the current hop (at application level), with the full chain reconstructable from the audit log; session identifiers are only self-asserted hints."
+ },
+ "notes": [
+  "The analysed text of the extension was taken from the author's GitHub repository at commit 5a40b0a (merged 31 October 2026, the -03 publication date). Its section structure was compared with the published -03 table of contents on the IETF datatracker. The source file's own heading numbers in Section 3 are offset by one from the published numbering (e.g. the file says 3.6 for what is published as 3.5 Agentic Context). Section labels in this report follow the published numbering. Quotes that cite sections (e.g. 'Section 3.4.1') keep the file's own numbers.",
+  "The base Transaction Tokens draft was taken from the oauth-wg repository at commit 146e47d, whose document history matches -11. Later edits on main (working-group last call feedback, August 2026) were not analysed.",
+  "RFC 9396 (Rich Authorization Requests) is listed as a normative reference in -03 but no longer used in its text.",
+  "Both drafts use RFC 2119 keywords; requirement levels are quoted as written. No instructions aimed at AI tools were found in the sources.",
+  "The IETF datatracker lists the base draft's working-group state as 'WG Consensus: Waiting for Write-Up' (seen 19 November 2026); this was not used as evidence in the report."
+ ],
+ "open_questions": [
+  "Only the table of contents of the published -03 was compared with the repository text; small wording differences between the two cannot be ruled out.",
+  "How receiving workloads obtain the Transaction Token Service's signing keys is not specified (the base draft says the keys are 'often' known). This could affect validity in practice.",
+  "The agent instance identifier was rated yellow because session_id identifies the agent's runtime session; it could be argued red because the value is self-asserted and may not be used for decisions.",
+  "Whether the extension's MUST for mutually authenticated channels between all components lets a resource server link the calling workload to proximate_agent.id is not stated; authentication was rated red on that basis.",
+  "Credential lifetime was rated yellow because no verifier-enforced maximum exists; 'on the order of minutes' could be read as a specific short limit (green)."
+ ]
+}</script></body></html>

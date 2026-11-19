@@ -1,0 +1,1030 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OAuth 2.0 AI Agent Instance Profile: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>OAuth 2.0 AI Agent Instance Profile<small>OAuth 2.0 AI Agent Instance Profile (draft-mcguinness-oauth-ai-agent-instance)</small></h1><ul class="facts"><li><b>Specification:</b> draft-mcguinness-oauth-ai-agent-instance-00</li><li><b>Date:</b> 2026-07-04</li><li><b>Maintainer:</b> Karl McGuinness (independent), individual Internet-Draft aimed at the IETF OAuth working group</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> -00 is the only revision submitted to the IETF. The author&#x27;s repository README (14 September 2026) marks it superseded and not being progressed, replaced by an agent federation profile together with Client Instance Identification (draft-mcguinness-oauth-client-instance-id). The successors were not analysed.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent authorization</span><span class="chip"><b>Also:</b> Attestation provenance</span><span class="chip"><b>Mechanism:</b> Proof-of-possession token</span><span class="chip"><b>Venue:</b> IETF individual draft</span><span class="chip"><b>Maturity:</b> Proposal</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>Many AI agent platforms register one OAuth client and run thousands of agent sessions under it, so a service receiving their access tokens sees only the platform, never the specific agent. The OAuth 2.0 AI Agent Instance Profile tries to fix this by giving each running agent instance its own attested identifier and carrying it into the access tokens that services receive. It is aimed at agent platforms, authorization servers and the APIs or MCP servers they call. It is an individual Internet-Draft by Karl McGuinness, version -00 from July 2026, with no named deployments, and the author has since marked it superseded and not being progressed.</p><p>It is a profile of a companion draft, the OAuth 2.0 Client Instance Assertion. An Agent Attester (usually the platform&#x27;s control plane) signs evidence naming the instance (agent_instance_id), optionally its platform, model and runtime, and binds it to a key the instance holds. The authorization server checks this evidence and issues an access token that names the user in sub and the agent instance in act.sub, and that is bound to the instance&#x27;s key (DPoP or mutual TLS, never a bearer token). Sub-agents get nested act chains through token exchange. The profile leaves agent permissions, contact channels and signals between services out, and its model claims are only as reliable as the Attester.</p><h2 id="how">How it works</h2><ol class="steps"><li>The agent platform registers its OAuth client for the profile (ai_agent_instance_profile set to true) and names its Agent Attester, either in its instance_issuers client metadata or by agreement with an authorization server that trusts that Attester.</li><li>When the platform starts an agent instance (a session, task or runtime), the Agent Attester mints signed evidence for it: a unique agent_instance_id, optional agent_platform, agent_model and agent_runtime claims, and a cnf claim binding a key that only this instance holds.</li><li>The instance asks the authorization server for a token (e.g. redeeming an authorization code after the user approved the client), presenting the evidence and a DPoP proof. The authorization server checks the signature, the client binding, replay and possession of the bound key.</li><li>The authorization server issues a sender-constrained access token: sub names the user, act.sub names the agent instance with sub_profile ai_agent, and the model may be surfaced if local policy allows. For a self-acting agent the instance itself is sub.</li><li>The instance calls the resource server (e.g. an MCP server) with the token and a fresh proof of possession. The resource server validates both and can key policy, rate limits and audit records on the instance, not only on the platform.</li><li>If the instance spawns a sub-agent, the sub-agent exchanges the token while presenting its own evidence, producing a nested act chain. If an instance misbehaves, the authorization server can revoke all tokens for that one instance.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>OAuth 2.0 AI Agent Instance Profile</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Per-agent-instance identity inside OAuth access tokens</td></tr><tr><td class="prop">Use cases</td><td class="">Agent platforms calling APIs and MCP servers</td></tr><tr><td class="prop">Parties involved</td><td class="">Platform, instance, Attester, AS, resource server, user</td></tr><tr><td class="prop">Status and adoption</td><td class="red">Individual draft -00, superseded, no deployments</td></tr><tr><td class="prop">Building blocks</td><td class="">OAuth, CIA-CORE, Token Exchange, DPoP, EAT</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="green">Attester-minted agent_instance_id per instance</td></tr><tr><td class="prop">Agent instance identifier</td><td class="green">Yes, act.sub or sub in every token</td></tr><tr><td class="prop">Acting for (authority)</td><td class="green">Yes, the user in sub</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Sender-constrained OAuth access token (DPoP/mTLS)</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Short recommended, no number for tokens</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, token plus proof of possession</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="green">Yes, per-instance key checked each request</td></tr><tr><td class="prop">Scoped authorization</td><td class="yellow">OAuth scopes only; agent permissions out of scope</td></tr><tr><td class="prop">Human approval</td><td class="yellow">Client-level consent only; per-instance approval optional</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="green">Agent Attester, endorsed by client or AS</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="yellow">Per-instance revocation defined, SHOULD</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No contact channel defined</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="yellow">Optional attested agent_model claim</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The service sees which agent instance, on which platform and for which user, holds a key-bound token with the grant&#x27;s OAuth scopes, so it can apply its own per-agent rules (e.g. read-only for older models); agent permissions themselves are not defined.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>Access can be cut off for one agent instance without affecting the platform&#x27;s other agents, through per-instance revocation at the authorization server, but only promptly for services that use introspection; how revocation is triggered and how the service reports a problem are not defined.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>An action can be traced to the user, the platform (client_id) and the specific agent instance, including each sub-agent in a delegation chain, and optionally to the model; how much this is worth depends on the Attester, which is usually the platform itself.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Status and adoption:</b> Individual draft -00, superseded, no deployments ()</li><li><b>Contact and escalation:</b> No contact channel defined (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>OAuth 2.0 AI Agent Instance Profile</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An OAuth profile in which an attester signs an identifier for each running AI agent instance, so that the access tokens a service receives name that specific instance (and optionally its model), bound to a key only that instance holds.<details><summary>Evidence (2)</summary><div class="claim">The profile targets platforms where one client identifier covers many agent instances. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“This specification profiles the OAuth 2.0 Client Instance Assertion for AI agent deployments, where a single OAuth client identifier represents an agent platform running many concurrent agent instances.”</blockquote></div><div class="claim">The instance identity reaches access tokens and is bound to the instance&#x27;s key. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“sender-constrained to a key the instance holds.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">AI agent platforms (hosted orchestrators, and also command-line or desktop agents) that call APIs or MCP servers through OAuth. The identity travels inside the OAuth access token, which the resource server validates itself on each request. The authorization server does most of the work: it checks the Attester&#x27;s evidence at its token endpoint and decides what goes into the token.<details><summary>Evidence (3)</summary><div class="claim">Resource servers, including MCP servers, are the intended beneficiaries. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“Resource servers receiving access tokens from these platforms see only the platform&#x27;s `client_id`; this includes Model Context Protocol servers ({{MCP}}), which use OAuth for authorization.”</blockquote></div><div class="claim">Local agents on end-user machines are covered. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 12. Local and Public-Client Agent Instances. <span class="chk">(quote verified against the source)</span><blockquote>“command-line and desktop agents execute on end-user machines, typically as public clients ({{RFC6749}}) using the `authorization_code` grant with PKCE ({{RFC7636}}) and without a client-level credential.”</blockquote></div><div class="claim">The evidence is presented to the authorization server at its token endpoint. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 3. Relationship to Other Specifications. <span class="chk">(quote verified against the source)</span><blockquote>“conveying attested agent instance identity and provenance to the OAuth token endpoint, and representing that identity in issued access tokens.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Agent: software, typically driven by a machine-learning model, that performs tasks by calling APIs. Agent Platform: the OAuth client under which agent instances run; it spawns, supervises and terminates them. Agent Instance: one specific agent session, task execution or runtime. Agent Attester: the authority that authenticates instances and mints their claims, usually the platform&#x27;s control plane but possibly a separate party. The authorization server validates evidence and issues tokens; the resource server receives them; the user (or other principal) authorizes the client.<details><summary>Evidence (5)</summary><div class="claim">Definition of Agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 2. Conventions and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“An autonomous or semi-autonomous software actor, typically driven by a machine-learning model, that performs tasks by calling APIs, optionally on behalf of a user or another principal.”</blockquote></div><div class="claim">Definition of Agent Platform. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 2. Conventions and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“The OAuth client under which agent instances run. The platform holds the client registration and operates the control plane that spawns, supervises, and terminates agent instances.”</blockquote></div><div class="claim">Definition of Agent Instance. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 2. Conventions and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“A client instance ({{CIA-CORE}}) that is an agent: a specific agent session, task execution, or runtime.”</blockquote></div><div class="claim">Definition of Agent Attester. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 2. Conventions and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“The authority that authenticates agent instances and mints the agent instance claims defined in {{agent-claims}}.”</blockquote></div><div class="claim">The worked example lists the user, client, Attester, authorization server and resource server. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Worked Example: Agent Calling an MCP Server. <span class="chk">(quote verified against the source)</span><blockquote>“MCP resource server: `https://mcp.example.org` (fronting the project tracker)”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="red"><span class="badge">Not addressed</span><br>Early proposal, now superseded. Version -00 (4 July 2026) is an individual Internet-Draft, not adopted by a working group, and the only revision submitted. In September 2026 the author&#x27;s repository marked it superseded and not being progressed, pointing to an agent federation profile and Client Instance Identification instead. It also depends on drafts (Client Instance Assertion, Attestation-Based Client Authentication, Entity Profiles). No named deployment was found.<div class="meta">Why this rating: An individual draft with no named deployments, now marked superseded by its author.</div><details><summary>Evidence (4)</summary><div class="claim">The repository holds superseded individual drafts. <i>Source states</i> <a href="https://github.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion">Author&#x27;s repository README (status of the drafts)</a>, OAuth Drafts. <span class="chk">(quote verified against the source)</span><blockquote>“This repository retains superseded individual Internet-Drafts.”</blockquote></div><div class="claim">The author marks this profile superseded. <i>Source states</i> <a href="https://github.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion">Author&#x27;s repository README (status of the drafts)</a>, OAuth 2.0 AI Agent Instance Profile. <span class="chk">(quote verified against the source)</span><blockquote>“Replaced by the agent federation profile together with Client Instance Identification below.”</blockquote></div><div class="claim">Only -00 exists in the document history. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Document History. <span class="chk">(quote verified against the source)</span><blockquote>“Initial version.”</blockquote></div><div class="claim">No implementation or deployment is named in the draft or found by web search. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, All sections; web search for the profile name and ai_agent_instance_profile.</div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">OAuth 2.0 (RFC 6749) with JWTs (RFC 7519). The companion draft OAuth 2.0 Client Instance Assertion (CIA-CORE) supplies token-endpoint processing, key binding, token format and revocation. Token Exchange (RFC 8693) provides the act claim for delegation chains; DPoP (RFC 9449) or mutual TLS (RFC 8705) bind tokens to a key. Attestation-Based Client Authentication (an OAuth working-group draft) is an alternative carrier, Entity Attestation Token (RFC 9711) carries runtime evidence, and the OAuth Entity Profiles draft supplies the ai_agent label.<details><summary>Evidence (4)</summary><div class="claim">CIA-CORE is the normative base. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 3. Relationship to Other Specifications. <span class="chk">(quote verified against the source)</span><blockquote>“This profile depends normatively on {{CIA-CORE}} for token-endpoint processing, sender-constraint binding, access-token representation, refresh-token semantics, and resource-server processing.”</blockquote></div><div class="claim">Delegation chains use RFC 8693. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 3. Relationship to Other Specifications. <span class="chk">(quote verified against the source)</span><blockquote>“Delegation-chain construction follows the `act` semantics of {{RFC8693}} as profiled by {{CIA-CORE}}.”</blockquote></div><div class="claim">The attestation carrier uses ATTEST-CLIENT-AUTH and DPoP. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 3. Relationship to Other Specifications. <span class="chk">(quote verified against the source)</span><blockquote>“When the Client Attestation carrier is used, it depends on {{ATTEST-CLIENT-AUTH}} for attestation validation, including DPoP combined mode ({{RFC9449}}).”</blockquote></div><div class="claim">Runtime evidence uses EAT. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 3. Relationship to Other Specifications. <span class="chk">(quote verified against the source)</span><blockquote>“Runtime-environment evidence is conveyed using the Entity Attestation Token ({{RFC9711}}) via the `agent_runtime` claim”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, per instance. Each agent instance gets an agent_instance_id, a string or URI minted by the Agent Attester (recommended to be a URL in the Attester&#x27;s own namespace). It must be unique across everything that Attester attests, stable for the instance&#x27;s lifetime, and not derived from a key, so it survives key rotation. The platform is still named separately by the OAuth client_id.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the individual agent instance; this differs from MCP Authorization, Web Bot Auth and TAP, which only name the client or provider.</div><details><summary>Evidence (4)</summary><div class="claim">agent_instance_id identifies the instance and is minted by the Attester. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 4. Agent Instance Claims. <span class="chk">(quote verified against the source)</span><blockquote>“A StringOrURI ({{RFC7519}}) identifying this agent instance, minted by the Agent Attester.”</blockquote></div><div class="claim">Uniqueness is mandatory. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 4. Agent Instance Claims. <span class="chk">(quote verified against the source)</span><blockquote>“The value MUST be unique among all instances attested by this Attester”</blockquote></div><div class="claim">The identifier is not a key. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 4. Agent Instance Claims. <span class="chk">(quote verified against the source)</span><blockquote>“The value MUST NOT be derived from a proof-of-possession key: keys are binding material, not identity”</blockquote></div><div class="claim">The platform remains identified by client_id. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 4. Agent Instance Claims. <span class="chk">(quote verified against the source)</span><blockquote>“The value identifies software operated by the Agent Platform, not the OAuth client identity, which continues to be conveyed by `client_id`.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. For a client registered for the profile, the authorization server must require instance evidence and must put the instance identifier into every issued token: as act.sub when the agent acts for a user, or as sub when it acts for itself. Here an instance means a session, task execution or runtime, not an install. The client or authorization server may exempt grant types not used by agents (e.g. the platform&#x27;s own client_credentials), and those tokens carry no instance.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Each instance has its own identifier and the service sees it in the token by default; the calibration examples are all red because they define none.</div><details><summary>Evidence (4)</summary><div class="claim">The instance subject is surfaced in the token. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 8. Access Token Surfacing. <span class="chk">(quote verified against the source)</span><blockquote>“Access-token representation follows {{CIA-CORE}}: the instance subject appears as `act.sub` in delegation cases and as top-level `sub` in self-acting cases”</blockquote></div><div class="claim">Evidence is mandatory for registered clients. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 6. Client and Authorization Server Metadata. <span class="chk">(quote verified against the source)</span><blockquote>“The AS MUST require Agent Instance Evidence on every token request from the client on the grants covered by {{CIA-CORE}}&#x27;s access-token classification”</blockquote></div><div class="claim">Some grant types can be exempted. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 6. Client and Authorization Server Metadata. <span class="chk">(quote verified against the source)</span><blockquote>“The client&#x27;s registration or AS policy MAY exempt designated grant types whose requests are not made by agent instances”</blockquote></div><div class="claim">Instance means a session, task execution or runtime. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 2. Conventions and Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“A client instance ({{CIA-CORE}}) that is an agent: a specific agent session, task execution, or runtime.”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, when there is a user. The token&#x27;s classification follows the grant: for an authorization code, JWT bearer or token exchange grant, the access token&#x27;s sub must name the principal (e.g. the user who authorized the client) and the agent appears in act. For client_credentials there is no other principal and the agent instance itself is sub. The format of the user identifier is up to the authorization server.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The base specification the profile normatively depends on requires the principal in sub for delegated tokens; MCP Authorization is red because it defines no such rule.</div><details><summary>Evidence (4)</summary><div class="claim">Classification depends on the grant. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.6.1. Classification. <span class="chk">(quote verified against the source)</span><blockquote>“The AS classifies the request based on whether the grant produces a principal distinct from the client instance presenting the Client Instance Assertion:”</blockquote></div><div class="claim">The principal must be in sub for delegation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.6.2. Delegation Case. <span class="chk">(quote verified against the source)</span><blockquote>“The access token&#x27;s `sub` MUST be the principal identified by the grant (e.g., the authenticated user).”</blockquote></div><div class="claim">Self-acting tokens have no other principal. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.6.3. Self-Acting Case. <span class="chk">(quote verified against the source)</span><blockquote>“When the request is classified as self-acting, the instance is the principal and there is no other party on whose behalf it acts.”</blockquote></div><div class="claim">The worked example shows both the user and the instance in the token. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Worked Example: Agent Calling an MCP Server. <span class="chk">(quote verified against the source)</span><blockquote>“&quot;`alice@example.com` via agent instance `sess-9f2c` (model `atlas` 7.3) updated issue 4711.&quot;”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>An OAuth access token that must be sender-constrained: bound through DPoP or mutual TLS to a key specific to that agent instance, so a stolen token alone cannot be used. Bearer tokens are forbidden under the profile. On each request the instance presents the token plus a proof of possession (a DPoP proof signed with its key, or the TLS client certificate). The token can be a JWT or an opaque token checked through introspection.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A defined credential on every request that the service can verify, here with proof of possession (stronger than MCP Authorization&#x27;s bearer token).</div><details><summary>Evidence (5)</summary><div class="claim">Bearer tokens are not allowed. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.5. Sender-Constrained Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“The AS MUST NOT issue a bearer access token under this profile.”</blockquote></div><div class="claim">DPoP and mutual TLS are the binding mechanisms. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.5. Sender-Constrained Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“Established mechanisms include `DPoP` {{RFC9449}} and Mutual-TLS-bound access tokens {{RFC8705}}.”</blockquote></div><div class="claim">The key is per instance. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.5. Sender-Constrained Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“The binding key MUST be specific to the validated client instance.”</blockquote></div><div class="claim">On the attestation carrier, tokens are DPoP-bound. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 5.2. Client Attestation Carrier. <span class="chk">(quote verified against the source)</span><blockquote>“the issued access token MUST be DPoP-bound to that key.”</blockquote></div><div class="claim">JWT or opaque tokens are both possible. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.6. Access Token Representation. <span class="chk">(quote verified against the source)</span><blockquote>“JWT access tokens issued under this profile follow {{RFC9068}}; opaque (reference) access tokens carry the same set of claims through introspection”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Short is recommended, with no number for the token the service receives. The instance evidence presented to the authorization server SHOULD live five minutes or less, but the access-token lifetime is left to the authorization server; the profile only says it SHOULD be short relative to how often the platform upgrades models, where services gate on the model. No rule tells the resource server to reject long-lived tokens.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: Recommended only, with no specific limit for the access token and no verifier rule (same as MCP Authorization).</div><details><summary>Evidence (3)</summary><div class="claim">Short access tokens are recommended in one context. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 15.1. Attestation Freshness and Model Drift. <span class="chk">(quote verified against the source)</span><blockquote>“ASes serving such resource servers SHOULD keep access-token lifetimes short relative to the deployment&#x27;s model upgrade cadence.”</blockquote></div><div class="claim">The evidence presented to the authorization server has a five-minute recommendation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 7.2. JWT Claims. <span class="chk">(quote verified against the source)</span><blockquote>“Issuers SHOULD set short lifetimes (e.g., five minutes or less)”</blockquote></div><div class="claim">Searched: Searched 8.6 Access Token Representation, 9 Resource Server Processing, 12.2 Trust-Withdrawal Latency for an access-token maximum. No numeric access-token lifetime or verifier rule. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, Searched 8.6 Access Token Representation, 9 Resource Server Processing, 12.2 Trust-Withdrawal Latency for an access-token maximum.</div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The resource server validates the access token as an ordinary OAuth JWT access token (RFC 9068, which includes issuer, audience and expiry checks) or through introspection, and then checks the proof of possession against the token&#x27;s cnf key. Introspection must report revoked tokens as inactive. All of this uses the service&#x27;s own authorization server, with no prior relationship with the agent platform.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The service validates the token through its own authorization server with expiry checks (same as MCP Authorization).</div><details><summary>Evidence (3)</summary><div class="claim">Resource servers validate token and sender constraint. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 9. Resource Server Processing. <span class="chk">(quote verified against the source)</span><blockquote>“including actor authorization, JWT access token validation, sender-constraint validation against the top-level `cnf`, and introspection.”</blockquote></div><div class="claim">JWT access tokens follow RFC 9068. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.6. Access Token Representation. <span class="chk">(quote verified against the source)</span><blockquote>“JWT access tokens issued under this profile follow {{RFC9068}}; opaque (reference) access tokens carry the same set of claims through introspection”</blockquote></div><div class="claim">Introspection reflects revocation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 12.4.3. Introspection Behavior on Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“an introspection response MUST return active = false for any access token that has been revoked under either model.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, for the agent instance. The token is bound to a key that belongs to that one instance, and the resource server verifies proof of possession of that key on each request, which the base specification says authenticates the instance. The link between the key and the agent_instance_id rests on the Attester, whose minting practice the authorization server cannot check in-band. The user is authenticated by the authorization server, not by the resource server.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The service verifies a per-agent key on every request; the calibration examples are red because they only check a bearer token or a provider-level key.</div><details><summary>Evidence (4)</summary><div class="claim">Proof of possession authenticates the instance. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 9. Resource Server Processing. <span class="chk">(quote verified against the source)</span><blockquote>“the instance named in `act.sub` does, and sender-constraint validation authenticates that instance.”</blockquote></div><div class="claim">The binding key is per instance. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.5. Sender-Constrained Access Tokens. <span class="chk">(quote verified against the source)</span><blockquote>“The binding key MUST be specific to the validated client instance.”</blockquote></div><div class="claim">The resource server checks the top-level cnf. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 12.10. Sender-Constraint Requirement. <span class="chk">(quote verified against the source)</span><blockquote>“Per {{ACTOR-PROFILE}}, the resource server validates proof of possession against the access token&#x27;s top-level `cnf` only”</blockquote></div><div class="claim">Attester minting practice cannot be verified in-band. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 15.2. Instance Identifier Lifecycle. <span class="chk">(quote verified against the source)</span><blockquote>“the AS verifies the evidence signature and claims but cannot verify in-band that the Attester&#x27;s minting practice is sound.”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Tokens carry the normal OAuth scopes of the underlying grant, and when a sub-agent exchanges a token the scope can be narrowed at each hop under Token Exchange. The profile itself defines no agent capability or tool permissions and says fine-grained permissions come from Rich Authorization Requests (RFC 9396) or a deployment&#x27;s own scope design. What it adds is per-instance identity, so a service can enforce its own limits per agent rather than per platform.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: Tokens carry ordinary OAuth scopes in the normal flow, but the profile defines no permissions of its own and puts agent permissions out of scope; chosen as the lower of yellow and green.</div><details><summary>Evidence (4)</summary><div class="claim">Agent permissions are out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“This profile does not define agent capability or tool-permission semantics; deployments expressing fine-grained agent permissions compose this profile with Rich Authorization Requests ({{RFC9396}}) or deployment-specific scope design.”</blockquote></div><div class="claim">Scope can be narrowed at each sub-agent exchange. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 9. Attested Delegation Chains. <span class="chk">(quote verified against the source)</span><blockquote>“scope attenuation at each exchange follows {{RFC8693}}.”</blockquote></div><div class="claim">The profile makes enforcement per agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 15.9. Scope of Protection. <span class="chk">(quote verified against the source)</span><blockquote>“this profile makes its enforcement and audit per-agent rather than per-platform.”</blockquote></div><div class="claim">The worked example shows scope narrowed at a sub-agent exchange. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Worked Example: Agent Calling an MCP Server. <span class="chk">(quote verified against the source)</span><blockquote>“scope was attenuated to `projects.read` at the exchange.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Where a user is involved (the authorization code grant), the user approves the client as a whole, and that consent covers every instance its Attesters vouch for. An authorization server MAY require approval for a specific instance or key when the request names a key (dpop_jkt), but a standard per-instance consent step would need a separate extension. Self-acting agents (client_credentials) involve no person at all.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: User consent exists only at client level through the underlying OAuth grant, and approval of the specific agent instance is optional; lower than MCP Authorization&#x27;s green, whose own flow defines the approval step.</div><details><summary>Evidence (3)</summary><div class="claim">Consent covers the client, not each instance. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.4. Authorization-Time Consistency. <span class="chk">(quote verified against the source)</span><blockquote>“User consent under this profile applies to the client as a whole; consent thereby covers all instances attested by listed instance issuers.”</blockquote></div><div class="claim">Per-instance approval is optional. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.4. Authorization-Time Consistency. <span class="chk">(quote verified against the source)</span><blockquote>“An AS MAY require per-instance or per-key authorization policy when the authorization request includes a sender-constraining key such as `dpop_jkt`.”</blockquote></div><div class="claim">Standard per-instance consent needs another extension. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 8.4. Authorization-Time Consistency. <span class="chk">(quote verified against the source)</span><blockquote>“Deployments requiring standardized per-instance consent without an authorization-time key mapping need a separate extension.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="green"><span class="badge">Addressed</span><br>The Agent Attester vouches for each instance, and the authorization server only issues tokens for instances with valid evidence from an Attester it accepts. With the assertion carrier, the platform lists its Attesters in its client metadata; with the attestation carrier, the authorization server configures which Attesters it trusts. The draft names three assurance tiers: platform self-attestation (the usual case), hardware-rooted and independent attestation. Deployments must not present self-attestation as one of the stronger tiers.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The protocol names the parties that vouch (Attester and authorization server), as MCP Authorization names its authorization server; the answer notes the usual tier is self-attestation.</div><details><summary>Evidence (5)</summary><div class="claim">The authorization server trusts an assertion only through the matching issuer listed by the client. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 5.3.2. Authority of the Authorization Server. <span class="chk">(quote verified against the source)</span><blockquote>“it derives its trust in an instance assertion solely from the descriptor whose issuer member matches the instance assertion&#x27;s `iss` claim.”</blockquote></div><div class="claim">The client lists its Attester on the assertion carrier. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 5.1. Client Instance Assertion Carrier. <span class="chk">(quote verified against the source)</span><blockquote>“the platform&#x27;s client metadata lists the Agent Attester in `instance_issuers`, bounding which authority may attest its instances.”</blockquote></div><div class="claim">The AS configures trust on the attestation carrier. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 5.2. Client Attestation Carrier. <span class="chk">(quote verified against the source)</span><blockquote>“Trust for this carrier is the AS-to-Attester trust of {{ATTEST-CLIENT-AUTH}}; {{CIA-CORE}}&#x27;s `instance_issuers` metadata is not consulted.”</blockquote></div><div class="claim">Platform self-attestation is the first tier. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 11. Trust Model and Assurance Tiers. <span class="chk">(quote verified against the source)</span><blockquote>“The Attester is the agent platform&#x27;s own control plane.”</blockquote></div><div class="claim">Tiers must not be misrepresented. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 11. Trust Model and Assurance Tiers. <span class="chk">(quote verified against the source)</span><blockquote>“Deployments SHOULD document which tier their Attester provides and MUST NOT represent platform self-attestation as hardware-rooted or independent attestation.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The base specification defines per-token revocation (RFC 7009) and a per-instance mode, keyed on the Attester and instance identifier, that invalidates all of one agent&#x27;s tokens without touching the platform&#x27;s other agents. Authorization servers SHOULD support the per-instance mode, and introspection must then report those tokens inactive. How revocation is triggered is out of scope, and a resource server validating JWTs locally keeps accepting a revoked token until it expires.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: Revocation is defined at instance granularity but is only recommended and reaches services that validate JWTs locally only at expiry; MCP Authorization is red because it defines none.</div><details><summary>Evidence (5)</summary><div class="claim">Per-instance revocation is recommended. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 12.4.2. Per-Instance Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“ASes implementing this profile SHOULD support a per-instance revocation mode keyed by the pair (instance issuer, instance subject):”</blockquote></div><div class="claim">Revocation models are optional overall. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 12.4. Token Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“Both build on {{RFC7009}}; deployments MAY support either, both, or neither.”</blockquote></div><div class="claim">Triggering is out of scope. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 12.4.2. Per-Instance Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“The mechanism for triggering per-instance revocation is deployment-specific and out of scope for this document.”</blockquote></div><div class="claim">Latency depends on token TTL and introspection caching. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a>, 12.4.2. Per-Instance Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“The compromise-to-all-tokens-invalid latency is bounded by the shortest of: the access token TTL, the introspection cache TTL at any consuming resource server”</blockquote></div><div class="claim">The worked example contains one agent without revoking the platform. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Worked Example: Agent Calling an MCP Server. <span class="chk">(quote verified against the source)</span><blockquote>“containing one agent without revoking the platform&#x27;s client registration.”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The profile defines no contact or escalation field. Its worked example has the MCP server report a misbehaving instance identifier so the platform can terminate the session, but it does not say through which channel or to whom. Any contact details would have to come from outside the protocol (e.g. the client&#x27;s registration).<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field is defined (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">The example assumes reporting without a defined channel. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Worked Example: Agent Calling an MCP Server. <span class="chk">(quote verified against the source)</span><blockquote>“If `sess-9f2c` misbehaves, the MCP server reports `act.sub`; the platform terminates the session”</blockquote></div><div class="claim">Searched: Searched all sections of both drafts for contact, abuse, support and escalation. No contact field in either draft. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Searched all sections of both drafts for contact, abuse, support and escalation.</div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The profile defines no way for one service to warn other services or authorization servers about a misbehaving agent instance. Chains across platforms are left to the trust and federation policy of the domains involved.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched: Searched all sections of both drafts for signals, events, reputation, shared signals and reporting. No signals between services. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, Searched all sections of both drafts for signals, events, reputation, shared signals and reporting.</div><div class="claim">Cross-domain matters are left to the domains. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 9. Attested Delegation Chains. <span class="chk">(quote verified against the source)</span><blockquote>“this profile defines no additional cross-domain rules.”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Optional. The Attester may include agent_model (a model identifier and optional version) in its signed evidence, and the authorization server MAY pass it on to services. It describes the instance&#x27;s primary configured model, not each call. Under platform self-attestation it is the platform&#x27;s own statement, and services must not treat it as independently verified. There is no registry of model identifiers.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: The model claim is defined but optional, and verifiable only to the extent the Attester tier allows; the calibration examples are red.</div><details><summary>Evidence (4)</summary><div class="claim">agent_model describes the primary model. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 4. Agent Instance Claims. <span class="chk">(quote verified against the source)</span><blockquote>“A JSON object characterizing the primary model configured for the agent instance, as determined by the Agent Attester at evidence issuance.”</blockquote></div><div class="claim">Surfacing to services is optional. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 8. Access Token Surfacing. <span class="chk">(quote verified against the source)</span><blockquote>“The AS MAY surface `agent_platform` and `agent_model` subject to local policy and the privacy considerations of {{security-privacy}}.”</blockquote></div><div class="claim">Self-attested model claims are not independent verification. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 15.3. Provenance Assurance. <span class="chk">(quote verified against the source)</span><blockquote>“Under platform self-attestation, a model claim is the platform&#x27;s statement about itself; resource servers MUST NOT treat it as independently verified.”</blockquote></div><div class="claim">No model registry. <i>Out of scope per</i> <a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a>, 4. Agent Instance Claims. <span class="chk">(quote verified against the source)</span><blockquote>“A registry of model identifiers is out of scope”</blockquote></div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/">OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00</a> (-00 (repository tag draft-mcguinness-oauth-ai-agent-instance-00, commit 3a42e23), 2026-07-04)</li><li><a href="https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/">OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)</a> (-01 (repository tag draft-mcguinness-oauth-client-instance-assertion-01, commit ccfebdf), 2026-06-23)</li><li><a href="https://github.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion">Author&#x27;s repository README (status of the drafts)</a> (commit 3fd47b9, 2026-09-14)</li></ul><h2>Notes</h2><ul class="plain"><li>The analysed text was taken from the author&#x27;s GitHub repository at the commit tagged for the -00 submission; the file on main is unchanged since then. Section numbers follow the published -00 numbering, derived from the order of headings in the source.</li><li>The author&#x27;s README (commit 3fd47b9, 14 September 2026) marks this draft superseded and not being progressed. Its successor, draft-mcguinness-oauth-client-instance-id-01 (2 November 2026), was not analysed.</li><li>Most of what the resource server sees (token format, key binding, revocation, consent) comes from the normative companion draft draft-mcguinness-oauth-client-instance-assertion-01, which is counted as part of the protocol because the profile cannot be implemented without it. That draft itself relies on the OAuth Actor Profile draft for resource-server rules, which was not read.</li><li>The specification uses RFC 2119 keywords; requirement levels are quoted as written. No instructions aimed at AI tools were found in the sources.</li></ul><h2>Open questions</h2><ul class="plain"><li>Is the agent_instance_id rating (green) still valid for the successor drafts? The README says instance identification moved to an optional claims profile, which would likely lower it.</li><li>The OAuth Actor Profile draft defines the resource-server processing rules this profile inherits; it was not read, so whether a resource server MUST reject a token whose DPoP proof is missing was taken from CIA-CORE&#x27;s summary rather than checked there.</li><li>The &#x27;agent federation profile&#x27; named as a replacement in the README could not be located; its relationship to this draft is unclear.</li><li>Scoped authorization could reasonably be rated green (OAuth scopes are always present) or yellow (no agent-specific permissions); yellow was chosen under the tie rule.</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (66 of 66 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "OAuth 2.0 AI Agent Instance Profile",
+  "full_name": "OAuth 2.0 AI Agent Instance Profile (draft-mcguinness-oauth-ai-agent-instance)",
+  "spec_version": "draft-mcguinness-oauth-ai-agent-instance-00",
+  "spec_date": "2026-07-04",
+  "maintainer": "Karl McGuinness (independent), individual Internet-Draft aimed at the IETF OAuth working group",
+  "newer_version_note": "-00 is the only revision submitted to the IETF. The author's repository README (14 September 2026) marks it superseded and not being progressed, replaced by an agent federation profile together with Client Instance Identification (draft-mcguinness-oauth-client-instance-id). The successors were not analysed."
+ },
+ "profile": {
+  "id": "oauth-ai-agent-instance",
+  "category": "agent-authorization",
+  "secondary_categories": [
+   "attestation-provenance"
+  ],
+  "mechanisms": [
+   "pop-token"
+  ],
+  "venue": "ietf-individual",
+  "maturity": "proposal",
+  "openness": "open-standard",
+  "layers": [
+   "token",
+   "http-header"
+  ],
+  "building_blocks": [
+   "OAuth 2.0",
+   "RFC 6749",
+   "RFC 7519",
+   "RFC 8693",
+   "RFC 9449",
+   "RFC 8705",
+   "RFC 9068",
+   "RFC 7662",
+   "RFC 7009",
+   "RFC 9711",
+   "RFC 7591",
+   "RFC 8414",
+   "Client Instance Assertion (draft)",
+   "Attestation-Based Client Authentication (draft)",
+   "OAuth Entity Profiles (draft)",
+   "OAuth Actor Profile (draft)"
+  ],
+  "website": "https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/",
+  "first_published": "2026-07"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "Many AI agent platforms register one OAuth client and run thousands of agent sessions under it, so a service receiving their access tokens sees only the platform, never the specific agent. The OAuth 2.0 AI Agent Instance Profile tries to fix this by giving each running agent instance its own attested identifier and carrying it into the access tokens that services receive. It is aimed at agent platforms, authorization servers and the APIs or MCP servers they call. It is an individual Internet-Draft by Karl McGuinness, version -00 from July 2026, with no named deployments, and the author has since marked it superseded and not being progressed.",
+  "It is a profile of a companion draft, the OAuth 2.0 Client Instance Assertion. An Agent Attester (usually the platform's control plane) signs evidence naming the instance (agent_instance_id), optionally its platform, model and runtime, and binds it to a key the instance holds. The authorization server checks this evidence and issues an access token that names the user in sub and the agent instance in act.sub, and that is bound to the instance's key (DPoP or mutual TLS, never a bearer token). Sub-agents get nested act chains through token exchange. The profile leaves agent permissions, contact channels and signals between services out, and its model claims are only as reliable as the Attester."
+ ],
+ "how_it_works": [
+  "The agent platform registers its OAuth client for the profile (ai_agent_instance_profile set to true) and names its Agent Attester, either in its instance_issuers client metadata or by agreement with an authorization server that trusts that Attester.",
+  "When the platform starts an agent instance (a session, task or runtime), the Agent Attester mints signed evidence for it: a unique agent_instance_id, optional agent_platform, agent_model and agent_runtime claims, and a cnf claim binding a key that only this instance holds.",
+  "The instance asks the authorization server for a token (e.g. redeeming an authorization code after the user approved the client), presenting the evidence and a DPoP proof. The authorization server checks the signature, the client binding, replay and possession of the bound key.",
+  "The authorization server issues a sender-constrained access token: sub names the user, act.sub names the agent instance with sub_profile ai_agent, and the model may be surfaced if local policy allows. For a self-acting agent the instance itself is sub.",
+  "The instance calls the resource server (e.g. an MCP server) with the token and a fresh proof of possession. The resource server validates both and can key policy, rate limits and audit records on the instance, not only on the platform.",
+  "If the instance spawns a sub-agent, the sub-agent exchanges the token while presenting its own evidence, producing a nested act chain. If an instance misbehaves, the authorization server can revoke all tokens for that one instance."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00",
+   "url": "https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/",
+   "fetch_url": "https://raw.githubusercontent.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion/3a42e234c228f359bc8a4da5aa25b30f2d84cbc1/draft-mcguinness-oauth-ai-agent-instance.md",
+   "version": "-00 (repository tag draft-mcguinness-oauth-ai-agent-instance-00, commit 3a42e23)",
+   "date": "2026-07-04",
+   "kind": "primary"
+  },
+  {
+   "id": "cia",
+   "title": "OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)",
+   "url": "https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/",
+   "fetch_url": "https://raw.githubusercontent.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion/ccfebdf6563e108bc7752159222a122a066d049d/draft-mcguinness-oauth-client-instance-assertion.md",
+   "version": "-01 (repository tag draft-mcguinness-oauth-client-instance-assertion-01, commit ccfebdf)",
+   "date": "2026-06-23",
+   "kind": "primary"
+  },
+  {
+   "id": "readme",
+   "title": "Author's repository README (status of the drafts)",
+   "url": "https://github.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion",
+   "fetch_url": "https://raw.githubusercontent.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion/3fd47b9675d6bfe124fa6effa77374f18797333a/README.md",
+   "version": "commit 3fd47b9",
+   "date": "2026-09-14",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Per-agent-instance identity inside OAuth access tokens",
+   "answer": "An OAuth profile in which an attester signs an identifier for each running AI agent instance, so that the access tokens a service receives name that specific instance (and optionally its model), bound to a key only that instance holds.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The profile targets platforms where one client identifier covers many agent instances.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "This specification profiles the OAuth 2.0 Client Instance Assertion for AI agent deployments, where a single OAuth client identifier represents an agent platform running many concurrent agent instances.",
+     "check": "OK",
+     "check_fp": "8a08b39849"
+    },
+    {
+     "text": "The instance identity reaches access tokens and is bound to the instance's key.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "sender-constrained to a key the instance holds.",
+     "check": "OK",
+     "check_fp": "23d84fa69d"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agent platforms calling APIs and MCP servers",
+   "answer": "AI agent platforms (hosted orchestrators, and also command-line or desktop agents) that call APIs or MCP servers through OAuth. The identity travels inside the OAuth access token, which the resource server validates itself on each request. The authorization server does most of the work: it checks the Attester's evidence at its token endpoint and decides what goes into the token.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Resource servers, including MCP servers, are the intended beneficiaries.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "Resource servers receiving access tokens from these platforms see only the platform's `client_id`; this includes Model Context Protocol servers ({{MCP}}), which use OAuth for authorization.",
+     "check": "OK",
+     "check_fp": "1706d66eb0"
+    },
+    {
+     "text": "Local agents on end-user machines are covered.",
+     "type": "fact",
+     "source": "spec",
+     "section": "12. Local and Public-Client Agent Instances",
+     "quote": "command-line and desktop agents execute on end-user machines, typically as public clients ({{RFC6749}}) using the `authorization_code` grant with PKCE ({{RFC7636}}) and without a client-level credential.",
+     "check": "OK",
+     "check_fp": "d2402cb591"
+    },
+    {
+     "text": "The evidence is presented to the authorization server at its token endpoint.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Relationship to Other Specifications",
+     "quote": "conveying attested agent instance identity and provenance to the OAuth token endpoint, and representing that identity in issued access tokens.",
+     "check": "OK",
+     "check_fp": "c1f54cec28"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Platform, instance, Attester, AS, resource server, user",
+   "answer": "Agent: software, typically driven by a machine-learning model, that performs tasks by calling APIs. Agent Platform: the OAuth client under which agent instances run; it spawns, supervises and terminates them. Agent Instance: one specific agent session, task execution or runtime. Agent Attester: the authority that authenticates instances and mints their claims, usually the platform's control plane but possibly a separate party. The authorization server validates evidence and issues tokens; the resource server receives them; the user (or other principal) authorizes the client.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Definition of Agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Conventions and Definitions",
+     "quote": "An autonomous or semi-autonomous software actor, typically driven by a machine-learning model, that performs tasks by calling APIs, optionally on behalf of a user or another principal.",
+     "check": "OK",
+     "check_fp": "756cb31530"
+    },
+    {
+     "text": "Definition of Agent Platform.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Conventions and Definitions",
+     "quote": "The OAuth client under which agent instances run. The platform holds the client registration and operates the control plane that spawns, supervises, and terminates agent instances.",
+     "check": "OK",
+     "check_fp": "b9a9c38eb8"
+    },
+    {
+     "text": "Definition of Agent Instance.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Conventions and Definitions",
+     "quote": "A client instance ({{CIA-CORE}}) that is an agent: a specific agent session, task execution, or runtime.",
+     "check": "OK",
+     "check_fp": "da97b3ba38"
+    },
+    {
+     "text": "Definition of Agent Attester.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Conventions and Definitions",
+     "quote": "The authority that authenticates agent instances and mints the agent instance claims defined in {{agent-claims}}.",
+     "check": "OK",
+     "check_fp": "9e80bf2b86"
+    },
+    {
+     "text": "The worked example lists the user, client, Attester, authorization server and resource server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Worked Example: Agent Calling an MCP Server",
+     "quote": "MCP resource server: `https://mcp.example.org` (fronting the project tracker)",
+     "check": "OK",
+     "check_fp": "43e11d2f42"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Individual draft -00, superseded, no deployments",
+   "answer": "Early proposal, now superseded. Version -00 (4 July 2026) is an individual Internet-Draft, not adopted by a working group, and the only revision submitted. In September 2026 the author's repository marked it superseded and not being progressed, pointing to an agent federation profile and Client Instance Identification instead. It also depends on drafts (Client Instance Assertion, Attestation-Based Client Authentication, Entity Profiles). No named deployment was found.",
+   "rating": "red",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Red: an individual draft with no named deployments, now marked superseded by its author.",
+   "claims": [
+    {
+     "text": "The repository holds superseded individual drafts.",
+     "type": "fact",
+     "source": "readme",
+     "section": "OAuth Drafts",
+     "quote": "This repository retains superseded individual Internet-Drafts.",
+     "check": "OK",
+     "check_fp": "8431eb4b78"
+    },
+    {
+     "text": "The author marks this profile superseded.",
+     "type": "fact",
+     "source": "readme",
+     "section": "OAuth 2.0 AI Agent Instance Profile",
+     "quote": "Replaced by the agent federation profile together with Client Instance Identification below.",
+     "check": "OK",
+     "check_fp": "3d0ed67ae1"
+    },
+    {
+     "text": "Only -00 exists in the document history.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Document History",
+     "quote": "Initial version.",
+     "check": "OK",
+     "check_fp": "2d2745c6a5"
+    },
+    {
+     "text": "No implementation or deployment is named in the draft or found by web search.",
+     "type": "silent",
+     "source": "spec",
+     "section": "All sections; web search for the profile name and ai_agent_instance_profile",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "OAuth, CIA-CORE, Token Exchange, DPoP, EAT",
+   "answer": "OAuth 2.0 (RFC 6749) with JWTs (RFC 7519). The companion draft OAuth 2.0 Client Instance Assertion (CIA-CORE) supplies token-endpoint processing, key binding, token format and revocation. Token Exchange (RFC 8693) provides the act claim for delegation chains; DPoP (RFC 9449) or mutual TLS (RFC 8705) bind tokens to a key. Attestation-Based Client Authentication (an OAuth working-group draft) is an alternative carrier, Entity Attestation Token (RFC 9711) carries runtime evidence, and the OAuth Entity Profiles draft supplies the ai_agent label.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "CIA-CORE is the normative base.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Relationship to Other Specifications",
+     "quote": "This profile depends normatively on {{CIA-CORE}} for token-endpoint processing, sender-constraint binding, access-token representation, refresh-token semantics, and resource-server processing.",
+     "check": "OK",
+     "check_fp": "ca1dcec31d"
+    },
+    {
+     "text": "Delegation chains use RFC 8693.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Relationship to Other Specifications",
+     "quote": "Delegation-chain construction follows the `act` semantics of {{RFC8693}} as profiled by {{CIA-CORE}}.",
+     "check": "OK",
+     "check_fp": "243a0d7421"
+    },
+    {
+     "text": "The attestation carrier uses ATTEST-CLIENT-AUTH and DPoP.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Relationship to Other Specifications",
+     "quote": "When the Client Attestation carrier is used, it depends on {{ATTEST-CLIENT-AUTH}} for attestation validation, including DPoP combined mode ({{RFC9449}}).",
+     "check": "OK",
+     "check_fp": "baa5b2da5f"
+    },
+    {
+     "text": "Runtime evidence uses EAT.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Relationship to Other Specifications",
+     "quote": "Runtime-environment evidence is conveyed using the Entity Attestation Token ({{RFC9711}}) via the `agent_runtime` claim",
+     "check": "OK",
+     "check_fp": "463aeccda6"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Attester-minted agent_instance_id per instance",
+   "answer": "Yes, per instance. Each agent instance gets an agent_instance_id, a string or URI minted by the Agent Attester (recommended to be a URL in the Attester's own namespace). It must be unique across everything that Attester attests, stable for the instance's lifetime, and not derived from a key, so it survives key rotation. The platform is still named separately by the OAuth client_id.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the identifier names the individual agent instance; this differs from MCP Authorization, Web Bot Auth and TAP, which only name the client or provider.",
+   "claims": [
+    {
+     "text": "agent_instance_id identifies the instance and is minted by the Attester.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agent Instance Claims",
+     "quote": "A StringOrURI ({{RFC7519}}) identifying this agent instance, minted by the Agent Attester.",
+     "check": "OK",
+     "check_fp": "0a16311dbd"
+    },
+    {
+     "text": "Uniqueness is mandatory.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agent Instance Claims",
+     "quote": "The value MUST be unique among all instances attested by this Attester",
+     "check": "OK",
+     "check_fp": "3b958d9dcd"
+    },
+    {
+     "text": "The identifier is not a key.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agent Instance Claims",
+     "quote": "The value MUST NOT be derived from a proof-of-possession key: keys are binding material, not identity",
+     "check": "OK",
+     "check_fp": "455b8b88ea"
+    },
+    {
+     "text": "The platform remains identified by client_id.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agent Instance Claims",
+     "quote": "The value identifies software operated by the Agent Platform, not the OAuth client identity, which continues to be conveyed by `client_id`.",
+     "check": "OK",
+     "check_fp": "d485c25f24"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Yes, act.sub or sub in every token",
+   "answer": "Yes. For a client registered for the profile, the authorization server must require instance evidence and must put the instance identifier into every issued token: as act.sub when the agent acts for a user, or as sub when it acts for itself. Here an instance means a session, task execution or runtime, not an install. The client or authorization server may exempt grant types not used by agents (e.g. the platform's own client_credentials), and those tokens carry no instance.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: each instance has its own identifier and the service sees it in the token by default; the calibration examples are all red because they define none.",
+   "claims": [
+    {
+     "text": "The instance subject is surfaced in the token.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8. Access Token Surfacing",
+     "quote": "Access-token representation follows {{CIA-CORE}}: the instance subject appears as `act.sub` in delegation cases and as top-level `sub` in self-acting cases",
+     "check": "OK",
+     "check_fp": "2450f15ccb"
+    },
+    {
+     "text": "Evidence is mandatory for registered clients.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6. Client and Authorization Server Metadata",
+     "quote": "The AS MUST require Agent Instance Evidence on every token request from the client on the grants covered by {{CIA-CORE}}'s access-token classification",
+     "check": "OK",
+     "check_fp": "c41ee8ea51"
+    },
+    {
+     "text": "Some grant types can be exempted.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6. Client and Authorization Server Metadata",
+     "quote": "The client's registration or AS policy MAY exempt designated grant types whose requests are not made by agent instances",
+     "check": "OK",
+     "check_fp": "4eee21bd66"
+    },
+    {
+     "text": "Instance means a session, task execution or runtime.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Conventions and Definitions",
+     "quote": "A client instance ({{CIA-CORE}}) that is an agent: a specific agent session, task execution, or runtime.",
+     "check": "OK",
+     "check_fp": "da97b3ba38"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Yes, the user in sub",
+   "answer": "Yes, when there is a user. The token's classification follows the grant: for an authorization code, JWT bearer or token exchange grant, the access token's sub must name the principal (e.g. the user who authorized the client) and the agent appears in act. For client_credentials there is no other principal and the agent instance itself is sub. The format of the user identifier is up to the authorization server.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the base specification the profile normatively depends on requires the principal in sub for delegated tokens; MCP Authorization is red because it defines no such rule.",
+   "claims": [
+    {
+     "text": "Classification depends on the grant.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.6.1. Classification",
+     "quote": "The AS classifies the request based on whether the grant produces a principal distinct from the client instance presenting the Client Instance Assertion:",
+     "check": "OK",
+     "check_fp": "cc59c5ac1d"
+    },
+    {
+     "text": "The principal must be in sub for delegation.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.6.2. Delegation Case",
+     "quote": "The access token's `sub` MUST be the principal identified by the grant (e.g., the authenticated user).",
+     "check": "OK",
+     "check_fp": "3eda0c319e"
+    },
+    {
+     "text": "Self-acting tokens have no other principal.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.6.3. Self-Acting Case",
+     "quote": "When the request is classified as self-acting, the instance is the principal and there is no other party on whose behalf it acts.",
+     "check": "OK",
+     "check_fp": "d943737f85"
+    },
+    {
+     "text": "The worked example shows both the user and the instance in the token.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Worked Example: Agent Calling an MCP Server",
+     "quote": "\"`alice@example.com` via agent instance `sess-9f2c` (model `atlas` 7.3) updated issue 4711.\"",
+     "check": "OK",
+     "check_fp": "41f60bd447"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Sender-constrained OAuth access token (DPoP/mTLS)",
+   "answer": "An OAuth access token that must be sender-constrained: bound through DPoP or mutual TLS to a key specific to that agent instance, so a stolen token alone cannot be used. Bearer tokens are forbidden under the profile. On each request the instance presents the token plus a proof of possession (a DPoP proof signed with its key, or the TLS client certificate). The token can be a JWT or an opaque token checked through introspection.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a defined credential on every request that the service can verify, here with proof of possession (stronger than MCP Authorization's bearer token).",
+   "claims": [
+    {
+     "text": "Bearer tokens are not allowed.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.5. Sender-Constrained Access Tokens",
+     "quote": "The AS MUST NOT issue a bearer access token under this profile.",
+     "check": "OK",
+     "check_fp": "512cc698fb"
+    },
+    {
+     "text": "DPoP and mutual TLS are the binding mechanisms.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.5. Sender-Constrained Access Tokens",
+     "quote": "Established mechanisms include `DPoP` {{RFC9449}} and Mutual-TLS-bound access tokens {{RFC8705}}.",
+     "check": "OK",
+     "check_fp": "1c94e82617"
+    },
+    {
+     "text": "The key is per instance.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.5. Sender-Constrained Access Tokens",
+     "quote": "The binding key MUST be specific to the validated client instance.",
+     "check": "OK",
+     "check_fp": "76017af03a"
+    },
+    {
+     "text": "On the attestation carrier, tokens are DPoP-bound.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2. Client Attestation Carrier",
+     "quote": "the issued access token MUST be DPoP-bound to that key.",
+     "check": "OK",
+     "check_fp": "73d17e47c5"
+    },
+    {
+     "text": "JWT or opaque tokens are both possible.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.6. Access Token Representation",
+     "quote": "JWT access tokens issued under this profile follow {{RFC9068}}; opaque (reference) access tokens carry the same set of claims through introspection",
+     "check": "OK",
+     "check_fp": "3c46b55a60"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Short recommended, no number for tokens",
+   "answer": "Short is recommended, with no number for the token the service receives. The instance evidence presented to the authorization server SHOULD live five minutes or less, but the access-token lifetime is left to the authorization server; the profile only says it SHOULD be short relative to how often the platform upgrades models, where services gate on the model. No rule tells the resource server to reject long-lived tokens.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: recommended only, with no specific limit for the access token and no verifier rule (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Short access tokens are recommended in one context.",
+     "type": "fact",
+     "source": "spec",
+     "section": "15.1. Attestation Freshness and Model Drift",
+     "quote": "ASes serving such resource servers SHOULD keep access-token lifetimes short relative to the deployment's model upgrade cadence.",
+     "check": "OK",
+     "check_fp": "08db45a450"
+    },
+    {
+     "text": "The evidence presented to the authorization server has a five-minute recommendation.",
+     "type": "fact",
+     "source": "cia",
+     "section": "7.2. JWT Claims",
+     "quote": "Issuers SHOULD set short lifetimes (e.g., five minutes or less)",
+     "check": "OK",
+     "check_fp": "18dc78a5be"
+    },
+    {
+     "text": "Searched: Searched 8.6 Access Token Representation, 9 Resource Server Processing, 12.2 Trust-Withdrawal Latency for an access-token maximum. No numeric access-token lifetime or verifier rule.",
+     "type": "silent",
+     "source": "cia",
+     "section": "Searched 8.6 Access Token Representation, 9 Resource Server Processing, 12.2 Trust-Withdrawal Latency for an access-token maximum",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, token plus proof of possession",
+   "answer": "Yes. The resource server validates the access token as an ordinary OAuth JWT access token (RFC 9068, which includes issuer, audience and expiry checks) or through introspection, and then checks the proof of possession against the token's cnf key. Introspection must report revoked tokens as inactive. All of this uses the service's own authorization server, with no prior relationship with the agent platform.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the service validates the token through its own authorization server with expiry checks (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Resource servers validate token and sender constraint.",
+     "type": "fact",
+     "source": "cia",
+     "section": "9. Resource Server Processing",
+     "quote": "including actor authorization, JWT access token validation, sender-constraint validation against the top-level `cnf`, and introspection.",
+     "check": "OK",
+     "check_fp": "0b35299127"
+    },
+    {
+     "text": "JWT access tokens follow RFC 9068.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.6. Access Token Representation",
+     "quote": "JWT access tokens issued under this profile follow {{RFC9068}}; opaque (reference) access tokens carry the same set of claims through introspection",
+     "check": "OK",
+     "check_fp": "3c46b55a60"
+    },
+    {
+     "text": "Introspection reflects revocation.",
+     "type": "fact",
+     "source": "cia",
+     "section": "12.4.3. Introspection Behavior on Revocation",
+     "quote": "an introspection response MUST return active = false for any access token that has been revoked under either model.",
+     "check": "OK",
+     "check_fp": "3e62da08e4"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Yes, per-instance key checked each request",
+   "answer": "Yes, for the agent instance. The token is bound to a key that belongs to that one instance, and the resource server verifies proof of possession of that key on each request, which the base specification says authenticates the instance. The link between the key and the agent_instance_id rests on the Attester, whose minting practice the authorization server cannot check in-band. The user is authenticated by the authorization server, not by the resource server.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the service verifies a per-agent key on every request; the calibration examples are red because they only check a bearer token or a provider-level key.",
+   "claims": [
+    {
+     "text": "Proof of possession authenticates the instance.",
+     "type": "fact",
+     "source": "cia",
+     "section": "9. Resource Server Processing",
+     "quote": "the instance named in `act.sub` does, and sender-constraint validation authenticates that instance.",
+     "check": "OK",
+     "check_fp": "e3750b47c7"
+    },
+    {
+     "text": "The binding key is per instance.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.5. Sender-Constrained Access Tokens",
+     "quote": "The binding key MUST be specific to the validated client instance.",
+     "check": "OK",
+     "check_fp": "76017af03a"
+    },
+    {
+     "text": "The resource server checks the top-level cnf.",
+     "type": "fact",
+     "source": "cia",
+     "section": "12.10. Sender-Constraint Requirement",
+     "quote": "Per {{ACTOR-PROFILE}}, the resource server validates proof of possession against the access token's top-level `cnf` only",
+     "check": "OK",
+     "check_fp": "20e08dd02b"
+    },
+    {
+     "text": "Attester minting practice cannot be verified in-band.",
+     "type": "fact",
+     "source": "spec",
+     "section": "15.2. Instance Identifier Lifecycle",
+     "quote": "the AS verifies the evidence signature and claims but cannot verify in-band that the Attester's minting practice is sound.",
+     "check": "OK",
+     "check_fp": "60d69fa92b"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "OAuth scopes only; agent permissions out of scope",
+   "answer": "Partly. Tokens carry the normal OAuth scopes of the underlying grant, and when a sub-agent exchanges a token the scope can be narrowed at each hop under Token Exchange. The profile itself defines no agent capability or tool permissions and says fine-grained permissions come from Rich Authorization Requests (RFC 9396) or a deployment's own scope design. What it adds is per-instance identity, so a service can enforce its own limits per agent rather than per platform.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Yellow: tokens carry ordinary OAuth scopes in the normal flow, but the profile defines no permissions of its own and puts agent permissions out of scope; chosen as the lower of yellow and green.",
+   "claims": [
+    {
+     "text": "Agent permissions are out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "This profile does not define agent capability or tool-permission semantics; deployments expressing fine-grained agent permissions compose this profile with Rich Authorization Requests ({{RFC9396}}) or deployment-specific scope design.",
+     "check": "OK",
+     "check_fp": "59160a97ef"
+    },
+    {
+     "text": "Scope can be narrowed at each sub-agent exchange.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9. Attested Delegation Chains",
+     "quote": "scope attenuation at each exchange follows {{RFC8693}}.",
+     "check": "OK",
+     "check_fp": "192ef2d737"
+    },
+    {
+     "text": "The profile makes enforcement per agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "15.9. Scope of Protection",
+     "quote": "this profile makes its enforcement and audit per-agent rather than per-platform.",
+     "check": "OK",
+     "check_fp": "a429f36c72"
+    },
+    {
+     "text": "The worked example shows scope narrowed at a sub-agent exchange.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Worked Example: Agent Calling an MCP Server",
+     "quote": "scope was attenuated to `projects.read` at the exchange.",
+     "check": "OK",
+     "check_fp": "c23a560894"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Client-level consent only; per-instance approval optional",
+   "answer": "Partly. Where a user is involved (the authorization code grant), the user approves the client as a whole, and that consent covers every instance its Attesters vouch for. An authorization server MAY require approval for a specific instance or key when the request names a key (dpop_jkt), but a standard per-instance consent step would need a separate extension. Self-acting agents (client_credentials) involve no person at all.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: user consent exists only at client level through the underlying OAuth grant, and approval of the specific agent instance is optional; lower than MCP Authorization's green, whose own flow defines the approval step.",
+   "claims": [
+    {
+     "text": "Consent covers the client, not each instance.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.4. Authorization-Time Consistency",
+     "quote": "User consent under this profile applies to the client as a whole; consent thereby covers all instances attested by listed instance issuers.",
+     "check": "OK",
+     "check_fp": "66294f1922"
+    },
+    {
+     "text": "Per-instance approval is optional.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.4. Authorization-Time Consistency",
+     "quote": "An AS MAY require per-instance or per-key authorization policy when the authorization request includes a sender-constraining key such as `dpop_jkt`.",
+     "check": "OK",
+     "check_fp": "b9f034a200"
+    },
+    {
+     "text": "Standard per-instance consent needs another extension.",
+     "type": "fact",
+     "source": "cia",
+     "section": "8.4. Authorization-Time Consistency",
+     "quote": "Deployments requiring standardized per-instance consent without an authorization-time key mapping need a separate extension.",
+     "check": "OK",
+     "check_fp": "bd7320ea3e"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Agent Attester, endorsed by client or AS",
+   "answer": "The Agent Attester vouches for each instance, and the authorization server only issues tokens for instances with valid evidence from an Attester it accepts. With the assertion carrier, the platform lists its Attesters in its client metadata; with the attestation carrier, the authorization server configures which Attesters it trusts. The draft names three assurance tiers: platform self-attestation (the usual case), hardware-rooted and independent attestation. Deployments must not present self-attestation as one of the stronger tiers.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the protocol names the parties that vouch (Attester and authorization server), as MCP Authorization names its authorization server; the answer notes the usual tier is self-attestation.",
+   "claims": [
+    {
+     "text": "The authorization server trusts an assertion only through the matching issuer listed by the client.",
+     "type": "fact",
+     "source": "cia",
+     "section": "5.3.2. Authority of the Authorization Server",
+     "quote": "it derives its trust in an instance assertion solely from the descriptor whose issuer member matches the instance assertion's `iss` claim.",
+     "check": "OK",
+     "check_fp": "8686374e0f"
+    },
+    {
+     "text": "The client lists its Attester on the assertion carrier.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1. Client Instance Assertion Carrier",
+     "quote": "the platform's client metadata lists the Agent Attester in `instance_issuers`, bounding which authority may attest its instances.",
+     "check": "OK",
+     "check_fp": "4859552a17"
+    },
+    {
+     "text": "The AS configures trust on the attestation carrier.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2. Client Attestation Carrier",
+     "quote": "Trust for this carrier is the AS-to-Attester trust of {{ATTEST-CLIENT-AUTH}}; {{CIA-CORE}}'s `instance_issuers` metadata is not consulted.",
+     "check": "OK",
+     "check_fp": "f1218cc0db"
+    },
+    {
+     "text": "Platform self-attestation is the first tier.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Trust Model and Assurance Tiers",
+     "quote": "The Attester is the agent platform's own control plane.",
+     "check": "OK",
+     "check_fp": "571ef6984c"
+    },
+    {
+     "text": "Tiers must not be misrepresented.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11. Trust Model and Assurance Tiers",
+     "quote": "Deployments SHOULD document which tier their Attester provides and MUST NOT represent platform self-attestation as hardware-rooted or independent attestation.",
+     "check": "OK",
+     "check_fp": "db54bd31f8"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Per-instance revocation defined, SHOULD",
+   "answer": "Partly. The base specification defines per-token revocation (RFC 7009) and a per-instance mode, keyed on the Attester and instance identifier, that invalidates all of one agent's tokens without touching the platform's other agents. Authorization servers SHOULD support the per-instance mode, and introspection must then report those tokens inactive. How revocation is triggered is out of scope, and a resource server validating JWTs locally keeps accepting a revoked token until it expires.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: revocation is defined at instance granularity but is only recommended and reaches services that validate JWTs locally only at expiry; MCP Authorization is red because it defines none.",
+   "claims": [
+    {
+     "text": "Per-instance revocation is recommended.",
+     "type": "fact",
+     "source": "cia",
+     "section": "12.4.2. Per-Instance Revocation",
+     "quote": "ASes implementing this profile SHOULD support a per-instance revocation mode keyed by the pair (instance issuer, instance subject):",
+     "check": "OK",
+     "check_fp": "27148e5f91"
+    },
+    {
+     "text": "Revocation models are optional overall.",
+     "type": "fact",
+     "source": "cia",
+     "section": "12.4. Token Revocation",
+     "quote": "Both build on {{RFC7009}}; deployments MAY support either, both, or neither.",
+     "check": "OK",
+     "check_fp": "a5e4419966"
+    },
+    {
+     "text": "Triggering is out of scope.",
+     "type": "out_of_scope",
+     "source": "cia",
+     "section": "12.4.2. Per-Instance Revocation",
+     "quote": "The mechanism for triggering per-instance revocation is deployment-specific and out of scope for this document.",
+     "check": "OK",
+     "check_fp": "746232b407"
+    },
+    {
+     "text": "Latency depends on token TTL and introspection caching.",
+     "type": "fact",
+     "source": "cia",
+     "section": "12.4.2. Per-Instance Revocation",
+     "quote": "The compromise-to-all-tokens-invalid latency is bounded by the shortest of: the access token TTL, the introspection cache TTL at any consuming resource server",
+     "check": "OK",
+     "check_fp": "650ccf8101"
+    },
+    {
+     "text": "The worked example contains one agent without revoking the platform.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Worked Example: Agent Calling an MCP Server",
+     "quote": "containing one agent without revoking the platform's client registration.",
+     "check": "OK",
+     "check_fp": "21a7cb5dfb"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No contact channel defined",
+   "answer": "No. The profile defines no contact or escalation field. Its worked example has the MCP server report a misbehaving instance identifier so the platform can terminate the session, but it does not say through which channel or to whom. Any contact details would have to come from outside the protocol (e.g. the client's registration).",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field is defined (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "The example assumes reporting without a defined channel.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Worked Example: Agent Calling an MCP Server",
+     "quote": "If `sess-9f2c` misbehaves, the MCP server reports `act.sub`; the platform terminates the session",
+     "check": "OK",
+     "check_fp": "1fb93daf6d"
+    },
+    {
+     "text": "Searched: Searched all sections of both drafts for contact, abuse, support and escalation. No contact field in either draft.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched all sections of both drafts for contact, abuse, support and escalation",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. The profile defines no way for one service to warn other services or authorization servers about a misbehaving agent instance. Chains across platforms are left to the trust and federation policy of the domains involved.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched: Searched all sections of both drafts for signals, events, reputation, shared signals and reporting. No signals between services.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Searched all sections of both drafts for signals, events, reputation, shared signals and reporting",
+     "quote": ""
+    },
+    {
+     "text": "Cross-domain matters are left to the domains.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9. Attested Delegation Chains",
+     "quote": "this profile defines no additional cross-domain rules.",
+     "check": "OK",
+     "check_fp": "aef14844f1"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "Optional attested agent_model claim",
+   "answer": "Optional. The Attester may include agent_model (a model identifier and optional version) in its signed evidence, and the authorization server MAY pass it on to services. It describes the instance's primary configured model, not each call. Under platform self-attestation it is the platform's own statement, and services must not treat it as independently verified. There is no registry of model identifiers.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: the model claim is defined but optional, and verifiable only to the extent the Attester tier allows; the calibration examples are red.",
+   "claims": [
+    {
+     "text": "agent_model describes the primary model.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4. Agent Instance Claims",
+     "quote": "A JSON object characterizing the primary model configured for the agent instance, as determined by the Agent Attester at evidence issuance.",
+     "check": "OK",
+     "check_fp": "ec95a0a2c6"
+    },
+    {
+     "text": "Surfacing to services is optional.",
+     "type": "fact",
+     "source": "spec",
+     "section": "8. Access Token Surfacing",
+     "quote": "The AS MAY surface `agent_platform` and `agent_model` subject to local policy and the privacy considerations of {{security-privacy}}.",
+     "check": "OK",
+     "check_fp": "2a22478745"
+    },
+    {
+     "text": "Self-attested model claims are not independent verification.",
+     "type": "fact",
+     "source": "spec",
+     "section": "15.3. Provenance Assurance",
+     "quote": "Under platform self-attestation, a model claim is the platform's statement about itself; resource servers MUST NOT treat it as independently verified.",
+     "check": "OK",
+     "check_fp": "e956c7ce12"
+    },
+    {
+     "text": "No model registry.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "4. Agent Instance Claims",
+     "quote": "A registry of model identifiers is out of scope",
+     "check": "OK",
+     "check_fp": "4c935b5637"
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The service sees which agent instance, on which platform and for which user, holds a key-bound token with the grant's OAuth scopes, so it can apply its own per-agent rules (e.g. read-only for older models); agent permissions themselves are not defined.",
+  "incident_response": "Access can be cut off for one agent instance without affecting the platform's other agents, through per-instance revocation at the authorization server, but only promptly for services that use introspection; how revocation is triggered and how the service reports a problem are not defined.",
+  "accountability": "An action can be traced to the user, the platform (client_id) and the specific agent instance, including each sub-agent in a delegation chain, and optionally to the model; how much this is worth depends on the Attester, which is usually the platform itself."
+ },
+ "notes": [
+  "The analysed text was taken from the author's GitHub repository at the commit tagged for the -00 submission; the file on main is unchanged since then. Section numbers follow the published -00 numbering, derived from the order of headings in the source.",
+  "The author's README (commit 3fd47b9, 14 September 2026) marks this draft superseded and not being progressed. Its successor, draft-mcguinness-oauth-client-instance-id-01 (2 November 2026), was not analysed.",
+  "Most of what the resource server sees (token format, key binding, revocation, consent) comes from the normative companion draft draft-mcguinness-oauth-client-instance-assertion-01, which is counted as part of the protocol because the profile cannot be implemented without it. That draft itself relies on the OAuth Actor Profile draft for resource-server rules, which was not read.",
+  "The specification uses RFC 2119 keywords; requirement levels are quoted as written. No instructions aimed at AI tools were found in the sources."
+ ],
+ "open_questions": [
+  "Is the agent_instance_id rating (green) still valid for the successor drafts? The README says instance identification moved to an optional claims profile, which would likely lower it.",
+  "The OAuth Actor Profile draft defines the resource-server processing rules this profile inherits; it was not read, so whether a resource server MUST reject a token whose DPoP proof is missing was taken from CIA-CORE's summary rather than checked there.",
+  "The 'agent federation profile' named as a replacement in the README could not be located; its relationship to this draft is unclear.",
+  "Scoped authorization could reasonably be rated green (OAuth scopes are always present) or yellow (no agent-specific permissions); yellow was chosen under the tie rule."
+ ]
+}</script></body></html>
