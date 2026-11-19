@@ -1,0 +1,904 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>x402: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>x402<small>x402 Protocol (internet-native payments over HTTP 402)</small></h1><ul class="facts"><li><b>Specification:</b> Protocol Version 2 (x402-specification-v2.md, version history entry v2.0 of 2025-12-09) with the v2 HTTP and MCP transports, the exact scheme and the official extensions, read at commit b007387 of x402-foundation/x402</li><li><b>Date:</b> v2 released 2025-12-11; text read at commit b007387 dated 2026-11-18</li><li><b>Maintainer:</b> x402 Foundation (Linux Foundation), created by Coinbase</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> Protocol version 2 is the latest; no version 3 exists in the repository. The v2 specification text has kept being edited without a version change (latest edit to the core file on 2026-10-26), so the analysis is pinned to commit b007387. Version 1 remains in the repository and the reference SDKs stay backward-compatible with it.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agentic commerce</span><span class="chip"><b>Mechanism:</b> Other</span><span class="chip"><b>Venue:</b> Foundation</span><span class="chip"><b>Maturity:</b> Stable</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>x402 lets a client, typically an AI agent or an app, pay for an API call, a web page or an MCP tool inside the request itself, using the long-unused HTTP status 402 Payment Required. It is aimed at services that want to charge per use without accounts, API keys or card checkouts. Coinbase created it in 2025; since 2026 it is governed by the x402 Foundation under the Linux Foundation, with about 40 member organisations. Protocol version 2 was released in December 2025 and Coinbase runs a hosted production facilitator; most payments use stablecoins on blockchains.</p><p>A server answers an unpaid request with its payment requirements (amount, asset, network, recipient, time limit). The client signs a payment authorization with its wallet key and retries with it in a header (or in MCP or A2A metadata). The server, usually through a facilitator service, checks the signature, balance, amount and validity window, runs the request and settles the payment on chain. x402 proves that someone with a funded wallet paid, not who the agent is or for whom it acts: identity comes only from optional extensions (wallet sign-in, HTTP Message Signatures or OAuth hints). It defines no scopes, human approval, revocation, contact channel or model identity.</p><h2 id="how">How it works</h2><ol class="steps"><li>Setup: the resource server picks a facilitator (e.g. Coinbase&#x27;s hosted one, or its own) and a recipient wallet; the client holds a wallet with funds on a supported network. No account or prior relationship between them is needed.</li><li>The client (e.g. an AI agent) requests a resource. The server replies 402 Payment Required with a PAYMENT-REQUIRED header listing accepted payment options: scheme (e.g. exact), network, amount, asset, recipient (payTo) and maxTimeoutSeconds.</li><li>The client chooses an option, signs a payment authorization with its wallet key (for exact on EVM: an EIP-3009 transfer authorization from its address to payTo, with a validity window and a random nonce) and retries the request with it in the PAYMENT-SIGNATURE header.</li><li>The server sends the payload to the facilitator&#x27;s /verify endpoint, which checks the signature recovers to the payer, the balance, the amount, recipient and validity window, and simulates the transfer.</li><li>If valid, the server runs the request, then calls /settle; the facilitator submits the transfer on chain. The server returns the result with a PAYMENT-RESPONSE header carrying the transaction and the payer&#x27;s address. (Some schemes settle before the request runs.)</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>x402</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Pay per request over HTTP 402 with signed wallet payments</td></tr><tr><td class="prop">Use cases</td><td class="">Paid APIs, content and MCP tools</td></tr><tr><td class="prop">Parties involved</td><td class="">Resource server, client, facilitator</td></tr><tr><td class="prop">Status and adoption</td><td class="green">v2 released; Foundation-governed; Coinbase facilitator</td></tr><tr><td class="prop">Building blocks</td><td class="">HTTP 402, CAIP-2, EIP-712/EIP-3009, optional RFC 9421</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">Payer&#x27;s wallet address</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="yellow">Signed payment authorization, paid requests only</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Validity window, set per payment; single use</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, via facilitator or on chain</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="yellow">No by default; optional sign-in extensions</td></tr><tr><td class="prop">Scoped authorization</td><td class="yellow">Paid or not, per resource</td></tr><tr><td class="prop">Human approval</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="red">Nobody; payment replaces trust</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="red">Not defined</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>A server can gate each resource behind a verified payment of a set amount, so access follows payment; it learns a payer wallet address but not the agent&#x27;s identity, principal or permissions unless optional extensions are used.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>A server can refuse further payments from a wallet address, but anyone can create a new wallet; there is no revocation, contact channel or way to warn other servers.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Each paid request can be traced to a wallet address and an on-chain transaction, which is durable and public, but linking that wallet to an agent, operator or user requires information outside the core protocol.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Acting for (authority):</b> No (not addressed by the specification)</li><li><b>Human approval:</b> No (not addressed by the specification)</li><li><b>Trust (who vouches for the agent):</b> Nobody; payment replaces trust (not addressed by the specification)</li><li><b>Revocation:</b> Not defined (not addressed by the specification)</li><li><b>Contact and escalation:</b> No (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>x402</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An open payment protocol where a server answers 402 Payment Required with its price and a client, such as an AI agent, retries with a payment authorization signed by its wallet, which the server verifies and settles (usually through a facilitator) before or after serving the request.<details><summary>Evidence (2)</summary><div class="claim">Scope of the specification. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, Document Scope. <span class="chk">(quote verified against the source)</span><blockquote>“This specification defines the core x402 protocol for internet-native payments.”</blockquote></div><div class="claim">The client sends a signed payment authorization. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 2. Core Payment Flow. <span class="chk">(quote verified against the source)</span><blockquote>“Client submits a signed payment authorization in the subsequent request”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Pay-per-use access to APIs, content and AI tools, including agents paying autonomously. On HTTP, the requirements travel in a PAYMENT-REQUIRED header on a 402 response and the payment in a PAYMENT-SIGNATURE header; on MCP and A2A, in message metadata. The resource server decides, usually by calling a facilitator that verifies and settles the payment; servers can also host those endpoints themselves.<details><summary>Evidence (3)</summary><div class="claim">HTTP payment header. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/transports-v2/http.md">x402 Transport: HTTP (specs/transports-v2/http.md)</a>, Payment Payload Transmission. <span class="chk">(quote verified against the source)</span><blockquote>“Clients send payment data using the PAYMENT-SIGNATURE HTTP header.”</blockquote></div><div class="claim">MCP binding. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/transports-v2/mcp.md">x402 Transport: MCP (specs/transports-v2/mcp.md)</a>, Payment Payload Transmission. <span class="chk">(quote verified against the source)</span><blockquote>“Clients send payment data using the MCP _meta field with key x402/payment.”</blockquote></div><div class="claim">Facilitator can be a third party or self-hosted. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 7. Facilitator Interface. <span class="chk">(quote verified against the source)</span><blockquote>“This allows resource servers to delegate blockchain operations to trusted third parties or host the endpoints themselves.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Resource Server: a service that requires payment for its resources. Client: any application or agent requesting them. Facilitator: a service that verifies payments and settles them on the blockchain (or other payment network). The payment network or blockchain itself and the payer&#x27;s wallet are implied but not listed as roles.<details><summary>Evidence (3)</summary><div class="claim">Resource Server. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 3. Protocol Components. <span class="chk">(quote verified against the source)</span><blockquote>“Resource Server: A service that requires payment for access to protected resources (APIs, content, data, etc.)”</blockquote></div><div class="claim">Client. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 3. Protocol Components. <span class="chk">(quote verified against the source)</span><blockquote>“Client: Any application or agent that requests access to protected resources”</blockquote></div><div class="claim">Facilitator. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 3. Protocol Components. <span class="chk">(quote verified against the source)</span><blockquote>“Facilitator: A service that handles payment verification and blockchain settlement”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="green"><span class="badge">Addressed</span><br>Released. Protocol version 2 was launched on 11 December 2025 after six months of real-world payments under version 1 (over 100 million payments, per the launch post). The Linux Foundation launched the x402 Foundation operationally on 14 July 2026 with 40 member organisations. Coinbase Developer Platform documents its hosted facilitator for production use. The specification is published under Apache 2.0 and its text is still edited under the version 2 label.<div class="meta">Why this rating: A released version with a named production deployment documented by the deployer (Coinbase&#x27;s facilitator), comparable to MCP Authorization.</div><details><summary>Evidence (5)</summary><div class="claim">V2 based on real-world use. <i>Source states</i> <a href="https://www.x402.org/writing/x402-v2-launch">x402.org, Introducing x402 V2: Evolving the Standard for Internet-native Payments</a>, Why x402 needed a V2. <span class="chk">(quote verified against the source)</span><blockquote>“V2 evolves the specification based on learnings from 6 months of x402 performing real-world payments”</blockquote></div><div class="claim">Payment volume. <i>Source states</i> <a href="https://www.x402.org/writing/x402-v2-launch">x402.org, Introducing x402 V2: Evolving the Standard for Internet-native Payments</a>, Why x402 needed a V2. <span class="chk">(quote verified against the source)</span><blockquote>“it has processed over 100M payments across APIs, apps, and AI agents”</blockquote></div><div class="claim">Foundation launch. <i>Source states</i> <a href="https://www.linuxfoundation.org/press/linux-foundation-announces-operational-launch-of-x402-foundation-to-standardize-internet-native-payments-for-ai-agents-and-applications">Linux Foundation, Linux Foundation Announces Operational Launch of x402 Foundation</a>, Press release. <span class="chk">(quote verified against the source)</span><blockquote>“Since the Foundation&#x27;s intent to launch in April, 40 organizations have joined as members.”</blockquote></div><div class="claim">Coinbase&#x27;s hosted facilitator. <i>Source states</i> <a href="https://docs.cdp.coinbase.com/x402/seller/facilitator">Coinbase Developer Platform docs, CDP Facilitator</a>, CDP Facilitator. <span class="chk">(quote verified against the source)</span><blockquote>“The CDP Facilitator handles that work as a hosted service.”</blockquote></div><div class="claim">Version history. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, Version History. <span class="chk">(quote verified against the source)</span><blockquote>“Protocol v2: CAIP-2 networks, restructured PaymentPayload/Required, ResourceInfo separation, extensions support”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">HTTP status 402 and custom headers (RFC 9110); CAIP-2 network identifiers; per-network payment mechanisms, e.g. on EVM chains EIP-712 signatures over EIP-3009 transfer authorizations, Permit2 or ERC-7710 delegations; JSON Schema for extensions. Optional extensions use CAIP-122 wallet sign-in (SIWE or SIWS), RFC 9421 HTTP Message Signatures with Web Bot Auth key directories, and OAuth discovery for auth hints.<details><summary>Evidence (3)</summary><div class="claim">CAIP-2 networks. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 11.1 Network Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“Networks in x402 v2 use CAIP-2 (Chain Agnostic Improvement Proposal) format: namespace:reference.”</blockquote></div><div class="claim">EIP-712 signature over EIP-3009 parameters in exact EVM. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5.2.2 Field Descriptions. <span class="chk">(quote verified against the source)</span><blockquote>“EIP-712 signature for authorization”</blockquote></div><div class="claim">RFC 9421 extension. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/http-message-signatures.md">x402 Extension: http-message-signatures (specs/extensions/http-message-signatures.md)</a>, Summary. <span class="chk">(quote verified against the source)</span><blockquote>“The http-message-signatures extension establishes the identity of the paying agent through cryptographic signatures (RFC 9421).”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The payment names the payer&#x27;s wallet address (e.g. the from field of an EVM authorization), and the facilitator can report it back as payer (an optional field). That address names whoever controls the paying wallet, which may be the agent, its operator or a user. The core protocol carries no agent identifier; the optional HTTP Message Signatures extension adds a Web Bot Auth style signature agent identity.<div class="meta">Required by the specification · requirement level: MUST*</div><div class="meta">Why this rating: The identifier is a payer wallet address, not an agent identity, and may be shared or freshly created (same colour as the provider-level identifiers of the calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Payer address in the authorization. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5.2.2 Field Descriptions (Authorization). <span class="chk">(quote verified against the source)</span><blockquote>“Payer&#x27;s wallet address”</blockquote></div><div class="claim">Payer returned to the server. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5.3.2 Field Descriptions. <span class="chk">(quote verified against the source)</span><blockquote>“Address of the payer&#x27;s wallet”</blockquote></div><div class="claim">Agent identity only through an extension. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/http-message-signatures.md">x402 Extension: http-message-signatures (specs/extensions/http-message-signatures.md)</a>, Purpose. <span class="chk">(quote verified against the source)</span><blockquote>“Establishes the cryptographic identity of the paying agent and provides information on how to associate that identity with the network for billing.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Each payment has its own nonce, and the optional payment-identifier extension adds an idempotency key, but neither identifies the agent instance. A deployment could give each agent instance its own wallet, but x402 does not define this.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier (same as all three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Nonce is per payment. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5.2.2 Field Descriptions (Authorization). <span class="chk">(quote verified against the source)</span><blockquote>“32-byte random nonce to prevent replay attacks”</blockquote></div><div class="claim">Payment identifier is an idempotency key. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/payment_identifier.md">x402 Extension: payment-identifier (specs/extensions/payment_identifier.md)</a>, Summary. <span class="chk">(quote verified against the source)</span><blockquote>“The payment-identifier extension enables clients to provide an id that serves as an idempotency key.”</blockquote></div><div class="claim">Searched the core types, the HTTP and MCP transports and the extensions for an agent or instance identifier. None is defined; the payment-identifier extension provides an idempotency key only. <i>Not found in</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5. Types.</div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. x402 shows who paid (a wallet address), not on whose behalf an agent acts. The specification mentions integration with sign-in systems such as Sign-In with Ethereum for authenticated pricing, and the optional sign-in-with-x extension proves control of a wallet address; neither identifies a principal behind an agent. The auth-hints extension points clients to OAuth, which could add a user identity outside x402.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Whom the agent acts for is not defined (same as MCP Authorization and Web Bot Auth); wallet sign-in and OAuth hints are mentioned in the answer.</div><details><summary>Evidence (2)</summary><div class="claim">Authentication integration mentioned only for pricing. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 10.2 Authentication Integration. <span class="chk">(quote verified against the source)</span><blockquote>“The protocol supports integration with authentication systems (e.g., Sign-In with Ethereum - SIWE) to enable authenticated pricing models where verified users receive discounted rates or special access terms.”</blockquote></div><div class="claim">Authentication and payment are separate concerns. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/extension-auth-hints.md">x402 Extension: auth-hints (specs/extensions/extension-auth-hints.md)</a>, Authentication Without Hints. <span class="chk">(quote verified against the source)</span><blockquote>“Authentication and payment are parallel concerns- authentication identifies the client, payment authorizes the transfer of value.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. On a paid request the client sends a PaymentPayload: the chosen payment option plus a scheme-specific payment signed with its wallet key (for exact on EVM, an EIP-712 signature over an EIP-3009 transfer from the payer to payTo with a value, validity window and nonce). It proves control of funds and is single-use, but it does not sign the HTTP request itself, and unpaid requests carry nothing. A signature on every request exists only through the optional HTTP Message Signatures extension.<div class="meta">Required by the specification · requirement level: MUST*</div><div class="meta">Why this rating: A verifiable credential is defined only for requests that require payment, and it authorizes a transfer rather than authenticating the request.</div><details><summary>Evidence (3)</summary><div class="claim">Exact EVM payload. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5.2.2 Field Descriptions. <span class="chk">(quote verified against the source)</span><blockquote>“EIP-3009 authorization parameters”</blockquote></div><div class="claim">Signed by the payer. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 10.1 Replay Attack Prevention. <span class="chk">(quote verified against the source)</span><blockquote>“Signature Verification: All authorizations are cryptographically signed by the payer”</blockquote></div><div class="claim">Payment only when required. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 2. Core Payment Flow. <span class="chk">(quote verified against the source)</span><blockquote>“If no valid payment is attached, the server responds with a payment required signal and payment requirements”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Authorizations carry an explicit validity window (e.g. validAfter and validBefore on EVM), and the server&#x27;s requirements state maxTimeoutSeconds, the maximum time for payment completion. The facilitator checks the window against the requirements, and each nonce can be used once on chain. But the core gives no maximum, and how strictly the window is bounded depends on each network&#x27;s mechanism.<div class="meta">Required by the specification · requirement level: MUST*</div><div class="meta">Why this rating: Validity windows are required and checked, but no specific maximum is set by the protocol; it varies by mechanism and server setting (unlike Visa TAP&#x27;s 8 minutes).</div><details><summary>Evidence (3)</summary><div class="claim">Time windows. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 10.1 Replay Attack Prevention. <span class="chk">(quote verified against the source)</span><blockquote>“Time Constraints: Authorizations have explicit valid time windows to limit their lifetime”</blockquote></div><div class="claim">maxTimeoutSeconds. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5.1.2 Field Descriptions. <span class="chk">(quote verified against the source)</span><blockquote>“Maximum time allowed for payment completion”</blockquote></div><div class="claim">Facilitator checks the window (EVM). <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact_evm.md">x402 Scheme: exact on EVM (specs/schemes/exact/scheme_exact_evm.md)</a>, Phase 2: Verification Logic. <span class="chk">(quote verified against the source)</span><blockquote>“Verify the authorization parameters (Amount, Validity Window) meet the PaymentRequirements.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The server, usually through a facilitator it chooses, checks that the signature recovers to the payer&#x27;s address, that the payer has enough balance, that amount, recipient, token, network and validity window match the requirements; settlement on chain then consumes the nonce. No prior relationship with the client is needed. The server relies on the facilitator&#x27;s answer unless it verifies itself.<div class="meta">Required by the specification · requirement level: MUST*</div><div class="meta">Why this rating: Verifiable without a prior relationship, with time checks (same colour as the three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Signature check. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact_evm.md">x402 Scheme: exact on EVM (specs/schemes/exact/scheme_exact_evm.md)</a>, Phase 2: Verification Logic. <span class="chk">(quote verified against the source)</span><blockquote>“Verify the signature is valid and recovers to the authorization.from address.”</blockquote></div><div class="claim">Balance check. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact_evm.md">x402 Scheme: exact on EVM (specs/schemes/exact/scheme_exact_evm.md)</a>, Phase 2: Verification Logic. <span class="chk">(quote verified against the source)</span><blockquote>“Verify the client has sufficient balance of the asset.”</blockquote></div><div class="claim">At least one check before execution. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 6.1 Asset Transfer Methods and Payment Flow Models. <span class="chk">(quote verified against the source)</span><blockquote>“Invariant: at least one check — a verify or settle before the resource — MUST run before the resource executes.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>No by default. Verifying a payment shows that the holder of a wallet key authorized a transfer, not who the agent or user is; the auth-hints extension itself says authentication and payment are parallel concerns. Optional extensions add authentication: sign-in-with-x lets the server verify a signed challenge proving control of a wallet address, and HTTP Message Signatures lets agents sign requests with a registered key (Web Bot Auth style, often a provider-level key).<div class="meta">Only in an extension or companion specification · requirement level: MAY*</div><div class="meta">Why this rating: The server can authenticate a wallet holder itself, but only through an optional extension; the core payment check is not authentication.</div><details><summary>Evidence (3)</summary><div class="claim">Parallel concerns. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/extension-auth-hints.md">x402 Extension: auth-hints (specs/extensions/extension-auth-hints.md)</a>, Authentication Without Hints. <span class="chk">(quote verified against the source)</span><blockquote>“Authentication and payment are parallel concerns- authentication identifies the client, payment authorizes the transfer of value.”</blockquote></div><div class="claim">SIWX proves wallet control. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/sign-in-with-x.md">x402 Extension: sign-in-with-x (specs/extensions/sign-in-with-x.md)</a>, Summary. <span class="chk">(quote verified against the source)</span><blockquote>“Clients prove control of a wallet address by signing a challenge message, allowing servers to identify returning users and skip payment for addresses that have previously paid.”</blockquote></div><div class="claim">SIWX is between server and client. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/sign-in-with-x.md">x402 Extension: sign-in-with-x (specs/extensions/sign-in-with-x.md)</a>, Summary. <span class="chk">(quote verified against the source)</span><blockquote>“The Facilitator is not involved in the authentication flow.”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The only permission x402 conveys is that a specific payment for a specific resource was made: the server sets amount, asset and recipient per resource, and access follows payment. There are no scopes or per-action rights. Spending limits on the client side (budgets) are out of scope and implementation-specific; on EVM, ERC-7710 delegations can carry on-chain caveats outside x402.<div class="meta">Part of the normal flow · requirement level: MUST*</div><div class="meta">Why this rating: Only a coarse paid-or-not decision per resource, with spending limits outside the protocol (same colour as Visa TAP).</div><details><summary>Evidence (3)</summary><div class="claim">Client-side budgets out of scope. <i>Out of scope per</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, Document Scope (Out of Scope). <span class="chk">(quote verified against the source)</span><blockquote>“Client-side budget management”</blockquote></div><div class="claim">Budgets implementation-specific. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 12.1 AI Agent Integration. <span class="chk">(quote verified against the source)</span><blockquote>“Budget management and spending controls (implementation-specific)”</blockquote></div><div class="claim">Delegations obtained outside x402. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact_evm.md">x402 Scheme: exact on EVM (specs/schemes/exact/scheme_exact_evm.md)</a>, 3. AssetTransferMethod: ERC-7710, Phase 1. <span class="chk">(quote verified against the source)</span><blockquote>“The process of obtaining a delegation is outside the scope of x402.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Agents can pay autonomously; x402 defines no step in which a person approves a payment or an action. Any approval happens in the client&#x27;s wallet or agent, outside the protocol.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed.</div><details><summary>Evidence (2)</summary><div class="claim">Autonomous payment by agents. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 12.1 AI Agent Integration. <span class="chk">(quote verified against the source)</span><blockquote>“AI agents can use x402 to autonomously pay for resources and services.”</blockquote></div><div class="claim">Searched the core specification, the transports and the extensions for consent, approval or confirmation steps. None is defined. <i>Not found in</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, Whole document.</div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="red"><span class="badge">Not addressed</span><br>Nobody. The server relies on the payment itself, checked by a facilitator it chooses, rather than on anyone vouching for the agent; anyone with a funded wallet can pay. The optional HTTP Message Signatures extension lets a payment network register signature agents for billing, but x402 defines no vetting.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: The protocol names no party that vouches for agents (same as Web Bot Auth).</div><details><summary>Evidence (3)</summary><div class="claim">Registration with a network only in an extension. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/http-message-signatures.md">x402 Extension: http-message-signatures (specs/extensions/http-message-signatures.md)</a>, Usage. <span class="chk">(quote verified against the source)</span><blockquote>“Register their signature agent URL with the network via the registrationUrl”</blockquote></div><div class="claim">Searched the core specification and extensions for onboarding, registries or attestations of agents. None is defined; the Bazaar discovery describes resources, not agents. <i>Not found in</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 8. Discovery API; 10. Security Considerations.</div><div class="claim">Any application or agent may be a client; paying requires only a wallet that can sign a valid authorization (inference from the roles and payment flow). <i>Inferred from</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 3. Protocol Components. <span class="chk">(quote verified against the source)</span><blockquote>“Client: Any application or agent that requests access to protected resources”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not defined. A signed payment authorization stops being usable when its validity window ends or its nonce is consumed on chain; x402 defines no way to revoke a client&#x27;s access, and under pre-execution settlement it defines no refund. A server can simply stop accepting payments from a wallet address in its own policy.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No revocation is defined (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">No refund defined for upfront settlement. <i>Source states</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact.md">x402 Scheme: exact (specs/schemes/exact/scheme_exact.md)</a>, Payment Flow. <span class="chk">(quote verified against the source)</span><blockquote>“this specification defines no refund, and any remedy is the resource server&#x27;s own arrangement.”</blockquote></div><div class="claim">Searched the core specification, schemes and extensions for revocation or blocking. None is defined. <i>Not found in</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, Whole document.</div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. x402 describes the resource (URL, description, service name) but defines no contact or escalation field for the client, its operator or the payer. A wallet address is the only handle on the paying side.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field or process (same as all three calibration examples).</div><details><summary>Evidence (1)</summary><div class="claim">Searched the PaymentPayload, PaymentRequired and extension schemas for contact, support or abuse fields for the client. None is defined. <i>Not found in</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5. Types.</div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The discovery API (Bazaar) lists paid resources for clients, but nothing lets servers or facilitators share information about a misbehaving client. Public blockchains record settled payments, which anyone can inspect, but x402 defines no signalling on top.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed.</div><details><summary>Evidence (1)</summary><div class="claim">Searched the core specification (including 8. Discovery API) and the extensions for reputation, abuse reports or shared signals. None is defined. <i>Not found in</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 8. Discovery API; 10. Security Considerations.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Nothing in the payment, the transports or the extensions says which AI model the client uses.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model.</div><details><summary>Evidence (1)</summary><div class="claim">Searched the PaymentPayload schema, transports and extensions for a model or client software field. None is defined. <i>Not found in</i> <a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a>, 5.2 PaymentPayload Schema.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md">x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)</a> (v2, commit b007387, 2026-11-18)</li><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/transports-v2/http.md">x402 Transport: HTTP (specs/transports-v2/http.md)</a> (v2, commit b007387, 2026-11-18)</li><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/transports-v2/mcp.md">x402 Transport: MCP (specs/transports-v2/mcp.md)</a> (v2, commit b007387, 2026-11-18)</li><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact.md">x402 Scheme: exact (specs/schemes/exact/scheme_exact.md)</a> (commit b007387, 2026-11-18)</li><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact_evm.md">x402 Scheme: exact on EVM (specs/schemes/exact/scheme_exact_evm.md)</a> (commit b007387, 2026-11-18)</li><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/sign-in-with-x.md">x402 Extension: sign-in-with-x (specs/extensions/sign-in-with-x.md)</a> (commit b007387, 2026-11-18)</li><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/http-message-signatures.md">x402 Extension: http-message-signatures (specs/extensions/http-message-signatures.md)</a> (commit b007387, 2026-11-18)</li><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/extension-auth-hints.md">x402 Extension: auth-hints (specs/extensions/extension-auth-hints.md)</a> (commit b007387, 2026-11-18)</li><li><a href="https://www.x402.org/writing/x402-v2-launch">x402.org, Introducing x402 V2: Evolving the Standard for Internet-native Payments</a> (2025-12-11)</li><li><a href="https://www.linuxfoundation.org/press/linux-foundation-announces-operational-launch-of-x402-foundation-to-standardize-internet-native-payments-for-ai-agents-and-applications">Linux Foundation, Linux Foundation Announces Operational Launch of x402 Foundation</a> (2026-07-14)</li><li><a href="https://docs.cdp.coinbase.com/x402/seller/facilitator">Coinbase Developer Platform docs, CDP Facilitator</a> (accessed 2026-11-19)</li><li><a href="https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/payment_identifier.md">x402 Extension: payment-identifier (specs/extensions/payment_identifier.md)</a> (commit b007387, 2026-11-18)</li></ul><h2>Notes</h2><ul class="plain"><li>Name collision: &#x27;x402&#x27; refers to this payment protocol; it is unrelated to the X.400/X.509 ITU-T standards naming. Version 1 and version 2 of x402 differ (e.g. v1 used X-PAYMENT headers); this analysis covers version 2.</li><li>Mechanism profile is &#x27;other&#x27;: the per-request proof is a blockchain payment authorization signed with a wallet key (e.g. EIP-712/EIP-3009), which none of the fixed mechanism values describes. HTTP Message Signatures appear only in an optional extension.</li><li>The x402 specification mixes RFC 2119 capitals (MUST, SHOULD) with lowercase &#x27;must&#x27; and table &#x27;Required&#x27; markers. Requirement tags with an asterisk reflect points that rest on schema &#x27;Required&#x27; fields or lowercase words.</li><li>Extensions (sign-in-with-x, http-message-signatures, auth-hints, payment-identifier) are published in the same repository and rated as &#x27;extension&#x27; coverage.</li><li>The x402.org, Linux Foundation and Coinbase pages were checked with a web tool, which limits quotes to about 125 characters, so some quotes are fragments. An earlier Coinbase FAQ sentence about operating &#x27;the first production facilitator&#x27; was no longer on the page and was not used.</li><li>first_published 2025-05 reflects Coinbase&#x27;s announcement of x402 in May 2025 as reported by secondary sources; it is not cited in the rows.</li></ul><h2>Open questions</h2><ul class="plain"><li>How strictly do facilitators bound the EVM validBefore value relative to maxTimeoutSeconds, given that the EVM verification step only says the window must &#x27;meet&#x27; the requirements?</li><li>Which servers use the sign-in-with-x or HTTP Message Signatures extensions in production to identify agents?</li><li>Will the x402 Foundation freeze dated versions of the v2 text, given ongoing edits under the same version label?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (42 of 42 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "x402",
+  "full_name": "x402 Protocol (internet-native payments over HTTP 402)",
+  "spec_version": "Protocol Version 2 (x402-specification-v2.md, version history entry v2.0 of 2025-12-09) with the v2 HTTP and MCP transports, the exact scheme and the official extensions, read at commit b007387 of x402-foundation/x402",
+  "spec_date": "v2 released 2025-12-11; text read at commit b007387 dated 2026-11-18",
+  "maintainer": "x402 Foundation (Linux Foundation), created by Coinbase",
+  "newer_version_note": "Protocol version 2 is the latest; no version 3 exists in the repository. The v2 specification text has kept being edited without a version change (latest edit to the core file on 2026-10-26), so the analysis is pinned to commit b007387. Version 1 remains in the repository and the reference SDKs stay backward-compatible with it."
+ },
+ "profile": {
+  "id": "x402",
+  "category": "agentic-commerce",
+  "secondary_categories": [],
+  "mechanisms": [
+   "other"
+  ],
+  "venue": "foundation",
+  "maturity": "stable",
+  "openness": "open-specification",
+  "layers": [
+   "http-header",
+   "application-message"
+  ],
+  "building_blocks": [
+   "RFC 9110 (HTTP 402)",
+   "CAIP-2",
+   "EIP-712",
+   "EIP-3009",
+   "Permit2",
+   "ERC-7710",
+   "CAIP-122",
+   "RFC 9421",
+   "JSON Schema"
+  ],
+  "website": "https://github.com/x402-foundation/x402",
+  "first_published": "2025-05"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "x402 lets a client, typically an AI agent or an app, pay for an API call, a web page or an MCP tool inside the request itself, using the long-unused HTTP status 402 Payment Required. It is aimed at services that want to charge per use without accounts, API keys or card checkouts. Coinbase created it in 2025; since 2026 it is governed by the x402 Foundation under the Linux Foundation, with about 40 member organisations. Protocol version 2 was released in December 2025 and Coinbase runs a hosted production facilitator; most payments use stablecoins on blockchains.",
+  "A server answers an unpaid request with its payment requirements (amount, asset, network, recipient, time limit). The client signs a payment authorization with its wallet key and retries with it in a header (or in MCP or A2A metadata). The server, usually through a facilitator service, checks the signature, balance, amount and validity window, runs the request and settles the payment on chain. x402 proves that someone with a funded wallet paid, not who the agent is or for whom it acts: identity comes only from optional extensions (wallet sign-in, HTTP Message Signatures or OAuth hints). It defines no scopes, human approval, revocation, contact channel or model identity."
+ ],
+ "how_it_works": [
+  "Setup: the resource server picks a facilitator (e.g. Coinbase's hosted one, or its own) and a recipient wallet; the client holds a wallet with funds on a supported network. No account or prior relationship between them is needed.",
+  "The client (e.g. an AI agent) requests a resource. The server replies 402 Payment Required with a PAYMENT-REQUIRED header listing accepted payment options: scheme (e.g. exact), network, amount, asset, recipient (payTo) and maxTimeoutSeconds.",
+  "The client chooses an option, signs a payment authorization with its wallet key (for exact on EVM: an EIP-3009 transfer authorization from its address to payTo, with a validity window and a random nonce) and retries the request with it in the PAYMENT-SIGNATURE header.",
+  "The server sends the payload to the facilitator's /verify endpoint, which checks the signature recovers to the payer, the balance, the amount, recipient and validity window, and simulates the transfer.",
+  "If valid, the server runs the request, then calls /settle; the facilitator submits the transfer on chain. The server returns the result with a PAYMENT-RESPONSE header carrying the transaction and the payer's address. (Some schemes settle before the request runs.)"
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "x402 Protocol Specification, Protocol Version 2 (specs/x402-specification-v2.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/x402-specification-v2.md",
+   "version": "v2, commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "http",
+   "title": "x402 Transport: HTTP (specs/transports-v2/http.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/transports-v2/http.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/transports-v2/http.md",
+   "version": "v2, commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "mcp",
+   "title": "x402 Transport: MCP (specs/transports-v2/mcp.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/transports-v2/mcp.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/transports-v2/mcp.md",
+   "version": "v2, commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "exact",
+   "title": "x402 Scheme: exact (specs/schemes/exact/scheme_exact.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact.md",
+   "version": "commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "exact-evm",
+   "title": "x402 Scheme: exact on EVM (specs/schemes/exact/scheme_exact_evm.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact_evm.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/schemes/exact/scheme_exact_evm.md",
+   "version": "commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "siwx",
+   "title": "x402 Extension: sign-in-with-x (specs/extensions/sign-in-with-x.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/sign-in-with-x.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/sign-in-with-x.md",
+   "version": "commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "httpsig",
+   "title": "x402 Extension: http-message-signatures (specs/extensions/http-message-signatures.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/http-message-signatures.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/http-message-signatures.md",
+   "version": "commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "authhints",
+   "title": "x402 Extension: auth-hints (specs/extensions/extension-auth-hints.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/extension-auth-hints.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/extension-auth-hints.md",
+   "version": "commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "v2-launch",
+   "title": "x402.org, Introducing x402 V2: Evolving the Standard for Internet-native Payments",
+   "url": "https://www.x402.org/writing/x402-v2-launch",
+   "version": "",
+   "date": "2025-12-11",
+   "kind": "primary"
+  },
+  {
+   "id": "lf-release",
+   "title": "Linux Foundation, Linux Foundation Announces Operational Launch of x402 Foundation",
+   "url": "https://www.linuxfoundation.org/press/linux-foundation-announces-operational-launch-of-x402-foundation-to-standardize-internet-native-payments-for-ai-agents-and-applications",
+   "version": "",
+   "date": "2026-07-14",
+   "kind": "primary"
+  },
+  {
+   "id": "cdp",
+   "title": "Coinbase Developer Platform docs, CDP Facilitator",
+   "url": "https://docs.cdp.coinbase.com/x402/seller/facilitator",
+   "version": "",
+   "date": "accessed 2026-11-19",
+   "kind": "primary"
+  },
+  {
+   "id": "payid",
+   "title": "x402 Extension: payment-identifier (specs/extensions/payment_identifier.md)",
+   "url": "https://github.com/x402-foundation/x402/blob/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/payment_identifier.md",
+   "fetch_url": "https://raw.githubusercontent.com/x402-foundation/x402/b00738784bfa78832f5a8caa3834fe1e28273369/specs/extensions/payment_identifier.md",
+   "version": "commit b007387",
+   "date": "2026-11-18",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Pay per request over HTTP 402 with signed wallet payments",
+   "answer": "An open payment protocol where a server answers 402 Payment Required with its price and a client, such as an AI agent, retries with a payment authorization signed by its wallet, which the server verifies and settles (usually through a facilitator) before or after serving the request.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Scope of the specification.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Document Scope",
+     "quote": "This specification defines the core x402 protocol for internet-native payments.",
+     "check": "OK",
+     "check_fp": "2ebfe682ec"
+    },
+    {
+     "text": "The client sends a signed payment authorization.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Core Payment Flow",
+     "quote": "Client submits a signed payment authorization in the subsequent request",
+     "check": "OK",
+     "check_fp": "1682a3e061"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Paid APIs, content and MCP tools",
+   "answer": "Pay-per-use access to APIs, content and AI tools, including agents paying autonomously. On HTTP, the requirements travel in a PAYMENT-REQUIRED header on a 402 response and the payment in a PAYMENT-SIGNATURE header; on MCP and A2A, in message metadata. The resource server decides, usually by calling a facilitator that verifies and settles the payment; servers can also host those endpoints themselves.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "HTTP payment header.",
+     "type": "fact",
+     "source": "http",
+     "section": "Payment Payload Transmission",
+     "quote": "Clients send payment data using the PAYMENT-SIGNATURE HTTP header.",
+     "check": "OK",
+     "check_fp": "c202e3c7b1"
+    },
+    {
+     "text": "MCP binding.",
+     "type": "fact",
+     "source": "mcp",
+     "section": "Payment Payload Transmission",
+     "quote": "Clients send payment data using the MCP _meta field with key x402/payment.",
+     "check": "OK",
+     "check_fp": "2d21da6d62"
+    },
+    {
+     "text": "Facilitator can be a third party or self-hosted.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7. Facilitator Interface",
+     "quote": "This allows resource servers to delegate blockchain operations to trusted third parties or host the endpoints themselves.",
+     "check": "OK",
+     "check_fp": "f01d3fe6a3"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Resource server, client, facilitator",
+   "answer": "Resource Server: a service that requires payment for its resources. Client: any application or agent requesting them. Facilitator: a service that verifies payments and settles them on the blockchain (or other payment network). The payment network or blockchain itself and the payer's wallet are implied but not listed as roles.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Resource Server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Protocol Components",
+     "quote": "Resource Server: A service that requires payment for access to protected resources (APIs, content, data, etc.)",
+     "check": "OK",
+     "check_fp": "c51c405321"
+    },
+    {
+     "text": "Client.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Protocol Components",
+     "quote": "Client: Any application or agent that requests access to protected resources",
+     "check": "OK",
+     "check_fp": "b9da70a9fb"
+    },
+    {
+     "text": "Facilitator.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Protocol Components",
+     "quote": "Facilitator: A service that handles payment verification and blockchain settlement",
+     "check": "OK",
+     "check_fp": "1935543608"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "v2 released; Foundation-governed; Coinbase facilitator",
+   "answer": "Released. Protocol version 2 was launched on 11 December 2025 after six months of real-world payments under version 1 (over 100 million payments, per the launch post). The Linux Foundation launched the x402 Foundation operationally on 14 July 2026 with 40 member organisations. Coinbase Developer Platform documents its hosted facilitator for production use. The specification is published under Apache 2.0 and its text is still edited under the version 2 label.",
+   "rating": "green",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Green: a released version with a named production deployment documented by the deployer (Coinbase's facilitator), comparable to MCP Authorization.",
+   "claims": [
+    {
+     "text": "V2 based on real-world use.",
+     "type": "fact",
+     "source": "v2-launch",
+     "section": "Why x402 needed a V2",
+     "quote": "V2 evolves the specification based on learnings from 6 months of x402 performing real-world payments",
+     "check": "WEB-OK",
+     "check_fp": "c81963343c"
+    },
+    {
+     "text": "Payment volume.",
+     "type": "fact",
+     "source": "v2-launch",
+     "section": "Why x402 needed a V2",
+     "quote": "it has processed over 100M payments across APIs, apps, and AI agents",
+     "check": "WEB-OK",
+     "check_fp": "158d6e5b1f"
+    },
+    {
+     "text": "Foundation launch.",
+     "type": "fact",
+     "source": "lf-release",
+     "section": "Press release",
+     "quote": "Since the Foundation's intent to launch in April, 40 organizations have joined as members.",
+     "check": "WEB-OK",
+     "check_fp": "7fa6a5b67e"
+    },
+    {
+     "text": "Coinbase's hosted facilitator.",
+     "type": "fact",
+     "source": "cdp",
+     "section": "CDP Facilitator",
+     "quote": "The CDP Facilitator handles that work as a hosted service.",
+     "check": "WEB-OK",
+     "check_fp": "3716a078a3"
+    },
+    {
+     "text": "Version history.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Version History",
+     "quote": "Protocol v2: CAIP-2 networks, restructured PaymentPayload/Required, ResourceInfo separation, extensions support",
+     "check": "OK",
+     "check_fp": "bd1f66d8d9"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "HTTP 402, CAIP-2, EIP-712/EIP-3009, optional RFC 9421",
+   "answer": "HTTP status 402 and custom headers (RFC 9110); CAIP-2 network identifiers; per-network payment mechanisms, e.g. on EVM chains EIP-712 signatures over EIP-3009 transfer authorizations, Permit2 or ERC-7710 delegations; JSON Schema for extensions. Optional extensions use CAIP-122 wallet sign-in (SIWE or SIWS), RFC 9421 HTTP Message Signatures with Web Bot Auth key directories, and OAuth discovery for auth hints.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "CAIP-2 networks.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11.1 Network Identifiers",
+     "quote": "Networks in x402 v2 use CAIP-2 (Chain Agnostic Improvement Proposal) format: namespace:reference.",
+     "check": "OK",
+     "check_fp": "0c8bc063db"
+    },
+    {
+     "text": "EIP-712 signature over EIP-3009 parameters in exact EVM.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2.2 Field Descriptions",
+     "quote": "EIP-712 signature for authorization",
+     "check": "OK",
+     "check_fp": "344917f7fc"
+    },
+    {
+     "text": "RFC 9421 extension.",
+     "type": "fact",
+     "source": "httpsig",
+     "section": "Summary",
+     "quote": "The http-message-signatures extension establishes the identity of the paying agent through cryptographic signatures (RFC 9421).",
+     "check": "OK",
+     "check_fp": "f448e266f7"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Payer's wallet address",
+   "answer": "Partly. The payment names the payer's wallet address (e.g. the from field of an EVM authorization), and the facilitator can report it back as payer (an optional field). That address names whoever controls the paying wallet, which may be the agent, its operator or a user. The core protocol carries no agent identifier; the optional HTTP Message Signatures extension adds a Web Bot Auth style signature agent identity.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST*",
+   "rating_reason": "Yellow: the identifier is a payer wallet address, not an agent identity, and may be shared or freshly created (same colour as the provider-level identifiers of the calibration examples).",
+   "claims": [
+    {
+     "text": "Payer address in the authorization.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2.2 Field Descriptions (Authorization)",
+     "quote": "Payer's wallet address",
+     "check": "OK",
+     "check_fp": "9cd1d9c28d"
+    },
+    {
+     "text": "Payer returned to the server.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3.2 Field Descriptions",
+     "quote": "Address of the payer's wallet",
+     "check": "OK",
+     "check_fp": "c5039ecb5c"
+    },
+    {
+     "text": "Agent identity only through an extension.",
+     "type": "fact",
+     "source": "httpsig",
+     "section": "Purpose",
+     "quote": "Establishes the cryptographic identity of the paying agent and provides information on how to associate that identity with the network for billing.",
+     "check": "OK",
+     "check_fp": "f5ac14861f"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. Each payment has its own nonce, and the optional payment-identifier extension adds an idempotency key, but neither identifies the agent instance. A deployment could give each agent instance its own wallet, but x402 does not define this.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Nonce is per payment.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2.2 Field Descriptions (Authorization)",
+     "quote": "32-byte random nonce to prevent replay attacks",
+     "check": "OK",
+     "check_fp": "5001850693"
+    },
+    {
+     "text": "Payment identifier is an idempotency key.",
+     "type": "fact",
+     "source": "payid",
+     "section": "Summary",
+     "quote": "The payment-identifier extension enables clients to provide an id that serves as an idempotency key.",
+     "check": "OK",
+     "check_fp": "e4751649d2"
+    },
+    {
+     "text": "Searched the core types, the HTTP and MCP transports and the extensions for an agent or instance identifier. None is defined; the payment-identifier extension provides an idempotency key only.",
+     "type": "silent",
+     "source": "spec",
+     "section": "5. Types",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "No",
+   "answer": "No. x402 shows who paid (a wallet address), not on whose behalf an agent acts. The specification mentions integration with sign-in systems such as Sign-In with Ethereum for authenticated pricing, and the optional sign-in-with-x extension proves control of a wallet address; neither identifies a principal behind an agent. The auth-hints extension points clients to OAuth, which could add a user identity outside x402.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: whom the agent acts for is not defined (same as MCP Authorization and Web Bot Auth); wallet sign-in and OAuth hints are mentioned in the answer.",
+   "claims": [
+    {
+     "text": "Authentication integration mentioned only for pricing.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.2 Authentication Integration",
+     "quote": "The protocol supports integration with authentication systems (e.g., Sign-In with Ethereum - SIWE) to enable authenticated pricing models where verified users receive discounted rates or special access terms.",
+     "check": "OK",
+     "check_fp": "e91212035d"
+    },
+    {
+     "text": "Authentication and payment are separate concerns.",
+     "type": "fact",
+     "source": "authhints",
+     "section": "Authentication Without Hints",
+     "quote": "Authentication and payment are parallel concerns- authentication identifies the client, payment authorizes the transfer of value.",
+     "check": "OK",
+     "check_fp": "20cdc9acec"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Signed payment authorization, paid requests only",
+   "answer": "Partly. On a paid request the client sends a PaymentPayload: the chosen payment option plus a scheme-specific payment signed with its wallet key (for exact on EVM, an EIP-712 signature over an EIP-3009 transfer from the payer to payTo with a value, validity window and nonce). It proves control of funds and is single-use, but it does not sign the HTTP request itself, and unpaid requests carry nothing. A signature on every request exists only through the optional HTTP Message Signatures extension.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST*",
+   "rating_reason": "Yellow: a verifiable credential is defined only for requests that require payment, and it authorizes a transfer rather than authenticating the request.",
+   "claims": [
+    {
+     "text": "Exact EVM payload.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.2.2 Field Descriptions",
+     "quote": "EIP-3009 authorization parameters",
+     "check": "OK",
+     "check_fp": "b1628a978b"
+    },
+    {
+     "text": "Signed by the payer.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.1 Replay Attack Prevention",
+     "quote": "Signature Verification: All authorizations are cryptographically signed by the payer",
+     "check": "OK",
+     "check_fp": "fc04ec3a21"
+    },
+    {
+     "text": "Payment only when required.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Core Payment Flow",
+     "quote": "If no valid payment is attached, the server responds with a payment required signal and payment requirements",
+     "check": "OK",
+     "check_fp": "b7f990d62d"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Validity window, set per payment; single use",
+   "answer": "Partly. Authorizations carry an explicit validity window (e.g. validAfter and validBefore on EVM), and the server's requirements state maxTimeoutSeconds, the maximum time for payment completion. The facilitator checks the window against the requirements, and each nonce can be used once on chain. But the core gives no maximum, and how strictly the window is bounded depends on each network's mechanism.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST*",
+   "rating_reason": "Yellow: validity windows are required and checked, but no specific maximum is set by the protocol; it varies by mechanism and server setting (unlike Visa TAP's 8 minutes).",
+   "claims": [
+    {
+     "text": "Time windows.",
+     "type": "fact",
+     "source": "spec",
+     "section": "10.1 Replay Attack Prevention",
+     "quote": "Time Constraints: Authorizations have explicit valid time windows to limit their lifetime",
+     "check": "OK",
+     "check_fp": "2fe87464f8"
+    },
+    {
+     "text": "maxTimeoutSeconds.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1.2 Field Descriptions",
+     "quote": "Maximum time allowed for payment completion",
+     "check": "OK",
+     "check_fp": "498575cea5"
+    },
+    {
+     "text": "Facilitator checks the window (EVM).",
+     "type": "fact",
+     "source": "exact-evm",
+     "section": "Phase 2: Verification Logic",
+     "quote": "Verify the authorization parameters (Amount, Validity Window) meet the PaymentRequirements.",
+     "check": "OK",
+     "check_fp": "500cfe0475"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, via facilitator or on chain",
+   "answer": "Yes. The server, usually through a facilitator it chooses, checks that the signature recovers to the payer's address, that the payer has enough balance, that amount, recipient, token, network and validity window match the requirements; settlement on chain then consumes the nonce. No prior relationship with the client is needed. The server relies on the facilitator's answer unless it verifies itself.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST*",
+   "rating_reason": "Green: verifiable without a prior relationship, with time checks (same colour as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Signature check.",
+     "type": "fact",
+     "source": "exact-evm",
+     "section": "Phase 2: Verification Logic",
+     "quote": "Verify the signature is valid and recovers to the authorization.from address.",
+     "check": "OK",
+     "check_fp": "977a4cbd6f"
+    },
+    {
+     "text": "Balance check.",
+     "type": "fact",
+     "source": "exact-evm",
+     "section": "Phase 2: Verification Logic",
+     "quote": "Verify the client has sufficient balance of the asset.",
+     "check": "OK",
+     "check_fp": "66b00a7219"
+    },
+    {
+     "text": "At least one check before execution.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.1 Asset Transfer Methods and Payment Flow Models",
+     "quote": "Invariant: at least one check — a verify or settle before the resource — MUST run before the resource executes.",
+     "check": "OK",
+     "check_fp": "c2a9876f75"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "No by default; optional sign-in extensions",
+   "answer": "No by default. Verifying a payment shows that the holder of a wallet key authorized a transfer, not who the agent or user is; the auth-hints extension itself says authentication and payment are parallel concerns. Optional extensions add authentication: sign-in-with-x lets the server verify a signed challenge proving control of a wallet address, and HTTP Message Signatures lets agents sign requests with a registered key (Web Bot Auth style, often a provider-level key).",
+   "rating": "yellow",
+   "coverage": "extension",
+   "requirement": "MAY*",
+   "rating_reason": "Yellow: the server can authenticate a wallet holder itself, but only through an optional extension; the core payment check is not authentication.",
+   "claims": [
+    {
+     "text": "Parallel concerns.",
+     "type": "fact",
+     "source": "authhints",
+     "section": "Authentication Without Hints",
+     "quote": "Authentication and payment are parallel concerns- authentication identifies the client, payment authorizes the transfer of value.",
+     "check": "OK",
+     "check_fp": "20cdc9acec"
+    },
+    {
+     "text": "SIWX proves wallet control.",
+     "type": "fact",
+     "source": "siwx",
+     "section": "Summary",
+     "quote": "Clients prove control of a wallet address by signing a challenge message, allowing servers to identify returning users and skip payment for addresses that have previously paid.",
+     "check": "OK",
+     "check_fp": "c3a26f3075"
+    },
+    {
+     "text": "SIWX is between server and client.",
+     "type": "fact",
+     "source": "siwx",
+     "section": "Summary",
+     "quote": "The Facilitator is not involved in the authentication flow.",
+     "check": "OK",
+     "check_fp": "60598c6526"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Paid or not, per resource",
+   "answer": "Partly. The only permission x402 conveys is that a specific payment for a specific resource was made: the server sets amount, asset and recipient per resource, and access follows payment. There are no scopes or per-action rights. Spending limits on the client side (budgets) are out of scope and implementation-specific; on EVM, ERC-7710 delegations can carry on-chain caveats outside x402.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "MUST*",
+   "rating_reason": "Yellow: only a coarse paid-or-not decision per resource, with spending limits outside the protocol (same colour as Visa TAP).",
+   "claims": [
+    {
+     "text": "Client-side budgets out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "Document Scope (Out of Scope)",
+     "quote": "Client-side budget management",
+     "check": "OK",
+     "check_fp": "27ad388bb0"
+    },
+    {
+     "text": "Budgets implementation-specific.",
+     "type": "fact",
+     "source": "spec",
+     "section": "12.1 AI Agent Integration",
+     "quote": "Budget management and spending controls (implementation-specific)",
+     "check": "OK",
+     "check_fp": "c41d709241"
+    },
+    {
+     "text": "Delegations obtained outside x402.",
+     "type": "fact",
+     "source": "exact-evm",
+     "section": "3. AssetTransferMethod: ERC-7710, Phase 1",
+     "quote": "The process of obtaining a delegation is outside the scope of x402.",
+     "check": "OK",
+     "check_fp": "0d441797be"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "No",
+   "answer": "No. Agents can pay autonomously; x402 defines no step in which a person approves a payment or an action. Any approval happens in the client's wallet or agent, outside the protocol.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed.",
+   "claims": [
+    {
+     "text": "Autonomous payment by agents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "12.1 AI Agent Integration",
+     "quote": "AI agents can use x402 to autonomously pay for resources and services.",
+     "check": "OK",
+     "check_fp": "c8f1ae321d"
+    },
+    {
+     "text": "Searched the core specification, the transports and the extensions for consent, approval or confirmation steps. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Nobody; payment replaces trust",
+   "answer": "Nobody. The server relies on the payment itself, checked by a facilitator it chooses, rather than on anyone vouching for the agent; anyone with a funded wallet can pay. The optional HTTP Message Signatures extension lets a payment network register signature agents for billing, but x402 defines no vetting.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: the protocol names no party that vouches for agents (same as Web Bot Auth).",
+   "claims": [
+    {
+     "text": "Registration with a network only in an extension.",
+     "type": "fact",
+     "source": "httpsig",
+     "section": "Usage",
+     "quote": "Register their signature agent URL with the network via the registrationUrl",
+     "check": "OK",
+     "check_fp": "a6cd74254b"
+    },
+    {
+     "text": "Searched the core specification and extensions for onboarding, registries or attestations of agents. None is defined; the Bazaar discovery describes resources, not agents.",
+     "type": "silent",
+     "source": "spec",
+     "section": "8. Discovery API; 10. Security Considerations",
+     "quote": ""
+    },
+    {
+     "text": "Any application or agent may be a client; paying requires only a wallet that can sign a valid authorization (inference from the roles and payment flow).",
+     "type": "inference",
+     "source": "spec",
+     "section": "3. Protocol Components",
+     "quote": "Client: Any application or agent that requests access to protected resources",
+     "check": "OK",
+     "check_fp": "b9da70a9fb"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Not defined",
+   "answer": "Not defined. A signed payment authorization stops being usable when its validity window ends or its nonce is consumed on chain; x402 defines no way to revoke a client's access, and under pre-execution settlement it defines no refund. A server can simply stop accepting payments from a wallet address in its own policy.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no revocation is defined (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "No refund defined for upfront settlement.",
+     "type": "fact",
+     "source": "exact",
+     "section": "Payment Flow",
+     "quote": "this specification defines no refund, and any remedy is the resource server's own arrangement.",
+     "check": "OK",
+     "check_fp": "fbb0e2bad9"
+    },
+    {
+     "text": "Searched the core specification, schemes and extensions for revocation or blocking. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No. x402 describes the resource (URL, description, service name) but defines no contact or escalation field for the client, its operator or the payer. A wallet address is the only handle on the paying side.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field or process (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the PaymentPayload, PaymentRequired and extension schemas for contact, support or abuse fields for the client. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "5. Types",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. The discovery API (Bazaar) lists paid resources for clients, but nothing lets servers or facilitators share information about a misbehaving client. Public blockchains record settled payments, which anyone can inspect, but x402 defines no signalling on top.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed.",
+   "claims": [
+    {
+     "text": "Searched the core specification (including 8. Discovery API) and the extensions for reputation, abuse reports or shared signals. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "8. Discovery API; 10. Security Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. Nothing in the payment, the transports or the extensions says which AI model the client uses.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model.",
+   "claims": [
+    {
+     "text": "Searched the PaymentPayload schema, transports and extensions for a model or client software field. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "5.2 PaymentPayload Schema",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "A server can gate each resource behind a verified payment of a set amount, so access follows payment; it learns a payer wallet address but not the agent's identity, principal or permissions unless optional extensions are used.",
+  "incident_response": "A server can refuse further payments from a wallet address, but anyone can create a new wallet; there is no revocation, contact channel or way to warn other servers.",
+  "accountability": "Each paid request can be traced to a wallet address and an on-chain transaction, which is durable and public, but linking that wallet to an agent, operator or user requires information outside the core protocol."
+ },
+ "notes": [
+  "Name collision: 'x402' refers to this payment protocol; it is unrelated to the X.400/X.509 ITU-T standards naming. Version 1 and version 2 of x402 differ (e.g. v1 used X-PAYMENT headers); this analysis covers version 2.",
+  "Mechanism profile is 'other': the per-request proof is a blockchain payment authorization signed with a wallet key (e.g. EIP-712/EIP-3009), which none of the fixed mechanism values describes. HTTP Message Signatures appear only in an optional extension.",
+  "The x402 specification mixes RFC 2119 capitals (MUST, SHOULD) with lowercase 'must' and table 'Required' markers. Requirement tags with an asterisk reflect points that rest on schema 'Required' fields or lowercase words.",
+  "Extensions (sign-in-with-x, http-message-signatures, auth-hints, payment-identifier) are published in the same repository and rated as 'extension' coverage.",
+  "The x402.org, Linux Foundation and Coinbase pages were checked with a web tool, which limits quotes to about 125 characters, so some quotes are fragments. An earlier Coinbase FAQ sentence about operating 'the first production facilitator' was no longer on the page and was not used.",
+  "first_published 2025-05 reflects Coinbase's announcement of x402 in May 2025 as reported by secondary sources; it is not cited in the rows."
+ ],
+ "open_questions": [
+  "How strictly do facilitators bound the EVM validBefore value relative to maxTimeoutSeconds, given that the EVM verification step only says the window must 'meet' the requirements?",
+  "Which servers use the sign-in-with-x or HTTP Message Signatures extensions in production to identify agents?",
+  "Will the x402 Foundation freeze dated versions of the v2 text, given ongoing edits under the same version label?"
+ ]
+}</script></body></html>

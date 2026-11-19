@@ -1,0 +1,980 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KYA-OS: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>KYA-OS<small>Know Your Agent Operating System (formerly MCP-I, Model Context Protocol - Identity)</small></h1><ul class="facts"><li><b>Specification:</b> KYA-OS Protocol Specification 1.0.0 (SPEC.md) with the Entity Card profile 1.1 and the MCP Extension Binding 1.0.0-draft, read at commit 11e5f96 of decentralized-identity/kya-os-mcp</li><li><b>Date:</b> 1.0.0 released 2026-07-29; text read at commit 11e5f96 dated 2026-11-18</li><li><b>Maintainer:</b> Decentralized Identity Foundation (DIF), Trusted AI Agents Working Group, KYA-OS task force; donated by Vouched, editor Dylan Hobbs (Vouched)</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> The specification text keeps changing under the same 1.0.0 label (108 commits to SPEC.md, the latest on 2026-11-18), so this analysis is pinned to commit 11e5f96. The npm reference implementation has its own version numbers (1.26.0 in the changelog at this commit).</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent authorization</span><span class="chip"><b>Also:</b> Credentials trust</span><span class="chip"><b>Mechanism:</b> DID, Verifiable credential, HTTP Message Signatures, Signed metadata</span><span class="chip"><b>Venue:</b> Foundation</span><span class="chip"><b>Maturity:</b> Stable</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>KYA-OS (Know Your Agent Operating System, formerly MCP-I) adds identity, delegation and audit proofs to AI agents calling tools, first of all MCP servers. It answers three questions for the receiving server: who is calling, under whose authority, and what was done. Vouched wrote it and donated it to the Decentralized Identity Foundation (DIF) in March 2026, where the Trusted AI Agents Working Group released version 1.0.0 in July 2026 and calls it a ratified DIF standard. A TypeScript reference implementation (@kya-os/mcp) is published by DIF, and Vouched sells products built on it.</p><p>Each agent creates its own key and decentralized identifier (DID). On each call, the agent attaches a short-lived signature (at most 60 seconds) tied to the request, the server and a one-time nonce. Authority comes from a chain of signed delegation credentials rooted at a Responsible Party, with scoped actions and caveats such as spending limits, revocable through status lists. If authority is missing, the server can send the user to a consent page. The server signs its responses for audit. KYA-OS leaves the choice of which roots to trust to each server, and defines no contact channel, cross-server signalling or model identity; an older session-based profile with weaker guarantees remains valid in 1.x.</p><h2 id="how">How it works</h2><ol class="steps"><li>Setup: the agent generates its own Ed25519 key pair and DID (did:key, or did:web published by its controller). The user or organisation that is accountable (the Responsible Party) signs a delegation credential naming the agent&#x27;s key, with the allowed actions or scopes, caveats such as a maximum amount, an expiry and a revocation status entry; longer chains can re-delegate with narrower rights.</li><li>The agent calls a tool on a KYA-OS server. In the per-request profile it attaches a proof object signed with its key, covering a hash of the request, the server&#x27;s DID as audience, a nonce and a validity window of at most 60 seconds, and may carry its delegation chain in the request metadata.</li><li>The server resolves the agent&#x27;s DID document, checks that the key belongs to the DID, the audience, the request hash, the time window, that the nonce is new, and the signature.</li><li>The server then verifies the delegation chain: each hop&#x27;s signature, that each hop narrows its parent, that the last delegate is the key that signed the request, that the root is one it trusts (if configured), that the invoked action is allowed, and that no hop is revoked in its issuer&#x27;s status list.</li><li>If the delegation is missing or insufficient, the server returns a signed needs_authorization challenge with a consent URL; the user approves there, a new delegation credential is issued and the agent retries.</li><li>If all checks pass, the server runs the tool and returns the result with a signed response proof binding the request and response hashes and the delegation used, which both sides can keep for audit.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>KYA-OS</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">DID identity, delegation chains and proofs for MCP agents</td></tr><tr><td class="prop">Use cases</td><td class="">Agents calling MCP tools; downstream HTTP calls</td></tr><tr><td class="prop">Parties involved</td><td class="">Agent, Principal, Responsible Party, server, verifier, issuers</td></tr><tr><td class="prop">Status and adoption</td><td class="green">1.0.0 Stable at DIF; Vouched&#x27;s products implement it</td></tr><tr><td class="prop">Building blocks</td><td class="">DIDs, W3C VCs, ZCAP-LD, status lists, Ed25519 JWS</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="green">Agent&#x27;s own DID</td></tr><tr><td class="prop">Agent instance identifier</td><td class="yellow">Per-delegation keys recommended</td></tr><tr><td class="prop">Acting for (authority)</td><td class="yellow">Responsible Party DID, when delegation is used</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Per-request holder-of-key signature</td></tr><tr><td class="prop">Credential lifetime</td><td class="green">60 seconds, enforced by verifiers</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, by DID resolution</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="green">Yes, the agent&#x27;s own key per request</td></tr><tr><td class="prop">Scoped authorization</td><td class="green">Yes, scoped and attenuated delegations</td></tr><tr><td class="prop">Human approval</td><td class="green">Yes, server-triggered consent step-up</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="yellow">Responsible Party; which roots to trust is local</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="green">Yes, per delegation via status lists</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No; registry and reputation only described</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>A server can allow or refuse each call by the agent&#x27;s own key and by a scoped, attenuated delegation chain, including spending caveats, and can ask the user for consent when authority is missing. Which delegation roots it accepts is its own configuration.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>Delegations can be revoked by the issuer, any ancestor or the Responsible Party, cascading to sub-delegations, and verifiers see it through status lists within about a minute for high-privilege scopes. There is no contact channel or way to warn other servers.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Each call can be traced to the agent&#x27;s key, the delegation chain and its Responsible Party, and the server&#x27;s signed response proofs and audit records bind what was requested and returned. The Responsible Party is a DID, linked to a verified person or organisation only if a KYC credential is attached.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Contact and escalation:</b> No (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No; registry and reputation only described (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>KYA-OS</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">A DIF specification, first bound to MCP, where each agent signs every call with its own DID key and presents a revocable, scoped delegation chain rooted at an accountable party, so the server can check who is calling, under whose authority, and keep signed proofs of what was done.<details><summary>Evidence (2)</summary><div class="claim">The specification&#x27;s abstract. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“KYA-OS enables MCP servers to verify who is calling (agent DID), what authority they hold (a delegation chain rooted at a Responsible Party, expressed as W3C Verifiable Credentials), and what was done (signed proof for audit trails).”</blockquote></div><div class="claim">Every request carries its own proof in the per-request profile. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 8. Per-Request Holder-of-Key Proof. <span class="chk">(quote verified against the source)</span><blockquote>“There is no session establishment and no handshake; every request carries its own proof.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Agents calling tools and resources on MCP servers, including across organisations, with delegated authority (e.g. payments within a limit). The proof and delegation chain travel in the MCP request metadata (_meta); outbound HTTP calls use KYA-OS headers; discovery uses Entity Cards projected onto MCP, A2A and NANDA metadata. The MCP server verifies itself (Level 2 and above) or an edge proxy verifies for legacy servers (Level 1), and gateways may pre-check headers.<details><summary>Evidence (3)</summary><div class="claim">A layer that host protocols embed; MCP is the first binding. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/README.md">kya-os-mcp repository, README.md</a>, What KYA-OS is. <span class="chk">(quote verified against the source)</span><blockquote>“KYA-OS is not a transport or a runtime, it is an identity and accountability layer that host protocols embed.”</blockquote></div><div class="claim">Cross-organisational verification with a carried chain. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 10.5 Carrying the chain with the request. <span class="chk">(quote verified against the source)</span><blockquote>“This is the cross-organizational case: a resource server can verify an agent acting for an organization whose delegation records it cannot query.”</blockquote></div><div class="claim">Edge proxy at Level 1, native verification at Level 2 and above. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 11.0 Trust Model. <span class="chk">(quote verified against the source)</span><blockquote>“At Conformance Level 2+, verification moves into the resource boundary (native server-side verification).”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Agent: AI software identified by its own DID. Principal: whoever immediately delegates authority to the agent, typically the human operator. Responsible Party: the root issuer of the delegation chain, ultimately accountable (an organisation, or the Principal in personal use). MCP server or service: the resource being called, itself identified by a DID. Verifier: checks credentials, sometimes an edge proxy. Issuers: sign delegation, capability or identity-verification credentials. Registries (delegation, credential, trust) are optional indexes.<details><summary>Evidence (5)</summary><div class="claim">Agent DID. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 2. Terminology (Agent DID). <span class="chk">(quote verified against the source)</span><blockquote>“A Decentralized Identifier (DID) that uniquely identifies an AI agent.”</blockquote></div><div class="claim">Principal. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 2. Terminology (Principal). <span class="chk">(quote verified against the source)</span><blockquote>“The entity that immediately delegates authority to an agent — typically the human operator who launches the agent for a task.”</blockquote></div><div class="claim">Responsible Party. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 2. Terminology (Responsible Party). <span class="chk">(quote verified against the source)</span><blockquote>“The entity ultimately accountable for the actions of an agent operating under a delegation chain.”</blockquote></div><div class="claim">Verifier, often an edge proxy at Level 1. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 11.0 Trust Model. <span class="chk">(quote verified against the source)</span><blockquote>“At Conformance Level 1 (edge-proxy verification), the verifier sits in front of legacy MCP servers that don&#x27;t natively understand KYA-OS.”</blockquote></div><div class="claim">Registries. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.8 Protocol Registry. <span class="chk">(quote verified against the source)</span><blockquote>“The registry indexes anything addressable by DID — agents, MCP servers, services, and delegation policies.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="green"><span class="badge">Addressed</span><br>Released. SPEC.md is version 1.0.0, marked Stable and described as ratified as a DIF standard; DIF and Vouched announced its release on 29 July 2026. The MCP extension binding is still a draft, and the text keeps changing under the 1.0.0 label. DIF publishes the reference implementation, and Vouched says its Know Your Agent product suite implements KYA-OS; no third-party deployment was found in a deployer&#x27;s own source.<div class="meta">Why this rating: A released version its maintainers call stable, with a named implementation by Vouched (its author); borderline, since no independent deployment was found and the MCP binding is a draft.</div><details><summary>Evidence (4)</summary><div class="claim">Stable 1.0.0 status. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, Status. <span class="chk">(quote verified against the source)</span><blockquote>“Stable 1.0.0 — Donated to DIF TAAWG (Decentralized Identity Foundation, Trusted AI Agents Working Group) and ratified as a DIF standard.”</blockquote></div><div class="claim">Release announcement. <i>Source states</i> <a href="https://www.businesswire.com/news/home/20260729377753/en/">Business Wire, Vouched and the Decentralized Identity Foundation Launch KYA-OS, an Open Trust Layer for AI Agents</a>, Press release. <span class="chk">(quote verified against the source)</span><blockquote>“Vouched and the Decentralized Identity Foundation (DIF) today announced the release of KYA-OS Protocol Specification v1.0.0”</blockquote></div><div class="claim">Vouched&#x27;s product suite implements it. <i>Source states</i> <a href="https://www.vouched.id/know-your-agent">Vouched, Know Your Agent product page</a>, Know Your Agent. <span class="chk">(quote verified against the source)</span><blockquote>“built Know Your Agent as the product suite that implements it.”</blockquote></div><div class="claim">The MCP extension binding is a draft. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-MCP-EXTENSION.md">KYA-OS MCP Extension Binding (SPEC-MCP-EXTENSION.md), 1.0.0-draft</a>, Header. <span class="chk">(quote verified against the source)</span><blockquote>“Version: 1.0.0-draft”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">Decentralized Identifiers (did:key and did:web, optionally did:cheqd); W3C Verifiable Credentials (1.1 for the legacy delegation shape, 2.0 with ZCAP-LD capabilities for the newer profile); StatusList2021 and Bitstring Status List for revocation; Ed25519 (RFC 8032) signatures in JWS (RFC 7515), with ES256 allowed for request proofs; RFC 8785 JSON canonicalization; an optional RFC 9421 HTTP signature sibling; RFC 7638 thumbprints and DPoP-style cnf binding (RFC 9449); MCP 2026-07-28 and its OAuth hardening for the consent flow.<details><summary>Evidence (3)</summary><div class="claim">DIDs, VCs, Ed25519 and StatusList2021. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“The protocol uses Decentralized Identifiers (DIDs) for agent identity, W3C Verifiable Credentials for delegation, Ed25519 signatures for cryptographic operations, and StatusList2021 for revocation.”</blockquote></div><div class="claim">VC 2.0 with ZCAP-LD in the newer profile. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.10 Card-era profile: VC 2.0 + ZCAP-LD delegation. <span class="chk">(quote verified against the source)</span><blockquote>“A DelegationCredential is a VC 2.0 whose credentialSubject IS an attenuated ZCAP-LD capability”</blockquote></div><div class="claim">Optional RFC 9421 sibling signature. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 8.5 RFC 9421 HTTP Message Signature sibling (dual carrier). <span class="chk">(quote verified against the source)</span><blockquote>“A stock RFC 9421 verifier (SEP-1960, Cloudflare Web Bot Auth) reconstructs this base and verifies httpSig against the resolved DID key with zero new code.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Each agent is identified by a DID it controls: did:key (derived from its public key) or did:web (a document its controller publishes). The agent must generate its own key pair, and no registry or verifier may generate or hold it. In the per-request profile the proof names the caller&#x27;s DID and key id, and the key must be listed in that DID&#x27;s document. A did:web may be a persistent, organisation-hosted identity.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the agent itself, with a key each agent generates (unlike the provider-level identifiers of all three calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">The Agent DID identifies an AI agent. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 2. Terminology (Agent DID). <span class="chk">(quote verified against the source)</span><blockquote>“A Decentralized Identifier (DID) that uniquely identifies an AI agent.”</blockquote></div><div class="claim">Agents generate their own key pair. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 4.5 Agent-Controlled Key Generation. <span class="chk">(quote verified against the source)</span><blockquote>“An agent MUST generate its own keypair locally.”</blockquote></div><div class="claim">Key generation on the agent&#x27;s behalf is non-conformant. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 4.5 Agent-Controlled Key Generation. <span class="chk">(quote verified against the source)</span><blockquote>“Implementations that generate or hold agent secret keys on the agent&#x27;s behalf are non-conformant.”</blockquote></div><div class="claim">did:web is the persistent, organisation-hosted option. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 4.1 Supported DID Methods. <span class="chk">(quote verified against the source)</span><blockquote>“Production servers, organizational identity”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The recommended delegate is a fresh, single-purpose did:key minted per delegation, and every request proves possession of that key, so the server can tell one delegated agent instance from another. But this is a recommendation: an agent may use one persistent did:web across many delegations and running copies, and the legacy session profile allows anonymous sessions without an agent DID.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: A per-instance key is the recommended model but not required, and a persistent DID may be shared by many running copies (all three calibration examples are red).</div><details><summary>Evidence (3)</summary><div class="claim">Fresh key per delegation is RECOMMENDED. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 1.4 Delegation key model. <span class="chk">(quote verified against the source)</span><blockquote>“The RECOMMENDED delegate subject is a fresh, single-purpose did:key minted per delegation”</blockquote></div><div class="claim">Possession is proven on every request. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 1.4 Delegation key model. <span class="chk">(quote verified against the source)</span><blockquote>“Possession of that key is proven on every request”</blockquote></div><div class="claim">did:web as an alternative durable name. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 1.4 Delegation key model. <span class="chk">(quote verified against the source)</span><blockquote>“An Entity that needs a durable, resolvable name across devices MAY instead use a did:web subject.”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. When a call is authorized by delegation, the server recomputes the Responsible Party as the signed root issuer of the chain, and can see the Principal and every hop. That party is a DID, not necessarily a verified person or company: identity verification (KYC or KYB) can be attached as an optional credential. Delegation belongs to conformance Level 3, so servers at lower levels learn no principal.<div class="meta">Optional in the specification · requirement level: MUST</div><div class="meta">Why this rating: Required (MUST) whenever a call is authorized by delegation, but delegation is only at conformance Level 3 or for gated tools, and identity verification of the party is optional (between Visa TAP&#x27;s optional object and a required verified identity).</div><details><summary>Evidence (4)</summary><div class="claim">Every chain ends at a Responsible Party. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.4 Delegation Graph. <span class="chk">(quote verified against the source)</span><blockquote>“Every chain MUST terminate at a Responsible Party.”</blockquote></div><div class="claim">Delegation is Level 3. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 15. Conformance. <span class="chk">(quote verified against the source)</span><blockquote>“Level 3 — Full Delegation: VC issuance/verification, delegation graphs, revocation, outbound propagation”</blockquote></div><div class="claim">KYC/KYB as an optional credential on the Responsible Party. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 10.4 KYC/KYB. <span class="chk">(quote verified against the source)</span><blockquote>“KYC/KYB rides the same rail as an IdentityVerificationCredential on the responsibleParty, asserting the verification fact and level, never raw PII”</blockquote></div><div class="claim">On success the verifier holds the recomputed Responsible Party. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 11.4 Request delegation verification. <span class="chk">(quote verified against the source)</span><blockquote>“On success the Verifier holds the recomputed responsibleParty, the leaf invoker, the leaf&#x27;s granted actions, the chain depth”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. In the per-request profile every call carries a proof object signed with the agent&#x27;s DID key (EdDSA or ES256), covering a hash of the request method and parameters, the server&#x27;s DID as audience, a nonce, and created and expires times; it is proof of possession, so a captured credential is useless without the key. An RFC 9421 HTTP signature can be added. The delegation credentials are signed by their issuers. A server that gates a call rejects it without a proof; the older session profile, still valid in 1.x, works differently.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: A verifiable, proof-of-possession credential on every gated request (stronger than the calibration examples, which are also green).</div><details><summary>Evidence (4)</summary><div class="claim">Covered claims of the proof. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 8.4 Detached JWS carrier (canonical). <span class="chk">(quote verified against the source)</span><blockquote>“The covered claims are every proof field EXCEPT the two signatures (jws, httpSig), i.e. {prf, alg, did, kid, audience, nonce, created, expires, requestHash} plus cnf when present.”</blockquote></div><div class="claim">Missing proof on a gated call is rejected. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-MCP-EXTENSION.md">KYA-OS MCP Extension Binding (SPEC-MCP-EXTENSION.md), 1.0.0-draft</a>, 4.3 Stripped declarations are absent declarations. <span class="chk">(quote verified against the source)</span><blockquote>“a missing or stripped proof on a gated call is rejected by the proof gate (proof_missing, §5.2), regardless of what the declaration said;”</blockquote></div><div class="claim">The per-request proof is the normative authority. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 5. Session Lifecycle (normative framing). <span class="chk">(quote verified against the source)</span><blockquote>“A conformant verifier MUST be able to authorize and audit a request from the proof and grant alone, with no server-side session state.”</blockquote></div><div class="claim">Undeclared clients are processed as core MCP in optional mode. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-MCP-EXTENSION.md">KYA-OS MCP Extension Binding (SPEC-MCP-EXTENSION.md), 1.0.0-draft</a>, 4.1 Optional mode. <span class="chk">(quote verified against the source)</span><blockquote>“A request from a client that did not declare the extension is processed as core MCP.”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="green"><span class="badge">Addressed</span><br>Very short for the request proof: expires minus created must not exceed 60 seconds, checked with about 5 seconds of clock skew, and verifiers reject a longer window (ttl_too_long) or an expired one; the nonce must be unseen. Delegation credentials carry their own expiry set by the issuer with no maximum, and short-lived delegations are recommended for high-stakes resources. Legacy sessions expire after 30 minutes idle by default.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A specific short maximum that verifiers must enforce (same colour as Visa TAP&#x27;s 8-minute window).</div><details><summary>Evidence (3)</summary><div class="claim">60-second maximum. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 8.2 Object. <span class="chk">(quote verified against the source)</span><blockquote>“and expires - created MUST NOT exceed 60 seconds”</blockquote></div><div class="claim">Verifier check. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 11.2 Proof verification, step 7. <span class="chk">(quote verified against the source)</span><blockquote>“expires - created ≤ 60 (ttl_too_long)”</blockquote></div><div class="claim">Short-lived delegations recommended for high-stakes resources. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.5.2 Concurrency and the Revocation Race. <span class="chk">(quote verified against the source)</span><blockquote>“Operators of high-stakes resources SHOULD reduce the race window by issuing short-lived delegations”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The server resolves the caller&#x27;s DID (did:key locally, did:web over HTTPS), checks that the key belongs to that DID, then checks the audience, the request hash, the time window, the nonce and the signature, failing closed on any error. Delegation hops are verified against their issuers&#x27; DID documents and status lists. No prior relationship with the agent is needed.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Verifiable from published DID documents with expiry checks and no prior relationship (same as the three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">The key must be in the DID document. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 12.1 Impersonation (forged principal). <span class="chk">(quote verified against the source)</span><blockquote>“the per-request proof&#x27;s kid MUST resolve to a verification method of proof.did”</blockquote></div><div class="claim">Audience check. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 11.2 Proof verification, step 5. <span class="chk">(quote verified against the source)</span><blockquote>“audience === expectedAudience, else audience_mismatch.”</blockquote></div><div class="claim">A carried chain verifies without a registry or other out-of-band lookup. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 10.5 Carrying the chain with the request. <span class="chk">(quote verified against the source)</span><blockquote>“A Verifier that reads a carried chain needs no registry or other out-of-band lookup to reconstruct the caller&#x27;s authority.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, for the agent. On each request the server verifies a signature made with the agent&#x27;s own DID key, which the agent generated and no other party may hold, and the delegation only works for the key it names (the last delegate must equal the signer). The server does not authenticate the human user; the user appears as the signer of the delegation. The legacy session profile, still valid in 1.x, allows weaker modes such as anonymous sessions.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: The service verifies per-request proof from a per-agent key (unlike all three calibration examples, which verify provider-level keys or tokens issued elsewhere); borderline because the legacy profile remains valid.</div><details><summary>Evidence (3)</summary><div class="claim">Level 2+ authenticates the agent, but access rests on delegation. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 11.0 Trust Model. <span class="chk">(quote verified against the source)</span><blockquote>“Direct server-side verification (Conformance Level 2+) authenticates the agent&#x27;s identity, but the access decision still rests on the delegation chain the agent presents”</blockquote></div><div class="claim">Leaf join. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 11.4 Request delegation verification, step 3. <span class="chk">(quote verified against the source)</span><blockquote>“The leaf delegate equals proof.did (§10.2), else delegation_invalid.”</blockquote></div><div class="claim">Legacy handshake allows anonymous sessions. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 5.3 Session Creation. <span class="chk">(quote verified against the source)</span><blockquote>“identityState: &#x27;anonymous&#x27; | &#x27;authenticated&#x27;;”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Delegation credentials carry scopes or allowed actions, an audience or invocation target, time bounds and caveats such as a maximum amount or a budget. Each re-delegation must be equal or narrower, every call must name the specific scope it uses, and the server rejects actions outside the leaf&#x27;s grant. These checks are required whenever the server authorizes by delegation.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Fine-grained permissions the service enforces (same colour as MCP Authorization&#x27;s scopes).</div><details><summary>Evidence (3)</summary><div class="claim">Attenuation at every hop. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.10 Card-era profile. <span class="chk">(quote verified against the source)</span><blockquote>“A chain is valid only if EVERY hop attenuates its parent.”</blockquote></div><div class="claim">Designation invariant. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.4.1 Designation Invariant. <span class="chk">(quote verified against the source)</span><blockquote>“An invocation that omits the specific resource designation MUST be rejected, even if the delegation would have authorized it under any matching scope.”</blockquote></div><div class="claim">Action check. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 11.4 Request delegation verification, step 6. <span class="chk">(quote verified against the source)</span><blockquote>“The invoked action is in the leaf&#x27;s allowedAction, else action_not_delegated.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. When a call lacks a delegation or enough scope, the server returns a signed needs_authorization challenge with a consent URL and requested scopes; the user authenticates and grants authorization there, a delegation credential is issued, and the agent retries. The challenge is signed so the client can detect a swapped URL. Delegations can also be issued by an agent to a sub-agent, which is not a human approval.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: The protocol defines a user approval step the service can trigger before access (same colour as MCP Authorization).</div><details><summary>Evidence (3)</summary><div class="claim">Server returns needs_authorization. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 9.1 verifyOrHints Pattern. <span class="chk">(quote verified against the source)</span><blockquote>“If delegation is missing or insufficient: return needs_authorization error”</blockquote></div><div class="claim">The user grants authorization. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 9.3 Resume Flow. <span class="chk">(quote verified against the source)</span><blockquote>“User authenticates and grants authorization”</blockquote></div><div class="claim">Consent gating for actions needing explicit human approval. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/README.md">kya-os-mcp repository, README.md</a>, What KYA-OS is. <span class="chk">(quote verified against the source)</span><blockquote>“Per-tool consent gating for actions that require explicit human approval.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The Responsible Party at the root of the chain vouches for the agent by signing the delegation, and capability or KYC credentials from trusted issuers can add assurance. But which roots and issuers a server accepts is its own configuration: checking trusted roots applies only when configured, and trust-registry standing is advisory, not blocking. The protocol names no party that vets agents for all servers.<div class="meta">Optional in the specification · requirement level: MAY*</div><div class="meta">Why this rating: Vouching through the delegation root is defined, but whether a trusted party stands behind it depends on optional root pinning, optional KYC credentials and an advisory registry (between MCP Authorization&#x27;s green and Web Bot Auth&#x27;s red).</div><details><summary>Evidence (3)</summary><div class="claim">Trusted roots are checked only when configured. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 11.4 Request delegation verification, step 4. <span class="chk">(quote verified against the source)</span><blockquote>“When the Verifier configures trusted root issuers, issuer(rootVC) is one of them, else delegation_invalid.”</blockquote></div><div class="claim">Registry standing is advisory. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.8 Protocol Registry. <span class="chk">(quote verified against the source)</span><blockquote>“Trust-registry rejection is advisory, not blocking.”</blockquote></div><div class="claim">The service decides who it trusts. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 11.0 Trust Model. <span class="chk">(quote verified against the source)</span><blockquote>“The service decides what scopes it accepts, who its trust registry trusts, and which did:web documents it will fetch.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Each delegation credential can carry a status list entry; the direct issuer, any ancestor or the Responsible Party can revoke it, and revocation cascades to every sub-delegation. Verifiers must fetch and verify the issuer&#x27;s signed status list and reject revoked or unreadable entries; caches should be at most 60 seconds for high-privilege scopes, and the newer profile needs a live read for its top level. Access can be cut for one delegation, one agent key or a whole chain.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: Revocation is defined in the protocol, fine-grained and reaches the verifier through status lists within a bounded cache time (all three calibration examples are red).</div><details><summary>Evidence (4)</summary><div class="claim">Root can revoke the whole chain. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.5.1 Revocation Rights. <span class="chk">(quote verified against the source)</span><blockquote>“The Responsible Party at the root of the chain. The root issuer MAY revoke the entire chain.”</blockquote></div><div class="claim">Cascading revocation. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.5 Cascading Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“Recursively mark all descendant delegations as revoked”</blockquote></div><div class="claim">Cache bound. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.5.2 Concurrency and the Revocation Race. <span class="chk">(quote verified against the source)</span><blockquote>“Cache status-list lookups with a TTL no longer than the revocation propagation target. For high-privilege scopes, ≤ 60 seconds is recommended.”</blockquote></div><div class="claim">Status checking is a Level 3 requirement. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/CONFORMANCE.md">KYA-OS Conformance Requirements (CONFORMANCE.md)</a>, Level 3, Requirements (L3.11). <span class="chk">(quote verified against the source)</span><blockquote>“Check credential status via StatusList2021”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. KYA-OS names the accountable Responsible Party by DID and keeps signed audit proofs, but defines no contact or escalation field for it or for the agent. A DID document could list service endpoints, but the specification does not define one for reports.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field or process is defined (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched SPEC.md, the Entity Card fields (§4.1) and the MCP binding for contact, support, abuse or escalation fields. None is defined. <i>Not found in</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 4.1 Fields.</div><div class="claim">The Card names the accountable party only as a DID. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a>, 4.1 Fields (responsibleParty). <span class="chk">(quote verified against the source)</span><blockquote>“Root-accountable Entity (§2.2, §10.2). SHOULD be did:web.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The specification describes a trust registry for checking standing and says reputation is tracked mainly on the Responsible Party, but defines no message or API for one service to report an agent to others. Delegation graphs and revocation state are not synchronised across deployments, and directory federation is out of scope for this version.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No signalling mechanism is defined; registry and reputation are described without a reporting protocol.</div><details><summary>Evidence (3)</summary><div class="claim">Trust registry for standing. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.8 Protocol Registry. <span class="chk">(quote verified against the source)</span><blockquote>“Trust Registry — indexes entities by DID for discovery, enabling participants to resolve trust relationships and verify standing.”</blockquote></div><div class="claim">Reputation scope. <i>Source states</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 11.12 Reputation Scope. <span class="chk">(quote verified against the source)</span><blockquote>“Reputation is tracked primarily on the Responsible Party — the root issuer accountable for a delegation chain (§2).”</blockquote></div><div class="claim">Federation is out of scope. <i>Out of scope per</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 6.7 Orchestration &amp; Extensibility. <span class="chk">(quote verified against the source)</span><blockquote>“Orchestration scope is service-local; directory federation is out of scope for this version.”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Identity is about the agent&#x27;s key, its type and its accountable party. The legacy handshake allows optional, self-asserted client information (name, version, platform), and key custody may be hardware-attested, but nothing identifies the AI model.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model (same as all three calibration examples).</div><details><summary>Evidence (1)</summary><div class="claim">Searched SPEC.md (handshake, proofs, delegation), the Entity Card fields and entity types for a model or provenance field. None is defined; the handshake has an optional clientInfo with name, version and platform only. <i>Not found in</i> <a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a>, 5.1 Handshake Request; Entity Card 4.1 Fields.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md">KYA-OS Protocol Specification (SPEC.md), version 1.0.0</a> (1.0.0, commit 11e5f96, 2026-11-18)</li><li><a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md">KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1</a> (1.1, commit 11e5f96, 2026-11-18)</li><li><a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-MCP-EXTENSION.md">KYA-OS MCP Extension Binding (SPEC-MCP-EXTENSION.md), 1.0.0-draft</a> (1.0.0-draft, commit 11e5f96, 2026-11-18)</li><li><a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/CONFORMANCE.md">KYA-OS Conformance Requirements (CONFORMANCE.md)</a> (1.12.0, commit 11e5f96, 2026-11-18)</li><li><a href="https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/README.md">kya-os-mcp repository, README.md</a> (commit 11e5f96, 2026-11-18)</li><li><a href="https://www.businesswire.com/news/home/20260729377753/en/">Business Wire, Vouched and the Decentralized Identity Foundation Launch KYA-OS, an Open Trust Layer for AI Agents</a> (2026-07-29)</li><li><a href="https://www.vouched.id/know-your-agent">Vouched, Know Your Agent product page</a> (accessed 2026-11-19)</li></ul><h2>Notes</h2><ul class="plain"><li>Name collisions: &#x27;KYA&#x27; (Know Your Agent) is also used by unrelated work, e.g. the Open-KYA &#x27;KYA Manifest Standard&#x27; (open-kya.github.io) and vendors&#x27; &#x27;Know Your Agent&#x27; products. This analysis covers KYA-OS, formerly MCP-I, in the DIF repository decentralized-identity/kya-os-mcp. The spec also says it was &#x27;previously known as MCP-Identity / MCP-I&#x27;.</li><li>Two profiles coexist in 1.x: a legacy session-bound profile (unsigned handshake, server-signed response proofs, StatusList2021 VC 1.1 delegations) and the per-request Entity Card profile (agent-signed proof on every call, VC 2.0 with ZCAP-LD). Ratings mostly follow the per-request profile, which SPEC.md section 5 calls the normative, durable authority; where the legacy profile is weaker, the answer says so.</li><li>Conformance has three separate ladders that reuse the names L1 to L3 (Core, Entity Card, Audit Assurance), which is easy to misread.</li><li>The specification uses RFC 2119 keywords. MAY* on the trust row reflects that trusted-root checking applies &#x27;when the Verifier configures&#x27; it rather than a keyword.</li><li>The press release and Vouched page were checked with a web tool, which limits quotes to about 125 characters, so those quotes are sentence fragments. The DIF website and modelcontextprotocol-identity.io could not be fetched in this session; the GitHub repository was used as the primary source.</li><li>first_published 2025-05 refers to Vouched&#x27;s first publication of MCP-I (May 2025), per its announcements; it is not cited in the rows.</li></ul><h2>Open questions</h2><ul class="plain"><li>Which servers outside Vouched verify KYA-OS proofs in production, and which profile (legacy session or per-request) do they use?</li><li>Is there a DIF-published, frozen copy of the 1.0.0 text, given that SPEC.md keeps changing under the same version label?</li><li>Is the credentialStatus entry required on every delegation credential, or can a delegation be issued that can only expire?</li><li>How should a server decide which Responsible Party roots to trust across organisations, beyond local pinning?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (58 of 58 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "KYA-OS",
+  "full_name": "Know Your Agent Operating System (formerly MCP-I, Model Context Protocol - Identity)",
+  "spec_version": "KYA-OS Protocol Specification 1.0.0 (SPEC.md) with the Entity Card profile 1.1 and the MCP Extension Binding 1.0.0-draft, read at commit 11e5f96 of decentralized-identity/kya-os-mcp",
+  "spec_date": "1.0.0 released 2026-07-29; text read at commit 11e5f96 dated 2026-11-18",
+  "maintainer": "Decentralized Identity Foundation (DIF), Trusted AI Agents Working Group, KYA-OS task force; donated by Vouched, editor Dylan Hobbs (Vouched)",
+  "newer_version_note": "The specification text keeps changing under the same 1.0.0 label (108 commits to SPEC.md, the latest on 2026-11-18), so this analysis is pinned to commit 11e5f96. The npm reference implementation has its own version numbers (1.26.0 in the changelog at this commit)."
+ },
+ "profile": {
+  "id": "kya-os",
+  "category": "agent-authorization",
+  "secondary_categories": [
+   "credentials-trust"
+  ],
+  "mechanisms": [
+   "did",
+   "verifiable-credential",
+   "http-message-signature",
+   "signed-metadata"
+  ],
+  "venue": "foundation",
+  "maturity": "stable",
+  "openness": "open-specification",
+  "layers": [
+   "application-message",
+   "http-header",
+   "metadata-document"
+  ],
+  "building_blocks": [
+   "DID (did:key, did:web)",
+   "W3C VC 1.1 and 2.0",
+   "ZCAP-LD",
+   "StatusList2021",
+   "Bitstring Status List",
+   "RFC 8785",
+   "RFC 8032",
+   "RFC 7515",
+   "RFC 9421",
+   "RFC 7638",
+   "RFC 9449",
+   "MCP"
+  ],
+  "website": "https://github.com/decentralized-identity/kya-os-mcp",
+  "first_published": "2025-05"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "KYA-OS (Know Your Agent Operating System, formerly MCP-I) adds identity, delegation and audit proofs to AI agents calling tools, first of all MCP servers. It answers three questions for the receiving server: who is calling, under whose authority, and what was done. Vouched wrote it and donated it to the Decentralized Identity Foundation (DIF) in March 2026, where the Trusted AI Agents Working Group released version 1.0.0 in July 2026 and calls it a ratified DIF standard. A TypeScript reference implementation (@kya-os/mcp) is published by DIF, and Vouched sells products built on it.",
+  "Each agent creates its own key and decentralized identifier (DID). On each call, the agent attaches a short-lived signature (at most 60 seconds) tied to the request, the server and a one-time nonce. Authority comes from a chain of signed delegation credentials rooted at a Responsible Party, with scoped actions and caveats such as spending limits, revocable through status lists. If authority is missing, the server can send the user to a consent page. The server signs its responses for audit. KYA-OS leaves the choice of which roots to trust to each server, and defines no contact channel, cross-server signalling or model identity; an older session-based profile with weaker guarantees remains valid in 1.x."
+ ],
+ "how_it_works": [
+  "Setup: the agent generates its own Ed25519 key pair and DID (did:key, or did:web published by its controller). The user or organisation that is accountable (the Responsible Party) signs a delegation credential naming the agent's key, with the allowed actions or scopes, caveats such as a maximum amount, an expiry and a revocation status entry; longer chains can re-delegate with narrower rights.",
+  "The agent calls a tool on a KYA-OS server. In the per-request profile it attaches a proof object signed with its key, covering a hash of the request, the server's DID as audience, a nonce and a validity window of at most 60 seconds, and may carry its delegation chain in the request metadata.",
+  "The server resolves the agent's DID document, checks that the key belongs to the DID, the audience, the request hash, the time window, that the nonce is new, and the signature.",
+  "The server then verifies the delegation chain: each hop's signature, that each hop narrows its parent, that the last delegate is the key that signed the request, that the root is one it trusts (if configured), that the invoked action is allowed, and that no hop is revoked in its issuer's status list.",
+  "If the delegation is missing or insufficient, the server returns a signed needs_authorization challenge with a consent URL; the user approves there, a new delegation credential is issued and the agent retries.",
+  "If all checks pass, the server runs the tool and returns the result with a signed response proof binding the request and response hashes and the delegation used, which both sides can keep for audit."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "KYA-OS Protocol Specification (SPEC.md), version 1.0.0",
+   "url": "https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md",
+   "fetch_url": "https://raw.githubusercontent.com/decentralized-identity/kya-os-mcp/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC.md",
+   "version": "1.0.0, commit 11e5f96",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "card",
+   "title": "KYA-OS Entity Card, Profile Specification (SPEC-ENTITY-CARD.md), version 1.1",
+   "url": "https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md",
+   "fetch_url": "https://raw.githubusercontent.com/decentralized-identity/kya-os-mcp/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-ENTITY-CARD.md",
+   "version": "1.1, commit 11e5f96",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "mcpext",
+   "title": "KYA-OS MCP Extension Binding (SPEC-MCP-EXTENSION.md), 1.0.0-draft",
+   "url": "https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-MCP-EXTENSION.md",
+   "fetch_url": "https://raw.githubusercontent.com/decentralized-identity/kya-os-mcp/11e5f965b53564ab170c6b9676314bb76c7c4ddf/SPEC-MCP-EXTENSION.md",
+   "version": "1.0.0-draft, commit 11e5f96",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "conformance",
+   "title": "KYA-OS Conformance Requirements (CONFORMANCE.md)",
+   "url": "https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/CONFORMANCE.md",
+   "fetch_url": "https://raw.githubusercontent.com/decentralized-identity/kya-os-mcp/11e5f965b53564ab170c6b9676314bb76c7c4ddf/CONFORMANCE.md",
+   "version": "1.12.0, commit 11e5f96",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "readme",
+   "title": "kya-os-mcp repository, README.md",
+   "url": "https://github.com/decentralized-identity/kya-os-mcp/blob/11e5f965b53564ab170c6b9676314bb76c7c4ddf/README.md",
+   "fetch_url": "https://raw.githubusercontent.com/decentralized-identity/kya-os-mcp/11e5f965b53564ab170c6b9676314bb76c7c4ddf/README.md",
+   "version": "commit 11e5f96",
+   "date": "2026-11-18",
+   "kind": "primary"
+  },
+  {
+   "id": "dif-release",
+   "title": "Business Wire, Vouched and the Decentralized Identity Foundation Launch KYA-OS, an Open Trust Layer for AI Agents",
+   "url": "https://www.businesswire.com/news/home/20260729377753/en/",
+   "version": "",
+   "date": "2026-07-29",
+   "kind": "primary"
+  },
+  {
+   "id": "vouched-kya",
+   "title": "Vouched, Know Your Agent product page",
+   "url": "https://www.vouched.id/know-your-agent",
+   "version": "",
+   "date": "accessed 2026-11-19",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "DID identity, delegation chains and proofs for MCP agents",
+   "answer": "A DIF specification, first bound to MCP, where each agent signs every call with its own DID key and presents a revocable, scoped delegation chain rooted at an accountable party, so the server can check who is calling, under whose authority, and keep signed proofs of what was done.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The specification's abstract.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "KYA-OS enables MCP servers to verify who is calling (agent DID), what authority they hold (a delegation chain rooted at a Responsible Party, expressed as W3C Verifiable Credentials), and what was done (signed proof for audit trails).",
+     "check": "OK",
+     "check_fp": "e7efa74d34"
+    },
+    {
+     "text": "Every request carries its own proof in the per-request profile.",
+     "type": "fact",
+     "source": "card",
+     "section": "8. Per-Request Holder-of-Key Proof",
+     "quote": "There is no session establishment and no handshake; every request carries its own proof.",
+     "check": "OK",
+     "check_fp": "5d9184fb27"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agents calling MCP tools; downstream HTTP calls",
+   "answer": "Agents calling tools and resources on MCP servers, including across organisations, with delegated authority (e.g. payments within a limit). The proof and delegation chain travel in the MCP request metadata (_meta); outbound HTTP calls use KYA-OS headers; discovery uses Entity Cards projected onto MCP, A2A and NANDA metadata. The MCP server verifies itself (Level 2 and above) or an edge proxy verifies for legacy servers (Level 1), and gateways may pre-check headers.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "A layer that host protocols embed; MCP is the first binding.",
+     "type": "fact",
+     "source": "readme",
+     "section": "What KYA-OS is",
+     "quote": "KYA-OS is not a transport or a runtime, it is an identity and accountability layer that host protocols embed.",
+     "check": "OK",
+     "check_fp": "57448ca79f"
+    },
+    {
+     "text": "Cross-organisational verification with a carried chain.",
+     "type": "fact",
+     "source": "card",
+     "section": "10.5 Carrying the chain with the request",
+     "quote": "This is the cross-organizational case: a resource server can verify an agent acting for an organization whose delegation records it cannot query.",
+     "check": "OK",
+     "check_fp": "b592a4c794"
+    },
+    {
+     "text": "Edge proxy at Level 1, native verification at Level 2 and above.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11.0 Trust Model",
+     "quote": "At Conformance Level 2+, verification moves into the resource boundary (native server-side verification).",
+     "check": "OK",
+     "check_fp": "d4d92982e6"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Agent, Principal, Responsible Party, server, verifier, issuers",
+   "answer": "Agent: AI software identified by its own DID. Principal: whoever immediately delegates authority to the agent, typically the human operator. Responsible Party: the root issuer of the delegation chain, ultimately accountable (an organisation, or the Principal in personal use). MCP server or service: the resource being called, itself identified by a DID. Verifier: checks credentials, sometimes an edge proxy. Issuers: sign delegation, capability or identity-verification credentials. Registries (delegation, credential, trust) are optional indexes.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Agent DID.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology (Agent DID)",
+     "quote": "A Decentralized Identifier (DID) that uniquely identifies an AI agent.",
+     "check": "OK",
+     "check_fp": "1f576e537f"
+    },
+    {
+     "text": "Principal.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology (Principal)",
+     "quote": "The entity that immediately delegates authority to an agent — typically the human operator who launches the agent for a task.",
+     "check": "OK",
+     "check_fp": "ca7b82b69b"
+    },
+    {
+     "text": "Responsible Party.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology (Responsible Party)",
+     "quote": "The entity ultimately accountable for the actions of an agent operating under a delegation chain.",
+     "check": "OK",
+     "check_fp": "d0ed5fb66a"
+    },
+    {
+     "text": "Verifier, often an edge proxy at Level 1.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11.0 Trust Model",
+     "quote": "At Conformance Level 1 (edge-proxy verification), the verifier sits in front of legacy MCP servers that don't natively understand KYA-OS.",
+     "check": "OK",
+     "check_fp": "f2f543af70"
+    },
+    {
+     "text": "Registries.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.8 Protocol Registry",
+     "quote": "The registry indexes anything addressable by DID — agents, MCP servers, services, and delegation policies.",
+     "check": "OK",
+     "check_fp": "7ffa004606"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "1.0.0 Stable at DIF; Vouched's products implement it",
+   "answer": "Released. SPEC.md is version 1.0.0, marked Stable and described as ratified as a DIF standard; DIF and Vouched announced its release on 29 July 2026. The MCP extension binding is still a draft, and the text keeps changing under the 1.0.0 label. DIF publishes the reference implementation, and Vouched says its Know Your Agent product suite implements KYA-OS; no third-party deployment was found in a deployer's own source.",
+   "rating": "green",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Green: a released version its maintainers call stable, with a named implementation by Vouched (its author); borderline, since no independent deployment was found and the MCP binding is a draft.",
+   "claims": [
+    {
+     "text": "Stable 1.0.0 status.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Status",
+     "quote": "Stable 1.0.0 — Donated to DIF TAAWG (Decentralized Identity Foundation, Trusted AI Agents Working Group) and ratified as a DIF standard.",
+     "check": "OK",
+     "check_fp": "ff71601fe0"
+    },
+    {
+     "text": "Release announcement.",
+     "type": "fact",
+     "source": "dif-release",
+     "section": "Press release",
+     "quote": "Vouched and the Decentralized Identity Foundation (DIF) today announced the release of KYA-OS Protocol Specification v1.0.0",
+     "check": "WEB-OK",
+     "check_fp": "4941291584"
+    },
+    {
+     "text": "Vouched's product suite implements it.",
+     "type": "fact",
+     "source": "vouched-kya",
+     "section": "Know Your Agent",
+     "quote": "built Know Your Agent as the product suite that implements it.",
+     "check": "WEB-OK",
+     "check_fp": "db4d460f05"
+    },
+    {
+     "text": "The MCP extension binding is a draft.",
+     "type": "fact",
+     "source": "mcpext",
+     "section": "Header",
+     "quote": "Version: 1.0.0-draft",
+     "check": "OK",
+     "check_fp": "f7da364b6e"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "DIDs, W3C VCs, ZCAP-LD, status lists, Ed25519 JWS",
+   "answer": "Decentralized Identifiers (did:key and did:web, optionally did:cheqd); W3C Verifiable Credentials (1.1 for the legacy delegation shape, 2.0 with ZCAP-LD capabilities for the newer profile); StatusList2021 and Bitstring Status List for revocation; Ed25519 (RFC 8032) signatures in JWS (RFC 7515), with ES256 allowed for request proofs; RFC 8785 JSON canonicalization; an optional RFC 9421 HTTP signature sibling; RFC 7638 thumbprints and DPoP-style cnf binding (RFC 9449); MCP 2026-07-28 and its OAuth hardening for the consent flow.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "DIDs, VCs, Ed25519 and StatusList2021.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "The protocol uses Decentralized Identifiers (DIDs) for agent identity, W3C Verifiable Credentials for delegation, Ed25519 signatures for cryptographic operations, and StatusList2021 for revocation.",
+     "check": "OK",
+     "check_fp": "099530575f"
+    },
+    {
+     "text": "VC 2.0 with ZCAP-LD in the newer profile.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.10 Card-era profile: VC 2.0 + ZCAP-LD delegation",
+     "quote": "A DelegationCredential is a VC 2.0 whose credentialSubject IS an attenuated ZCAP-LD capability",
+     "check": "OK",
+     "check_fp": "c6a65c08c0"
+    },
+    {
+     "text": "Optional RFC 9421 sibling signature.",
+     "type": "fact",
+     "source": "card",
+     "section": "8.5 RFC 9421 HTTP Message Signature sibling (dual carrier)",
+     "quote": "A stock RFC 9421 verifier (SEP-1960, Cloudflare Web Bot Auth) reconstructs this base and verifies httpSig against the resolved DID key with zero new code.",
+     "check": "OK",
+     "check_fp": "cbb32d71fa"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Agent's own DID",
+   "answer": "Yes. Each agent is identified by a DID it controls: did:key (derived from its public key) or did:web (a document its controller publishes). The agent must generate its own key pair, and no registry or verifier may generate or hold it. In the per-request profile the proof names the caller's DID and key id, and the key must be listed in that DID's document. A did:web may be a persistent, organisation-hosted identity.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the identifier names the agent itself, with a key each agent generates (unlike the provider-level identifiers of all three calibration examples).",
+   "claims": [
+    {
+     "text": "The Agent DID identifies an AI agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2. Terminology (Agent DID)",
+     "quote": "A Decentralized Identifier (DID) that uniquely identifies an AI agent.",
+     "check": "OK",
+     "check_fp": "1f576e537f"
+    },
+    {
+     "text": "Agents generate their own key pair.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.5 Agent-Controlled Key Generation",
+     "quote": "An agent MUST generate its own keypair locally.",
+     "check": "OK",
+     "check_fp": "0a7bad30ee"
+    },
+    {
+     "text": "Key generation on the agent's behalf is non-conformant.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.5 Agent-Controlled Key Generation",
+     "quote": "Implementations that generate or hold agent secret keys on the agent's behalf are non-conformant.",
+     "check": "OK",
+     "check_fp": "e430aa93bc"
+    },
+    {
+     "text": "did:web is the persistent, organisation-hosted option.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1 Supported DID Methods",
+     "quote": "Production servers, organizational identity",
+     "check": "OK",
+     "check_fp": "4c3ddb3358"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Per-delegation keys recommended",
+   "answer": "Partly. The recommended delegate is a fresh, single-purpose did:key minted per delegation, and every request proves possession of that key, so the server can tell one delegated agent instance from another. But this is a recommendation: an agent may use one persistent did:web across many delegations and running copies, and the legacy session profile allows anonymous sessions without an agent DID.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: a per-instance key is the recommended model but not required, and a persistent DID may be shared by many running copies (all three calibration examples are red).",
+   "claims": [
+    {
+     "text": "Fresh key per delegation is RECOMMENDED.",
+     "type": "fact",
+     "source": "card",
+     "section": "1.4 Delegation key model",
+     "quote": "The RECOMMENDED delegate subject is a fresh, single-purpose did:key minted per delegation",
+     "check": "OK",
+     "check_fp": "50c512e9b3"
+    },
+    {
+     "text": "Possession is proven on every request.",
+     "type": "fact",
+     "source": "card",
+     "section": "1.4 Delegation key model",
+     "quote": "Possession of that key is proven on every request",
+     "check": "OK",
+     "check_fp": "08b3c9e697"
+    },
+    {
+     "text": "did:web as an alternative durable name.",
+     "type": "fact",
+     "source": "card",
+     "section": "1.4 Delegation key model",
+     "quote": "An Entity that needs a durable, resolvable name across devices MAY instead use a did:web subject.",
+     "check": "OK",
+     "check_fp": "70f94e547b"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Responsible Party DID, when delegation is used",
+   "answer": "Partly. When a call is authorized by delegation, the server recomputes the Responsible Party as the signed root issuer of the chain, and can see the Principal and every hop. That party is a DID, not necessarily a verified person or company: identity verification (KYC or KYB) can be attached as an optional credential. Delegation belongs to conformance Level 3, so servers at lower levels learn no principal.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: required (MUST) whenever a call is authorized by delegation, but delegation is only at conformance Level 3 or for gated tools, and identity verification of the party is optional (between Visa TAP's optional object and a required verified identity).",
+   "claims": [
+    {
+     "text": "Every chain ends at a Responsible Party.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.4 Delegation Graph",
+     "quote": "Every chain MUST terminate at a Responsible Party.",
+     "check": "OK",
+     "check_fp": "bc95751f8a"
+    },
+    {
+     "text": "Delegation is Level 3.",
+     "type": "fact",
+     "source": "spec",
+     "section": "15. Conformance",
+     "quote": "Level 3 — Full Delegation: VC issuance/verification, delegation graphs, revocation, outbound propagation",
+     "check": "OK",
+     "check_fp": "2e63669e26"
+    },
+    {
+     "text": "KYC/KYB as an optional credential on the Responsible Party.",
+     "type": "fact",
+     "source": "card",
+     "section": "10.4 KYC/KYB",
+     "quote": "KYC/KYB rides the same rail as an IdentityVerificationCredential on the responsibleParty, asserting the verification fact and level, never raw PII",
+     "check": "OK",
+     "check_fp": "7dc80d76e4"
+    },
+    {
+     "text": "On success the verifier holds the recomputed Responsible Party.",
+     "type": "fact",
+     "source": "card",
+     "section": "11.4 Request delegation verification",
+     "quote": "On success the Verifier holds the recomputed responsibleParty, the leaf invoker, the leaf's granted actions, the chain depth",
+     "check": "OK",
+     "check_fp": "8ab065f6d7"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Per-request holder-of-key signature",
+   "answer": "Yes. In the per-request profile every call carries a proof object signed with the agent's DID key (EdDSA or ES256), covering a hash of the request method and parameters, the server's DID as audience, a nonce, and created and expires times; it is proof of possession, so a captured credential is useless without the key. An RFC 9421 HTTP signature can be added. The delegation credentials are signed by their issuers. A server that gates a call rejects it without a proof; the older session profile, still valid in 1.x, works differently.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: a verifiable, proof-of-possession credential on every gated request (stronger than the calibration examples, which are also green).",
+   "claims": [
+    {
+     "text": "Covered claims of the proof.",
+     "type": "fact",
+     "source": "card",
+     "section": "8.4 Detached JWS carrier (canonical)",
+     "quote": "The covered claims are every proof field EXCEPT the two signatures (jws, httpSig), i.e. {prf, alg, did, kid, audience, nonce, created, expires, requestHash} plus cnf when present.",
+     "check": "OK",
+     "check_fp": "25266a4327"
+    },
+    {
+     "text": "Missing proof on a gated call is rejected.",
+     "type": "fact",
+     "source": "mcpext",
+     "section": "4.3 Stripped declarations are absent declarations",
+     "quote": "a missing or stripped proof on a gated call is rejected by the proof gate (proof_missing, §5.2), regardless of what the declaration said;",
+     "check": "OK",
+     "check_fp": "1cf20f66eb"
+    },
+    {
+     "text": "The per-request proof is the normative authority.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5. Session Lifecycle (normative framing)",
+     "quote": "A conformant verifier MUST be able to authorize and audit a request from the proof and grant alone, with no server-side session state.",
+     "check": "OK",
+     "check_fp": "0f685d52a9"
+    },
+    {
+     "text": "Undeclared clients are processed as core MCP in optional mode.",
+     "type": "fact",
+     "source": "mcpext",
+     "section": "4.1 Optional mode",
+     "quote": "A request from a client that did not declare the extension is processed as core MCP.",
+     "check": "OK",
+     "check_fp": "d868e1965b"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "60 seconds, enforced by verifiers",
+   "answer": "Very short for the request proof: expires minus created must not exceed 60 seconds, checked with about 5 seconds of clock skew, and verifiers reject a longer window (ttl_too_long) or an expired one; the nonce must be unseen. Delegation credentials carry their own expiry set by the issuer with no maximum, and short-lived delegations are recommended for high-stakes resources. Legacy sessions expire after 30 minutes idle by default.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a specific short maximum that verifiers must enforce (same colour as Visa TAP's 8-minute window).",
+   "claims": [
+    {
+     "text": "60-second maximum.",
+     "type": "fact",
+     "source": "card",
+     "section": "8.2 Object",
+     "quote": "and expires - created MUST NOT exceed 60 seconds",
+     "check": "OK",
+     "check_fp": "7c9bf8cfbd"
+    },
+    {
+     "text": "Verifier check.",
+     "type": "fact",
+     "source": "card",
+     "section": "11.2 Proof verification, step 7",
+     "quote": "expires - created ≤ 60 (ttl_too_long)",
+     "check": "OK",
+     "check_fp": "06b15f712d"
+    },
+    {
+     "text": "Short-lived delegations recommended for high-stakes resources.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.5.2 Concurrency and the Revocation Race",
+     "quote": "Operators of high-stakes resources SHOULD reduce the race window by issuing short-lived delegations",
+     "check": "OK",
+     "check_fp": "9b21002473"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, by DID resolution",
+   "answer": "Yes. The server resolves the caller's DID (did:key locally, did:web over HTTPS), checks that the key belongs to that DID, then checks the audience, the request hash, the time window, the nonce and the signature, failing closed on any error. Delegation hops are verified against their issuers' DID documents and status lists. No prior relationship with the agent is needed.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: verifiable from published DID documents with expiry checks and no prior relationship (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "The key must be in the DID document.",
+     "type": "fact",
+     "source": "card",
+     "section": "12.1 Impersonation (forged principal)",
+     "quote": "the per-request proof's kid MUST resolve to a verification method of proof.did",
+     "check": "OK",
+     "check_fp": "9f1e777704"
+    },
+    {
+     "text": "Audience check.",
+     "type": "fact",
+     "source": "card",
+     "section": "11.2 Proof verification, step 5",
+     "quote": "audience === expectedAudience, else audience_mismatch.",
+     "check": "OK",
+     "check_fp": "49c13bbb21"
+    },
+    {
+     "text": "A carried chain verifies without a registry or other out-of-band lookup.",
+     "type": "fact",
+     "source": "card",
+     "section": "10.5 Carrying the chain with the request",
+     "quote": "A Verifier that reads a carried chain needs no registry or other out-of-band lookup to reconstruct the caller's authority.",
+     "check": "OK",
+     "check_fp": "07f3f8c4e8"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Yes, the agent's own key per request",
+   "answer": "Yes, for the agent. On each request the server verifies a signature made with the agent's own DID key, which the agent generated and no other party may hold, and the delegation only works for the key it names (the last delegate must equal the signer). The server does not authenticate the human user; the user appears as the signer of the delegation. The legacy session profile, still valid in 1.x, allows weaker modes such as anonymous sessions.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: the service verifies per-request proof from a per-agent key (unlike all three calibration examples, which verify provider-level keys or tokens issued elsewhere); borderline because the legacy profile remains valid.",
+   "claims": [
+    {
+     "text": "Level 2+ authenticates the agent, but access rests on delegation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11.0 Trust Model",
+     "quote": "Direct server-side verification (Conformance Level 2+) authenticates the agent's identity, but the access decision still rests on the delegation chain the agent presents",
+     "check": "OK",
+     "check_fp": "2ac3aed898"
+    },
+    {
+     "text": "Leaf join.",
+     "type": "fact",
+     "source": "card",
+     "section": "11.4 Request delegation verification, step 3",
+     "quote": "The leaf delegate equals proof.did (§10.2), else delegation_invalid.",
+     "check": "OK",
+     "check_fp": "ac117dc1c2"
+    },
+    {
+     "text": "Legacy handshake allows anonymous sessions.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3 Session Creation",
+     "quote": "identityState: 'anonymous' | 'authenticated';",
+     "check": "OK",
+     "check_fp": "117e6e1c9d"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Yes, scoped and attenuated delegations",
+   "answer": "Yes. Delegation credentials carry scopes or allowed actions, an audience or invocation target, time bounds and caveats such as a maximum amount or a budget. Each re-delegation must be equal or narrower, every call must name the specific scope it uses, and the server rejects actions outside the leaf's grant. These checks are required whenever the server authorizes by delegation.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: fine-grained permissions the service enforces (same colour as MCP Authorization's scopes).",
+   "claims": [
+    {
+     "text": "Attenuation at every hop.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.10 Card-era profile",
+     "quote": "A chain is valid only if EVERY hop attenuates its parent.",
+     "check": "OK",
+     "check_fp": "8648008006"
+    },
+    {
+     "text": "Designation invariant.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.4.1 Designation Invariant",
+     "quote": "An invocation that omits the specific resource designation MUST be rejected, even if the delegation would have authorized it under any matching scope.",
+     "check": "OK",
+     "check_fp": "3ec8154336"
+    },
+    {
+     "text": "Action check.",
+     "type": "fact",
+     "source": "card",
+     "section": "11.4 Request delegation verification, step 6",
+     "quote": "The invoked action is in the leaf's allowedAction, else action_not_delegated.",
+     "check": "OK",
+     "check_fp": "81e4465f19"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Yes, server-triggered consent step-up",
+   "answer": "Yes. When a call lacks a delegation or enough scope, the server returns a signed needs_authorization challenge with a consent URL and requested scopes; the user authenticates and grants authorization there, a delegation credential is issued, and the agent retries. The challenge is signed so the client can detect a swapped URL. Delegations can also be issued by an agent to a sub-agent, which is not a human approval.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: the protocol defines a user approval step the service can trigger before access (same colour as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Server returns needs_authorization.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.1 verifyOrHints Pattern",
+     "quote": "If delegation is missing or insufficient: return needs_authorization error",
+     "check": "OK",
+     "check_fp": "73b75215c7"
+    },
+    {
+     "text": "The user grants authorization.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.3 Resume Flow",
+     "quote": "User authenticates and grants authorization",
+     "check": "OK",
+     "check_fp": "6e31c320d0"
+    },
+    {
+     "text": "Consent gating for actions needing explicit human approval.",
+     "type": "fact",
+     "source": "readme",
+     "section": "What KYA-OS is",
+     "quote": "Per-tool consent gating for actions that require explicit human approval.",
+     "check": "OK",
+     "check_fp": "c15ef8c500"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Responsible Party; which roots to trust is local",
+   "answer": "Partly. The Responsible Party at the root of the chain vouches for the agent by signing the delegation, and capability or KYC credentials from trusted issuers can add assurance. But which roots and issuers a server accepts is its own configuration: checking trusted roots applies only when configured, and trust-registry standing is advisory, not blocking. The protocol names no party that vets agents for all servers.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY*",
+   "rating_reason": "Yellow: vouching through the delegation root is defined, but whether a trusted party stands behind it depends on optional root pinning, optional KYC credentials and an advisory registry (between MCP Authorization's green and Web Bot Auth's red).",
+   "claims": [
+    {
+     "text": "Trusted roots are checked only when configured.",
+     "type": "fact",
+     "source": "card",
+     "section": "11.4 Request delegation verification, step 4",
+     "quote": "When the Verifier configures trusted root issuers, issuer(rootVC) is one of them, else delegation_invalid.",
+     "check": "OK",
+     "check_fp": "8b01f5ccbf"
+    },
+    {
+     "text": "Registry standing is advisory.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.8 Protocol Registry",
+     "quote": "Trust-registry rejection is advisory, not blocking.",
+     "check": "OK",
+     "check_fp": "fc6cbe5a1d"
+    },
+    {
+     "text": "The service decides who it trusts.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11.0 Trust Model",
+     "quote": "The service decides what scopes it accepts, who its trust registry trusts, and which did:web documents it will fetch.",
+     "check": "OK",
+     "check_fp": "0b38e6a796"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Yes, per delegation via status lists",
+   "answer": "Yes. Each delegation credential can carry a status list entry; the direct issuer, any ancestor or the Responsible Party can revoke it, and revocation cascades to every sub-delegation. Verifiers must fetch and verify the issuer's signed status list and reject revoked or unreadable entries; caches should be at most 60 seconds for high-privilege scopes, and the newer profile needs a live read for its top level. Access can be cut for one delegation, one agent key or a whole chain.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: revocation is defined in the protocol, fine-grained and reaches the verifier through status lists within a bounded cache time (all three calibration examples are red).",
+   "claims": [
+    {
+     "text": "Root can revoke the whole chain.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.5.1 Revocation Rights",
+     "quote": "The Responsible Party at the root of the chain. The root issuer MAY revoke the entire chain.",
+     "check": "OK",
+     "check_fp": "8c931a8fed"
+    },
+    {
+     "text": "Cascading revocation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.5 Cascading Revocation",
+     "quote": "Recursively mark all descendant delegations as revoked",
+     "check": "OK",
+     "check_fp": "c715c9efa3"
+    },
+    {
+     "text": "Cache bound.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.5.2 Concurrency and the Revocation Race",
+     "quote": "Cache status-list lookups with a TTL no longer than the revocation propagation target. For high-privilege scopes, ≤ 60 seconds is recommended.",
+     "check": "OK",
+     "check_fp": "5e96362726"
+    },
+    {
+     "text": "Status checking is a Level 3 requirement.",
+     "type": "fact",
+     "source": "conformance",
+     "section": "Level 3, Requirements (L3.11)",
+     "quote": "Check credential status via StatusList2021",
+     "check": "OK",
+     "check_fp": "5b548fa299"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No. KYA-OS names the accountable Responsible Party by DID and keeps signed audit proofs, but defines no contact or escalation field for it or for the agent. A DID document could list service endpoints, but the specification does not define one for reports.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field or process is defined (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched SPEC.md, the Entity Card fields (§4.1) and the MCP binding for contact, support, abuse or escalation fields. None is defined.",
+     "type": "silent",
+     "source": "card",
+     "section": "4.1 Fields",
+     "quote": ""
+    },
+    {
+     "text": "The Card names the accountable party only as a DID.",
+     "type": "fact",
+     "source": "card",
+     "section": "4.1 Fields (responsibleParty)",
+     "quote": "Root-accountable Entity (§2.2, §10.2). SHOULD be did:web.",
+     "check": "OK",
+     "check_fp": "c53a40b6bc"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No; registry and reputation only described",
+   "answer": "No. The specification describes a trust registry for checking standing and says reputation is tracked mainly on the Responsible Party, but defines no message or API for one service to report an agent to others. Delegation graphs and revocation state are not synchronised across deployments, and directory federation is out of scope for this version.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no signalling mechanism is defined; registry and reputation are described without a reporting protocol.",
+   "claims": [
+    {
+     "text": "Trust registry for standing.",
+     "type": "fact",
+     "source": "spec",
+     "section": "6.8 Protocol Registry",
+     "quote": "Trust Registry — indexes entities by DID for discovery, enabling participants to resolve trust relationships and verify standing.",
+     "check": "OK",
+     "check_fp": "cd78f193d2"
+    },
+    {
+     "text": "Reputation scope.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11.12 Reputation Scope",
+     "quote": "Reputation is tracked primarily on the Responsible Party — the root issuer accountable for a delegation chain (§2).",
+     "check": "OK",
+     "check_fp": "1f64adef72"
+    },
+    {
+     "text": "Federation is out of scope.",
+     "type": "out_of_scope",
+     "source": "spec",
+     "section": "6.7 Orchestration & Extensibility",
+     "quote": "Orchestration scope is service-local; directory federation is out of scope for this version.",
+     "check": "OK",
+     "check_fp": "ea1f2df92a"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. Identity is about the agent's key, its type and its accountable party. The legacy handshake allows optional, self-asserted client information (name, version, platform), and key custody may be hardware-attested, but nothing identifies the AI model.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched SPEC.md (handshake, proofs, delegation), the Entity Card fields and entity types for a model or provenance field. None is defined; the handshake has an optional clientInfo with name, version and platform only.",
+     "type": "silent",
+     "source": "spec",
+     "section": "5.1 Handshake Request; Entity Card 4.1 Fields",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "A server can allow or refuse each call by the agent's own key and by a scoped, attenuated delegation chain, including spending caveats, and can ask the user for consent when authority is missing. Which delegation roots it accepts is its own configuration.",
+  "incident_response": "Delegations can be revoked by the issuer, any ancestor or the Responsible Party, cascading to sub-delegations, and verifiers see it through status lists within about a minute for high-privilege scopes. There is no contact channel or way to warn other servers.",
+  "accountability": "Each call can be traced to the agent's key, the delegation chain and its Responsible Party, and the server's signed response proofs and audit records bind what was requested and returned. The Responsible Party is a DID, linked to a verified person or organisation only if a KYC credential is attached."
+ },
+ "notes": [
+  "Name collisions: 'KYA' (Know Your Agent) is also used by unrelated work, e.g. the Open-KYA 'KYA Manifest Standard' (open-kya.github.io) and vendors' 'Know Your Agent' products. This analysis covers KYA-OS, formerly MCP-I, in the DIF repository decentralized-identity/kya-os-mcp. The spec also says it was 'previously known as MCP-Identity / MCP-I'.",
+  "Two profiles coexist in 1.x: a legacy session-bound profile (unsigned handshake, server-signed response proofs, StatusList2021 VC 1.1 delegations) and the per-request Entity Card profile (agent-signed proof on every call, VC 2.0 with ZCAP-LD). Ratings mostly follow the per-request profile, which SPEC.md section 5 calls the normative, durable authority; where the legacy profile is weaker, the answer says so.",
+  "Conformance has three separate ladders that reuse the names L1 to L3 (Core, Entity Card, Audit Assurance), which is easy to misread.",
+  "The specification uses RFC 2119 keywords. MAY* on the trust row reflects that trusted-root checking applies 'when the Verifier configures' it rather than a keyword.",
+  "The press release and Vouched page were checked with a web tool, which limits quotes to about 125 characters, so those quotes are sentence fragments. The DIF website and modelcontextprotocol-identity.io could not be fetched in this session; the GitHub repository was used as the primary source.",
+  "first_published 2025-05 refers to Vouched's first publication of MCP-I (May 2025), per its announcements; it is not cited in the rows."
+ ],
+ "open_questions": [
+  "Which servers outside Vouched verify KYA-OS proofs in production, and which profile (legacy session or per-request) do they use?",
+  "Is there a DIF-published, frozen copy of the 1.0.0 text, given that SPEC.md keeps changing under the same version label?",
+  "Is the credentialStatus entry required on every delegation credential, or can a delegation be issued that can only expire?",
+  "How should a server decide which Responsible Party roots to trust across organisations, beyond local pinning?"
+ ]
+}</script></body></html>

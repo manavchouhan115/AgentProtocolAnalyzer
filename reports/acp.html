@@ -1,0 +1,1154 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ACP: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>ACP<small>Agentic Commerce Protocol</small></h1><ul class="facts"><li><b>Specification:</b> Released version 2026-04-17 (latest dated release), read at repository commit 7fdd78d</li><li><b>Date:</b> 2026-04-17 (release); commit 7fdd78d dated 2026-07-17</li><li><b>Maintainer:</b> OpenAI and Stripe (Founding Maintainers), with Meta listed as a lead maintainer and Technical Steering Committee member</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> No dated release after 2026-04-17 exists at commit 7fdd78d (the repository head on 2026-11-19). The spec/unreleased folder holds further changes that are not part of this analysis. The RFC design documents are not snapshotted per release; they were read at the same commit.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agentic commerce</span><span class="chip"><b>Mechanism:</b> API key, HTTP Message Signatures</span><span class="chip"><b>Venue:</b> Other</span><span class="chip"><b>Maturity:</b> Draft</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>The Agentic Commerce Protocol (ACP) lets an AI agent, such as ChatGPT, run a purchase against a merchant&#x27;s own checkout on behalf of a buyer, while the merchant stays the seller of record and keeps payments on its own payment provider. It is aimed at three groups: merchants (called sellers), agent platforms, and payment service providers (PSPs). OpenAI and Stripe maintain it as founding maintainers, with Meta now also listed. It is published on GitHub under Apache 2.0 with dated releases, the latest being 2026-04-17, but the repository still labels the protocol as beta.</p><p>ACP is mainly a set of REST APIs that the merchant hosts: the agent creates, updates and completes checkout sessions, sending a bearer API key on every call and, as a recommendation, a signature over the JSON body with a timestamp. Payment details go to the merchant&#x27;s PSP, which returns a one-time token limited by an allowance (maximum amount, currency, merchant, checkout session, expiry). The merchant can require extra buyer steps such as 3-D Secure, run through a delegated authentication API. ACP does not define how API keys are issued, who vouches for an agent platform, per-agent identity, revocation, contact channels or model identity; request signing is still informally specified.</p><h2 id="how">How it works</h2><ol class="steps"><li>Setup, outside the protocol: the merchant and the agent platform agree to work together and set up an API key (the specification does not say who issues it) and, if signatures are used, the accepted signature algorithms. The merchant may also publish a discovery document at /.well-known/acp.json.</li><li>The agent (e.g. ChatGPT) calls the merchant&#x27;s POST /checkout_sessions with the items and, optionally, buyer and address details, sending Authorization: Bearer with the API key, an API-Version and an Idempotency-Key, and as a recommendation a Signature and Timestamp header.</li><li>The merchant checks the API key and, if used, the signature and timestamp, then returns the authoritative cart, its payment handlers and any required buyer interventions (e.g. 3-D Secure or biometric).</li><li>For card payments the agent sends the card details to the merchant&#x27;s PSP (POST /agentic_commerce/delegate_payment), which returns a one-time vault token that can only be used within the allowance: maximum amount, currency, merchant, checkout session and expiry time.</li><li>If the merchant asks for 3-D Secure, the agent runs it through the delegated authentication API with the merchant&#x27;s chosen authentication provider, and the buyer may be challenged by the card issuer.</li><li>The agent completes the session with the token (and any authentication result). The merchant charges the token through its PSP, creates the order, and sends order updates to the agent platform by signed webhook.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>ACP</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Merchant-hosted checkout API that AI agents call for buyers</td></tr><tr><td class="prop">Use cases</td><td class="">Agent checkout with merchants; REST or MCP</td></tr><tr><td class="prop">Parties involved</td><td class="">Seller, seller platform, PSP, agent, buyer, authentication provider</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">Dated releases, still labelled beta; OpenAI and Stripe use it</td></tr><tr><td class="prop">Building blocks</td><td class="">Bearer API keys, JSON signatures, 3-D Secure, RFC 8615</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">Agent platform&#x27;s API key</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="yellow">Optional buyer details, self-asserted</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Bearer API key; signature recommended</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Key: none; signature window unspecified</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="yellow">Only with keys agreed in advance</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="red">No, platform API key only</td></tr><tr><td class="prop">Scoped authorization</td><td class="yellow">Payment allowance only; no API scopes</td></tr><tr><td class="prop">Human approval</td><td class="yellow">Merchant can require 3-D Secure or biometric</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="red">Bilateral, outside the protocol</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="red">Not defined; merchant can drop the key</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The merchant can allow or refuse an agent platform by its API key, and the payment token limits each purchase to one merchant, one session, a maximum amount and an expiry. It cannot tell individual agents or verified users apart, and the API key carries no scopes.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>A merchant can stop accepting a platform&#x27;s API key, which cuts off the whole platform and all its users, and payment tokens expire on their own. ACP defines no revocation, contact channel or way to warn other merchants.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>An order can be traced to the agent platform (by API key), to the buyer details the agent supplied, and to the payment credential and any 3-D Secure result. Without request signing in practice, the platform&#x27;s role in a specific request is not provable to a third party.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Authentication of the agent or user:</b> No, platform API key only (not addressed by the specification)</li><li><b>Trust (who vouches for the agent):</b> Bilateral, outside the protocol (handled outside the protocol)</li><li><b>Revocation:</b> Not defined; merchant can drop the key (not addressed by the specification)</li><li><b>Contact and escalation:</b> No (not addressed by the specification)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>ACP</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An open REST protocol where an AI agent platform calls a merchant&#x27;s checkout API with a bearer API key to buy for a user, and passes a one-time payment token limited by an allowance, so the merchant keeps its own checkout and payment provider.<details><summary>Evidence (3)</summary><div class="claim">The maintainers&#x27; own description. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/README.md">agentic-commerce-protocol repository, README.md</a>, Agentic Commerce Protocol (ACP). <span class="chk">(quote verified against the source)</span><blockquote>“is an interaction model and open standard for connecting buyers, their AI agents, and businesses to complete purchases seamlessly.”</blockquote></div><div class="claim">The merchant remains the system of record. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, RFC: Agentic Checkout, introduction. <span class="chk">(quote verified against the source)</span><blockquote>“The merchant remains the system of record for all orders, payments, taxes, and compliance.”</blockquote></div><div class="claim">The payment token is limited by an allowance. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, RFC: Agentic Commerce, Delegate Payment API, introduction. <span class="chk">(quote verified against the source)</span><blockquote>“The token may then be used by the merchant&#x27;s existing PSP only within explicit Allowance constraints.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Online purchases made by an AI agent for a buyer, e.g. ChatGPT calling a merchant&#x27;s checkout endpoints. Identity and authorization data travel in HTTP headers (bearer API key, optional signature and timestamp) and in the JSON body (buyer details, payment token, authentication result). The merchant&#x27;s API verifies the calls; the merchant&#x27;s PSP verifies the delegate payment calls. An MCP binding maps the same operations to MCP tools, with authentication left to the MCP server.<details><summary>Evidence (3)</summary><div class="claim">OpenAI calls the merchant&#x27;s endpoints. <i>Source states</i> <a href="https://developers.openai.com/commerce/specs/checkout">OpenAI Developers, Agentic Checkout Spec (commerce documentation)</a>, REST endpoints. <span class="chk">(quote verified against the source)</span><blockquote>“Call direction: OpenAI -&gt; Merchant”</blockquote></div><div class="claim">Five merchant endpoints to place orders for ChatGPT users. <i>Source states</i> <a href="https://developers.openai.com/commerce/specs/checkout">OpenAI Developers, Agentic Checkout Spec (commerce documentation)</a>, REST endpoints. <span class="chk">(quote verified against the source)</span><blockquote>“Merchants must implement the following five endpoints to place orders on behalf of ChatGPT users.”</blockquote></div><div class="claim">In the MCP binding, authentication is handled by the MCP server, not per call. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/docs/mcp-binding.md">ACP MCP binding (docs/mcp-binding.md)</a>, Request mapping (meta fields). <span class="chk">(quote verified against the source)</span><blockquote>“MCP servers handle authentication at the connection level (via server configuration or OAuth), not per tool call.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Seller (business or merchant): the party accepting payment and system of record. Seller Platform: commerce infrastructure a seller uses (e.g. Shopify). PSP (payment service provider): processes payments and issues delegated tokens (e.g. Stripe, Adyen). Agent (facilitator or orchestrator): orchestrates checkout on behalf of the user. Buyer: the person the agent buys for. Authentication Provider: a merchant-specified service that runs 3-D Secure with the agent.<details><summary>Evidence (6)</summary><div class="claim">Seller. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md">RFC: Agentic Commerce, Payment Handlers (rfcs/rfc.payment_handlers.md)</a>, 4.2 Terminology Clarifications. <span class="chk">(quote verified against the source)</span><blockquote>“Seller | Business / Merchant | Party accepting payment”</blockquote></div><div class="claim">Seller Platform. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md">RFC: Agentic Commerce, Payment Handlers (rfcs/rfc.payment_handlers.md)</a>, 4.2 Terminology Clarifications. <span class="chk">(quote verified against the source)</span><blockquote>“Infrastructure/system that sellers use for commerce (e.g., Shopify)”</blockquote></div><div class="claim">PSP. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md">RFC: Agentic Commerce, Payment Handlers (rfcs/rfc.payment_handlers.md)</a>, 4.2 Terminology Clarifications. <span class="chk">(quote verified against the source)</span><blockquote>“Service processing payment transactions (e.g., Stripe, Adyen)”</blockquote></div><div class="claim">Agent. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md">RFC: Agentic Commerce, Payment Handlers (rfcs/rfc.payment_handlers.md)</a>, 4.2 Terminology Clarifications. <span class="chk">(quote verified against the source)</span><blockquote>“Agent | Facilitator / Orchestrator | Party orchestrating checkout on behalf of user”</blockquote></div><div class="claim">Buyers are one of the three groups the protocol connects. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/README.md">agentic-commerce-protocol repository, README.md</a>, Agentic Commerce Protocol (ACP). <span class="chk">(quote verified against the source)</span><blockquote>“connecting buyers, their AI agents, and businesses”</blockquote></div><div class="claim">Authentication Providers implement the delegated authentication API. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_authentication.md">RFC: Agentic Commerce, Delegate Authentication API (rfcs/rfc.delegate_authentication.md)</a>, RFC: Agentic Commerce - Delegate Authentication API, introduction. <span class="chk">(quote verified against the source)</span><blockquote>“This RFC defines a standardized REST API contract that authentication providers SHOULD implement to enable delegated consumer authentication with merchant-specified authentication providers.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Released in dated versions (latest 2026-04-17, previous versions deprecated), but the repository says the specification is in beta and its RFC documents are marked Draft or Proposal. OpenAI documents ChatGPT calling merchants&#x27; ACP checkout endpoints, the README names OpenAI and Stripe as first implementers, and Stripe describes ACP as created by Stripe, OpenAI and Meta. OpenAI&#x27;s current payments guide describes a separate ChatGPT Wallet flow on merchant websites.<div class="meta">Why this rating: Named deployments exist, but the maintainers still call the specification beta and mark its RFCs Draft or Proposal, so it does not meet the &#x27;released and ready for use&#x27; test for green (borderline; tie rule applied).</div><details><summary>Evidence (8)</summary><div class="claim">Beta status. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/README.md">agentic-commerce-protocol repository, README.md</a>, Agentic Commerce Protocol (ACP). <span class="chk">(quote verified against the source)</span><blockquote>“The specification is maintained by OpenAI and Stripe and is currently in beta.”</blockquote></div><div class="claim">Latest dated release and deprecation of the previous one. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/changelog/2026-04-17.md">ACP changelog, Version 2026-04-17</a>, Version Compatibility. <span class="chk">(quote verified against the source)</span><blockquote>“Previous version 2026-01-30 deprecated”</blockquote></div><div class="claim">The core checkout RFC is marked Draft. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, RFC header. <span class="chk">(quote verified against the source)</span><blockquote>“Status: Draft”</blockquote></div><div class="claim">OpenAI and Stripe implementations. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/README.md">agentic-commerce-protocol repository, README.md</a>, Getting Started. <span class="chk">(quote verified against the source)</span><blockquote>“ACP has been first implemented by both OpenAI and Stripe, providing production-ready reference implementations for merchants and developers”</blockquote></div><div class="claim">OpenAI&#x27;s deployer documentation: ChatGPT calls merchants. <i>Source states</i> <a href="https://developers.openai.com/commerce/specs/checkout">OpenAI Developers, Agentic Checkout Spec (commerce documentation)</a>, REST endpoints. <span class="chk">(quote verified against the source)</span><blockquote>“Merchants must implement the following five endpoints to place orders on behalf of ChatGPT users.”</blockquote></div><div class="claim">Stripe&#x27;s description of the protocol and its creators. <i>Source states</i> <a href="https://docs.stripe.com/agentic-commerce/protocols/acp">Stripe Docs, Agentic Commerce Protocol</a>, Agentic Commerce Protocol. <span class="chk">(quote verified against the source)</span><blockquote>“is an open standard created by Stripe, OpenAI, and Meta that defines how AI agents interact with businesses to complete purchases on behalf of buyers.”</blockquote></div><div class="claim">Meta is listed as a lead maintainer. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/MAINTAINERS.md">agentic-commerce-protocol repository, MAINTAINERS.md</a>, Lead maintainers. <span class="chk">(quote verified against the source)</span><blockquote>“Meta”</blockquote></div><div class="claim">OpenAI&#x27;s current payments guide describes relaying user signals in the Forwarded header for purchases on merchant websites, and does not name ACP. <i>Source states</i> <a href="https://developers.openai.com/commerce/specs/payment">OpenAI Developers, Accept payments (commerce guide at /commerce/specs/payment)</a>, Accept payments, risk handling. <span class="chk">(quote verified against the source)</span><blockquote>“OpenAI is rolling out support for relaying user signals through the Forwarded HTTP header.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">HTTP bearer authentication carrying an API key; an ACP-specific detached signature over canonical JSON with an RFC 3339 timestamp (not RFC 9421 HTTP Message Signatures, and not yet formally specified); RFC 9535 JSONPath in errors; an RFC 8615 well-known discovery document; OpenAPI 3.1 and JSON Schema for the API definitions; EMV 3-D Secure 2 for delegated buyer authentication; and PCI DSS for card data handling. TLS 1.3 is required for checkout and delegate payment calls.<details><summary>Evidence (6)</summary><div class="claim">Bearer scheme with API key format. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.securitySchemes.bearerAuth. <span class="chk">(quote verified against the source)</span><blockquote>“bearerFormat: API Key”</blockquote></div><div class="claim">Signature over canonical JSON with an RFC 3339 timestamp. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 2.1 Initialization. <span class="chk">(quote verified against the source)</span><blockquote>“client SHOULD sign requests (Signature) over canonical JSON with an accompanying Timestamp (RFC 3339).”</blockquote></div><div class="claim">Request signing is not yet formally specified. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.discovery.md">RFC: Discovery (rfcs/rfc.discovery.md)</a>, 11. Future Extensions. <span class="chk">(quote verified against the source)</span><blockquote>“Deferred pending formalization of ACP&#x27;s request signing specification.”</blockquote></div><div class="claim">Delegated authentication covers 3-D Secure 2 only. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_authentication.md">RFC: Agentic Commerce, Delegate Authentication API (rfcs/rfc.delegate_authentication.md)</a>, 1. Scope &amp; Goals. <span class="chk">(quote verified against the source)</span><blockquote>“3D Secure 2 (3DS2) authentication only”</blockquote></div><div class="claim">Discovery document per RFC 8615. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/changelog/2026-04-17.md">ACP changelog, Version 2026-04-17</a>, Discovery Well-Known Document. <span class="chk">(quote verified against the source)</span><blockquote>“A static, publicly accessible JSON document served at the origin root per RFC 8615.”</blockquote></div><div class="claim">TLS 1.3 for checkout. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 7. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“TLS 1.3 MUST be used.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Every request must carry Authorization: Bearer with a token that the OpenAPI definition describes as an API key, so the merchant knows which agent platform (e.g. ChatGPT) is calling. The same key is used for all of that platform&#x27;s calls and users. A User-Agent string naming the client software is recommended but self-asserted. The specification does not say who issues the key.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the agent platform (its API key), shared by all its agents and users (same as MCP Authorization&#x27;s client_id and Visa TAP&#x27;s keyid).</div><details><summary>Evidence (5)</summary><div class="claim">The bearer token is required. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 7. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Authentication: Authorization: Bearer &lt;token&gt; REQUIRED.”</blockquote></div><div class="claim">The bearer token is an API key. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.parameters.Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“Bearer token for API authentication”</blockquote></div><div class="claim">OpenAI&#x27;s documentation describes it as the API key used to make requests. <i>Source states</i> <a href="https://developers.openai.com/commerce/specs/checkout">OpenAI Developers, Agentic Checkout Spec (commerce documentation)</a>, Request headers. <span class="chk">(quote verified against the source)</span><blockquote>“API Key used to make requests”</blockquote></div><div class="claim">User-Agent is only recommended. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 3.1 Common Requirements. <span class="chk">(quote verified against the source)</span><blockquote>“User-Agent: &lt;string&gt; (RECOMMENDED)”</blockquote></div><div class="claim">Searched the checkout, delegate payment and discovery RFCs for how API keys are issued or bound to an agent. Nothing is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 2.1 Initialization; 3.1 Common Requirements; 7. Security Considerations.</div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ACP carries per-request and per-session identifiers (Request-Id, Idempotency-Key, the checkout session id) and a merchant-side customer id, but none of these identify the agent instance that sent the request. The API key identifies the platform as a whole.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Request-Id is only a recommended correlation header. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 3.1 Common Requirements. <span class="chk">(quote verified against the source)</span><blockquote>“Request-Id: &lt;string&gt; (RECOMMENDED)”</blockquote></div><div class="claim">Searched the request headers, Buyer, CheckoutSession and RiskSignals schemas for an agent instance identifier. None is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.parameters; components.schemas (Buyer, RiskSignals).</div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The agent may send a Buyer object (name, email, phone, company, loyalty data) when creating or completing a session; email is required only if the object is sent. These are contact details supplied by the agent, not a verified identity, and the merchant may map them to its own customer id. Account linking (e.g. OAuth 2.0 identity linking) is listed only as future work.<div class="meta">Optional in the specification · requirement level: MAY*</div><div class="meta">Why this rating: The protocol defines the buyer object, but it is optional in session creation and completion, and self-asserted (similar to Visa TAP&#x27;s optional consumer object).</div><details><summary>Evidence (4)</summary><div class="claim">Buyer details are optional when creating a session. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 2.2 Session Lifecycle. <span class="chk">(quote verified against the source)</span><blockquote>“initializes a session from items and optional buyer/address.”</blockquote></div><div class="claim">What the Buyer object contains. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.schemas.Buyer. <span class="chk">(quote verified against the source)</span><blockquote>“Information about the buyer including contact details, company info, and loyalty status”</blockquote></div><div class="claim">Merchant-side customer identifier field. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.schemas.Buyer.customer_id. <span class="chk">(quote verified against the source)</span><blockquote>“Merchant&#x27;s internal customer identifier”</blockquote></div><div class="claim">Identity linking is future work. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.discovery.md">RFC: Discovery (rfcs/rfc.discovery.md)</a>, 11. Future Extensions. <span class="chk">(quote verified against the source)</span><blockquote>“Declaring supported authentication mechanisms (e.g., OAuth 2.0 identity linking) when those capabilities are added to ACP.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>A bearer API key on every request, meaning whoever holds the key can use it; it is not proof of possession. The specification also recommends a Signature header (a detached signature over the canonical JSON body) with a Timestamp, but it does not cover the method, path or other headers, and the algorithms are agreed out of band. For payment, the merchant receives a one-time vault token in the complete request, issued by its PSP.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A defined credential (bearer API key) is required on every request; the answer states it is not proof of possession (same as MCP Authorization).</div><details><summary>Evidence (6)</summary><div class="claim">Bearer token required. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 7. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Authentication: Authorization: Bearer &lt;token&gt; REQUIRED.”</blockquote></div><div class="claim">Signature and Timestamp are recommended, and checked within a clock-skew window. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 7. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Integrity &amp; Freshness: Signature over canonical JSON and Timestamp SHOULD be verified with a bounded clock‑skew window.”</blockquote></div><div class="claim">The delegate payment RFC describes it as a detached signature made with the client&#x27;s private key. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 2.2 Preparation &amp; Signing. <span class="chk">(quote verified against the source)</span><blockquote>“Client MUST compute a detached signature with its private key, base64url-encode it, and place it in the Signature header.”</blockquote></div><div class="claim">Algorithms are advertised out of band. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 2.1 Initialization. <span class="chk">(quote verified against the source)</span><blockquote>“Server advertises acceptable signature algorithms (e.g., Ed25519, ES256) out-of-band.”</blockquote></div><div class="claim">The released checkout OpenAPI describes the Signature header differently, as an HMAC for webhook verification (inconsistency noted). <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.parameters.Signature. <span class="chk">(quote verified against the source)</span><blockquote>“HMAC signature for webhook verification”</blockquote></div><div class="claim">The released delegate payment OpenAPI describes Signature as a detached JSON signature. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.delegate_payment.yaml">Delegate Payment API, OpenAPI, spec/2026-04-17/openapi/openapi.delegate_payment.yaml</a>, components.parameters.Signature. <span class="chk">(quote verified against the source)</span><blockquote>“Detached JSON signature for request verification”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. No lifetime is defined for the bearer API key. Where signatures are used, the Timestamp should be checked within a bounded clock-skew window, but no number is given. The delegated payment token must stop working at its allowance expiry time, which the agent sets in each request with no maximum defined, and it is one-time use.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: A freshness check is recommended for verifiers but with no specific number, and the bearer key has no lifetime (comparable to MCP Authorization&#x27;s &#x27;short-lived&#x27; with no number).</div><details><summary>Evidence (4)</summary><div class="claim">Freshness check without a number. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 6. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Freshness: Timestamp SHOULD be required and checked within an acceptable clock-skew window.”</blockquote></div><div class="claim">Payment token expiry. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 2.5 Usage &amp; Expiry. <span class="chk">(quote verified against the source)</span><blockquote>“The token MUST become invalid at or after allowance.expires_at.”</blockquote></div><div class="claim">Allowance is one-time. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 3.5 Allowance (REQUIRED). <span class="chk">(quote verified against the source)</span><blockquote>“reason: MUST be one_time”</blockquote></div><div class="claim">Searched the checkout RFC, the OpenAPI security scheme and the delegate payment RFC for a lifetime or rotation rule for the bearer API key. None is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 3.1 Common Requirements; 7. Security Considerations.</div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Only after prior setup. The merchant checks the bearer API key against the keys it has handed out, and, if signatures are used, verifies the signature and timestamp with algorithms and keys agreed out of band. There is no published key directory for agent platforms; publishing signing keys in the discovery document is deferred. The PSP checks the payment token against its allowance when the merchant charges it.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Validation is possible only after a bilateral setup between merchant and agent platform; unlike the three calibration examples (green), there are no published keys or named authorization server.</div><details><summary>Evidence (4)</summary><div class="claim">Algorithms are agreed out of band. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 2.1 Initialization. <span class="chk">(quote verified against the source)</span><blockquote>“Server SHOULD publish acceptable signature algorithms out‑of‑band”</blockquote></div><div class="claim">Publishing signing keys is deferred. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.discovery.md">RFC: Discovery (rfcs/rfc.discovery.md)</a>, 11. Future Extensions. <span class="chk">(quote verified against the source)</span><blockquote>“Signing keys: Public key advertisement (JWK format) for signature verification, enabling agents to verify the authenticity of responses.”</blockquote></div><div class="claim">The conformance checklist only asks merchants to verify auth and signatures where applicable. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 10. Conformance Checklist. <span class="chk">(quote verified against the source)</span><blockquote>“Verifies auth; signs/verifies requests where applicable”</blockquote></div><div class="claim">The payment token is limited to its allowance. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 2.5 Usage &amp; Expiry. <span class="chk">(quote verified against the source)</span><blockquote>“The returned token MUST ONLY be usable within the provided Allowance (reason, max_amount, currency, expiry).”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The merchant checks the agent platform&#x27;s API key (and optionally a signature from the platform), which is shared by every agent and user of that platform. The merchant does not authenticate the buyer through ACP: buyer details are supplied by the agent, and 3-D Secure, when used, is run by the card issuer through an authentication provider, with the merchant only receiving the result.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: The merchant only verifies a platform-level key; buyer authentication happens at the card issuer, which does not count (same as Visa TAP).</div><details><summary>Evidence (4)</summary><div class="claim">Only a bearer token is required. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 7. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Authentication: Authorization: Bearer &lt;token&gt; REQUIRED.”</blockquote></div><div class="claim">The agent runs 3-D Secure directly with the authentication provider, not through the merchant. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_authentication.md">RFC: Agentic Commerce, Delegate Authentication API (rfcs/rfc.delegate_authentication.md)</a>, 1. Scope &amp; Goals. <span class="chk">(quote verified against the source)</span><blockquote>“Allow clients to execute consumer authentication directly with the specified server using standardized endpoints, without routing through the merchant.”</blockquote></div><div class="claim">The merchant receives the authentication result in the complete call. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 4.4 Complete Session. <span class="chk">(quote verified against the source)</span><blockquote>“MUST return the authentication_result in the POST /complete request body, regardless of the authentication outcome.”</blockquote></div><div class="claim">Searched for a buyer sign-in or account-linking flow at the merchant. Only listed as future work. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.discovery.md">RFC: Discovery (rfcs/rfc.discovery.md)</a>, 11. Future Extensions.</div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. A delegated payment token can only be used within its allowance: one time, up to a maximum amount in one currency, for one merchant and checkout session, before an expiry time; the PSP enforces this when the merchant charges it. The API key itself carries no scopes, so the merchant learns nothing about what the agent may do beyond paying. Payment handlers can opt out of delegation.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: Per-purchase limits exist but only for the payment credential and are enforced by the PSP, while the API calls carry no scopes (more specific than Visa TAP&#x27;s browse/pay split, less than MCP Authorization&#x27;s scopes).</div><details><summary>Evidence (4)</summary><div class="claim">Allowance fields. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 2.5 Usage &amp; Expiry. <span class="chk">(quote verified against the source)</span><blockquote>“The returned token MUST ONLY be usable within the provided Allowance (reason, max_amount, currency, expiry).”</blockquote></div><div class="claim">Allowance is tied to a checkout session and merchant. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 3.5 Allowance (REQUIRED). <span class="chk">(quote verified against the source)</span><blockquote>“merchant_id: string (≤256)”</blockquote></div><div class="claim">Delegation is the recommended default, and handlers can opt out. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md">RFC: Agentic Commerce, Payment Handlers (rfcs/rfc.payment_handlers.md)</a>, 3.3 Why require delegate_payment by default?. <span class="chk">(quote verified against the source)</span><blockquote>“Making delegate_payment the recommended default (via requires_delegate_payment: true) ensures these properties are preserved while allowing handlers to opt out when the pattern doesn&#x27;t fit”</blockquote></div><div class="claim">Searched the OpenAPI security scheme and checkout RFC for scopes or permissions on the API key. None is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.securitySchemes.</div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The merchant can declare required buyer interventions (3ds or biometric) for a session, enforced always or depending on risk, and can flag messages that need the buyer&#x27;s review. 3-D Secure runs through the delegated authentication API, where the card issuer may challenge the buyer. ACP defines no general step in which the buyer confirms each purchase; that happens in the agent&#x27;s own interface.<div class="meta">Optional in the specification · requirement level: MAY*</div><div class="meta">Why this rating: Approval steps are defined but optional and only for some transactions, triggered by the merchant or issuer.</div><details><summary>Evidence (4)</summary><div class="claim">Required interventions per session. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.capability_negotiation.md">RFC: Capability Negotiation (rfcs/rfc.capability_negotiation.md)</a>, interventions (object, OPTIONAL). <span class="chk">(quote verified against the source)</span><blockquote>“Intervention methods required for this session. If empty or absent, no specific interventions are required.”</blockquote></div><div class="claim">Default enforcement is conditional. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.capability_negotiation.md">RFC: Capability Negotiation (rfcs/rfc.capability_negotiation.md)</a>, interventions (object, OPTIONAL). <span class="chk">(quote verified against the source)</span><blockquote>“conditional — Required interventions enforced based on risk signals (default)”</blockquote></div><div class="claim">Challenge flow in delegated authentication. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_authentication.md">RFC: Agentic Commerce, Delegate Authentication API (rfcs/rfc.delegate_authentication.md)</a>, 2.2 Authentication Lifecycle. <span class="chk">(quote verified against the source)</span><blockquote>“Returns challenge action if required, or frictionless result.”</blockquote></div><div class="claim">Messages can require buyer review. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/changelog/2026-04-17.md">ACP changelog, Version 2026-04-17</a>, Message Resolution Field. <span class="chk">(quote verified against the source)</span><blockquote>“requires_buyer_review: Buyer must authorize before order placement due to policy, regulatory, or entitlement rules (checkout complete)”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not defined. A merchant relies on an agent platform because it has given that platform an API key, which happens outside ACP (OpenAI, for example, onboards merchants through its own process). The specification names no party that vouches for agent platforms and defines no registry. The delegated authentication API requires providers to accept only requests from the agent&#x27;s verified infrastructure, but does not say how that is established.<div class="meta">Handled outside the protocol</div><div class="meta">Why this rating: Trust is bilateral and set up outside the protocol; no party is named to vouch (unlike MCP Authorization&#x27;s authorization server or Visa TAP&#x27;s key store).</div><details><summary>Evidence (3)</summary><div class="claim">Delegated authentication relies on allowlisting the agent&#x27;s infrastructure. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_authentication.md">RFC: Agentic Commerce, Delegate Authentication API (rfcs/rfc.delegate_authentication.md)</a>, 8. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Agent Infrastructure Allowlisting: Authentication Providers MUST enforce origin restrictions to prevent abuse,”</blockquote></div><div class="claim">Searched the README, governance and the checkout, delegate payment and discovery RFCs for onboarding, certification or a registry of agent platforms. None is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 2.1 Initialization; 7. Security Considerations.</div><div class="claim">No central handler registry either. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md">RFC: Agentic Commerce, Payment Handlers (rfcs/rfc.payment_handlers.md)</a>, 2.2 Non-Goals. <span class="chk">(quote verified against the source)</span><blockquote>“Creating a centralized handler registry (handlers are discovered per-session)”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not defined. ACP has no revocation mechanism for API keys or agent platforms. A merchant can stop accepting a platform&#x27;s API key in its own systems, which cuts off that whole platform and all its users at once. Delegated payment tokens are one-time and expire at the allowance expiry, and ACP defines no call to revoke one earlier.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No revocation is defined; dropping a key is coarse and outside the protocol (same as the three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the checkout, delegate payment, delegate authentication and discovery RFCs and the 2026-04-17 OpenAPI files for revoke, revocation or key removal. None is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, Whole document.</div><div class="claim">Payment tokens expire. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a>, 2.5 Usage &amp; Expiry. <span class="chk">(quote verified against the source)</span><blockquote>“The token MUST become invalid at or after allowance.expires_at.”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. ACP defines no contact or escalation field for the agent platform. The merchant knows the platform it gave an API key to, and sends order updates to the platform&#x27;s webhook, but neither is a defined channel for reporting misbehaviour.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field or process is defined (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the checkout and delegate payment RFCs, the discovery document schema and the OpenAPI headers for contact, support or abuse fields for the agent side. None is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.parameters; components.schemas.</div><div class="claim">Order updates go to the platform&#x27;s webhook receiver. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, 2.3 Webhooks (Separate Spec). <span class="chk">(quote verified against the source)</span><blockquote>“Order lifecycle updates (order_create, order_update) MUST be emitted to the application&#x27;s webhook receiver”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Risk signals in ACP flow from the agent to the merchant and PSP about the buyer and transaction (e.g. a card-testing score, IP address, device fingerprint). Nothing lets one merchant warn others about an agent platform.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed; risk signals go from the agent to the merchant, not between services.</div><details><summary>Evidence (2)</summary><div class="claim">Risk signals describe the checkout, sent by the agent. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.schemas.RiskSignals. <span class="chk">(quote verified against the source)</span><blockquote>“Risk and fraud detection signals for the checkout session”</blockquote></div><div class="claim">Searched all RFCs for reputation, shared signals or reports between merchants. None is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a>, Whole document.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The recommended User-Agent header names the client software (the example is ChatGPT/2.0), not the AI model, and it is self-asserted.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing identifies the model (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">User-Agent example names client software. <i>Source states</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.parameters.UserAgent. <span class="chk">(quote verified against the source)</span><blockquote>“ChatGPT/2.0 (Mac OS X 15.0.1; arm64; build 0)”</blockquote></div><div class="claim">Searched headers and schemas for a model or provenance field. None is defined. <i>Not found in</i> <a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a>, components.parameters; components.schemas.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/README.md">agentic-commerce-protocol repository, README.md</a> (commit 7fdd78d, 2026-07-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/MAINTAINERS.md">agentic-commerce-protocol repository, MAINTAINERS.md</a> (commit 7fdd78d, 2026-07-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/changelog/2026-04-17.md">ACP changelog, Version 2026-04-17</a> (2026-04-17, 2026-04-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md">RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)</a> (commit 7fdd78d (header: Status Draft, Version 2026-01-16), 2026-07-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md">RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)</a> (commit 7fdd78d (header: Status Draft, Version 2025-09-29), 2026-07-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_authentication.md">RFC: Agentic Commerce, Delegate Authentication API (rfcs/rfc.delegate_authentication.md)</a> (commit 7fdd78d (header: Status Draft, Version 2026-01-28), 2026-07-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.capability_negotiation.md">RFC: Capability Negotiation (rfcs/rfc.capability_negotiation.md)</a> (commit 7fdd78d (header: Version 2026-01-16), 2026-07-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md">RFC: Agentic Commerce, Payment Handlers (rfcs/rfc.payment_handlers.md)</a> (commit 7fdd78d (header: Version 2026-01-22), 2026-07-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.discovery.md">RFC: Discovery (rfcs/rfc.discovery.md)</a> (commit 7fdd78d, 2026-07-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml">Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml</a> (2026-04-17, 2026-04-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.delegate_payment.yaml">Delegate Payment API, OpenAPI, spec/2026-04-17/openapi/openapi.delegate_payment.yaml</a> (2026-04-17, 2026-04-17)</li><li><a href="https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/docs/mcp-binding.md">ACP MCP binding (docs/mcp-binding.md)</a> (commit 7fdd78d, 2026-07-17)</li><li><a href="https://developers.openai.com/commerce/specs/checkout">OpenAI Developers, Agentic Checkout Spec (commerce documentation)</a> (accessed 2026-11-19)</li><li><a href="https://docs.stripe.com/agentic-commerce/protocols/acp">Stripe Docs, Agentic Commerce Protocol</a> (accessed 2026-11-19)</li><li><a href="https://developers.openai.com/commerce/specs/payment">OpenAI Developers, Accept payments (commerce guide at /commerce/specs/payment)</a> (accessed 2026-11-19)</li></ul><h2>Notes</h2><ul class="plain"><li>Name collision: &#x27;ACP&#x27; is also used for the Agent Communication Protocol (IBM BeeAI, later merged into A2A), the Agent Client Protocol (Zed, editor to coding agent) and AGNTCY&#x27;s Agent Connect Protocol. This analysis covers the Agentic Commerce Protocol by OpenAI and Stripe.</li><li>Version: the latest dated release is 2026-04-17. The RFC design documents in rfcs/ are not snapshotted per release; their headers carry older version dates and statuses Draft or Proposal, and they were read at commit 7fdd78d. Where the RFCs and the released OpenAPI differ, both are cited.</li><li>Inconsistency: the delegate payment RFC says the client MUST sign requests (section 2.2) but lists the Signature header as RECOMMENDED (section 2.3); the checkout OpenAPI describes Signature as an HMAC for webhook verification, the delegate payment OpenAPI as a detached JSON signature.</li><li>Most RFC text uses RFC 2119 keywords. Where the requirement tag has an asterisk, the point rests on schema optionality or the lowercase word &#x27;optional&#x27; rather than a keyword.</li><li>Stripe&#x27;s documentation describes ACP&#x27;s delegate authentication as delegating authorization with OAuth 2.0, while the specification at this commit defines delegate authentication as 3-D Secure 2 only and lists OAuth 2.0 identity linking as future work. This analysis follows the specification.</li><li>The OpenAI documentation pages were fetched with a web tool; agenticcommerce.dev could not be fetched in this session.</li><li>OpenAI&#x27;s Delegated Payment page (developers.openai.com/commerce/specs/payment) now shows an &#x27;Accept payments&#x27; guide for ChatGPT Wallet and the Forwarded header, not the delegated payment specification; older search snippets of that page are out of date, so it was not used as a source.</li></ul><h2>Open questions</h2><ul class="plain"><li>Who issues the bearer API key in deployments other than ChatGPT, and is it ever bound to an individual user or agent?</li><li>Is request signing actually used in production, with which algorithm (asymmetric or HMAC), and how are keys exchanged?</li><li>Will the OAuth 2.0 identity linking mentioned by Stripe and the discovery RFC be added to the specification, and would it identify the buyer to the merchant?</li><li>Is there a maximum allowance expiry that PSPs enforce for delegated payment tokens?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (64 of 64 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "ACP",
+  "full_name": "Agentic Commerce Protocol",
+  "spec_version": "Released version 2026-04-17 (latest dated release), read at repository commit 7fdd78d",
+  "spec_date": "2026-04-17 (release); commit 7fdd78d dated 2026-07-17",
+  "maintainer": "OpenAI and Stripe (Founding Maintainers), with Meta listed as a lead maintainer and Technical Steering Committee member",
+  "newer_version_note": "No dated release after 2026-04-17 exists at commit 7fdd78d (the repository head on 2026-11-19). The spec/unreleased folder holds further changes that are not part of this analysis. The RFC design documents are not snapshotted per release; they were read at the same commit."
+ },
+ "profile": {
+  "id": "agentic-commerce-protocol",
+  "category": "agentic-commerce",
+  "secondary_categories": [],
+  "mechanisms": [
+   "api-key",
+   "http-message-signature"
+  ],
+  "venue": "other",
+  "maturity": "draft",
+  "openness": "open-specification",
+  "layers": [
+   "http-header",
+   "http-body"
+  ],
+  "building_blocks": [
+   "RFC 6750",
+   "RFC 3339",
+   "RFC 8615",
+   "RFC 9535",
+   "OpenAPI 3.1",
+   "JSON Schema",
+   "EMV 3-D Secure 2",
+   "PCI DSS"
+  ],
+  "website": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol",
+  "first_published": "2025-09"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "The Agentic Commerce Protocol (ACP) lets an AI agent, such as ChatGPT, run a purchase against a merchant's own checkout on behalf of a buyer, while the merchant stays the seller of record and keeps payments on its own payment provider. It is aimed at three groups: merchants (called sellers), agent platforms, and payment service providers (PSPs). OpenAI and Stripe maintain it as founding maintainers, with Meta now also listed. It is published on GitHub under Apache 2.0 with dated releases, the latest being 2026-04-17, but the repository still labels the protocol as beta.",
+  "ACP is mainly a set of REST APIs that the merchant hosts: the agent creates, updates and completes checkout sessions, sending a bearer API key on every call and, as a recommendation, a signature over the JSON body with a timestamp. Payment details go to the merchant's PSP, which returns a one-time token limited by an allowance (maximum amount, currency, merchant, checkout session, expiry). The merchant can require extra buyer steps such as 3-D Secure, run through a delegated authentication API. ACP does not define how API keys are issued, who vouches for an agent platform, per-agent identity, revocation, contact channels or model identity; request signing is still informally specified."
+ ],
+ "how_it_works": [
+  "Setup, outside the protocol: the merchant and the agent platform agree to work together and set up an API key (the specification does not say who issues it) and, if signatures are used, the accepted signature algorithms. The merchant may also publish a discovery document at /.well-known/acp.json.",
+  "The agent (e.g. ChatGPT) calls the merchant's POST /checkout_sessions with the items and, optionally, buyer and address details, sending Authorization: Bearer with the API key, an API-Version and an Idempotency-Key, and as a recommendation a Signature and Timestamp header.",
+  "The merchant checks the API key and, if used, the signature and timestamp, then returns the authoritative cart, its payment handlers and any required buyer interventions (e.g. 3-D Secure or biometric).",
+  "For card payments the agent sends the card details to the merchant's PSP (POST /agentic_commerce/delegate_payment), which returns a one-time vault token that can only be used within the allowance: maximum amount, currency, merchant, checkout session and expiry time.",
+  "If the merchant asks for 3-D Secure, the agent runs it through the delegated authentication API with the merchant's chosen authentication provider, and the buyer may be challenged by the card issuer.",
+  "The agent completes the session with the token (and any authentication result). The merchant charges the token through its PSP, creates the order, and sends order updates to the agent platform by signed webhook."
+ ],
+ "sources": [
+  {
+   "id": "readme",
+   "title": "agentic-commerce-protocol repository, README.md",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/README.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/README.md",
+   "version": "commit 7fdd78d",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "maintainers",
+   "title": "agentic-commerce-protocol repository, MAINTAINERS.md",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/MAINTAINERS.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/MAINTAINERS.md",
+   "version": "commit 7fdd78d",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "changelog",
+   "title": "ACP changelog, Version 2026-04-17",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/changelog/2026-04-17.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/changelog/2026-04-17.md",
+   "version": "2026-04-17",
+   "date": "2026-04-17",
+   "kind": "primary"
+  },
+  {
+   "id": "rfc-checkout",
+   "title": "RFC: Agentic Checkout, Merchant REST API (rfcs/rfc.agentic_checkout.md)",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.agentic_checkout.md",
+   "version": "commit 7fdd78d (header: Status Draft, Version 2026-01-16)",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "rfc-payment",
+   "title": "RFC: Agentic Commerce, Delegate Payment API (rfcs/rfc.delegate_payment.md)",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_payment.md",
+   "version": "commit 7fdd78d (header: Status Draft, Version 2025-09-29)",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "rfc-auth",
+   "title": "RFC: Agentic Commerce, Delegate Authentication API (rfcs/rfc.delegate_authentication.md)",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_authentication.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.delegate_authentication.md",
+   "version": "commit 7fdd78d (header: Status Draft, Version 2026-01-28)",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "rfc-capabilities",
+   "title": "RFC: Capability Negotiation (rfcs/rfc.capability_negotiation.md)",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.capability_negotiation.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.capability_negotiation.md",
+   "version": "commit 7fdd78d (header: Version 2026-01-16)",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "rfc-handlers",
+   "title": "RFC: Agentic Commerce, Payment Handlers (rfcs/rfc.payment_handlers.md)",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.payment_handlers.md",
+   "version": "commit 7fdd78d (header: Version 2026-01-22)",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "rfc-discovery",
+   "title": "RFC: Discovery (rfcs/rfc.discovery.md)",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.discovery.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/rfcs/rfc.discovery.md",
+   "version": "commit 7fdd78d",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "oas-checkout",
+   "title": "Agentic Checkout API, OpenAPI, spec/2026-04-17/openapi/openapi.agentic_checkout.yaml",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.agentic_checkout.yaml",
+   "version": "2026-04-17",
+   "date": "2026-04-17",
+   "kind": "primary"
+  },
+  {
+   "id": "oas-payment",
+   "title": "Delegate Payment API, OpenAPI, spec/2026-04-17/openapi/openapi.delegate_payment.yaml",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.delegate_payment.yaml",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/spec/2026-04-17/openapi/openapi.delegate_payment.yaml",
+   "version": "2026-04-17",
+   "date": "2026-04-17",
+   "kind": "primary"
+  },
+  {
+   "id": "mcp-binding",
+   "title": "ACP MCP binding (docs/mcp-binding.md)",
+   "url": "https://github.com/agentic-commerce-protocol/agentic-commerce-protocol/blob/7fdd78df677a94dce04c770644b0fbbb1401272b/docs/mcp-binding.md",
+   "fetch_url": "https://raw.githubusercontent.com/agentic-commerce-protocol/agentic-commerce-protocol/7fdd78df677a94dce04c770644b0fbbb1401272b/docs/mcp-binding.md",
+   "version": "commit 7fdd78d",
+   "date": "2026-07-17",
+   "kind": "primary"
+  },
+  {
+   "id": "openai-checkout",
+   "title": "OpenAI Developers, Agentic Checkout Spec (commerce documentation)",
+   "url": "https://developers.openai.com/commerce/specs/checkout",
+   "fetch_url": "https://developers.openai.com/commerce/specs/checkout.md",
+   "version": "",
+   "date": "accessed 2026-11-19",
+   "kind": "primary"
+  },
+  {
+   "id": "stripe-docs",
+   "title": "Stripe Docs, Agentic Commerce Protocol",
+   "url": "https://docs.stripe.com/agentic-commerce/protocols/acp",
+   "version": "",
+   "date": "accessed 2026-11-19",
+   "kind": "primary"
+  },
+  {
+   "id": "openai-payments-guide",
+   "title": "OpenAI Developers, Accept payments (commerce guide at /commerce/specs/payment)",
+   "url": "https://developers.openai.com/commerce/specs/payment",
+   "version": "",
+   "date": "accessed 2026-11-19",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Merchant-hosted checkout API that AI agents call for buyers",
+   "answer": "An open REST protocol where an AI agent platform calls a merchant's checkout API with a bearer API key to buy for a user, and passes a one-time payment token limited by an allowance, so the merchant keeps its own checkout and payment provider.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The maintainers' own description.",
+     "type": "fact",
+     "source": "readme",
+     "section": "Agentic Commerce Protocol (ACP)",
+     "quote": "is an interaction model and open standard for connecting buyers, their AI agents, and businesses to complete purchases seamlessly.",
+     "check": "OK",
+     "check_fp": "41b465150f"
+    },
+    {
+     "text": "The merchant remains the system of record.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "RFC: Agentic Checkout, introduction",
+     "quote": "The merchant remains the system of record for all orders, payments, taxes, and compliance.",
+     "check": "OK",
+     "check_fp": "fc85b8b1d3"
+    },
+    {
+     "text": "The payment token is limited by an allowance.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "RFC: Agentic Commerce, Delegate Payment API, introduction",
+     "quote": "The token may then be used by the merchant's existing PSP only within explicit Allowance constraints.",
+     "check": "OK",
+     "check_fp": "02d0e188d6"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agent checkout with merchants; REST or MCP",
+   "answer": "Online purchases made by an AI agent for a buyer, e.g. ChatGPT calling a merchant's checkout endpoints. Identity and authorization data travel in HTTP headers (bearer API key, optional signature and timestamp) and in the JSON body (buyer details, payment token, authentication result). The merchant's API verifies the calls; the merchant's PSP verifies the delegate payment calls. An MCP binding maps the same operations to MCP tools, with authentication left to the MCP server.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "OpenAI calls the merchant's endpoints.",
+     "type": "fact",
+     "source": "openai-checkout",
+     "section": "REST endpoints",
+     "quote": "Call direction: OpenAI -> Merchant",
+     "check": "WEB-OK",
+     "check_fp": "d47818ac94"
+    },
+    {
+     "text": "Five merchant endpoints to place orders for ChatGPT users.",
+     "type": "fact",
+     "source": "openai-checkout",
+     "section": "REST endpoints",
+     "quote": "Merchants must implement the following five endpoints to place orders on behalf of ChatGPT users.",
+     "check": "WEB-OK",
+     "check_fp": "eda5243798"
+    },
+    {
+     "text": "In the MCP binding, authentication is handled by the MCP server, not per call.",
+     "type": "fact",
+     "source": "mcp-binding",
+     "section": "Request mapping (meta fields)",
+     "quote": "MCP servers handle authentication at the connection level (via server configuration or OAuth), not per tool call.",
+     "check": "OK",
+     "check_fp": "e9fd7d5c75"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Seller, seller platform, PSP, agent, buyer, authentication provider",
+   "answer": "Seller (business or merchant): the party accepting payment and system of record. Seller Platform: commerce infrastructure a seller uses (e.g. Shopify). PSP (payment service provider): processes payments and issues delegated tokens (e.g. Stripe, Adyen). Agent (facilitator or orchestrator): orchestrates checkout on behalf of the user. Buyer: the person the agent buys for. Authentication Provider: a merchant-specified service that runs 3-D Secure with the agent.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Seller.",
+     "type": "fact",
+     "source": "rfc-handlers",
+     "section": "4.2 Terminology Clarifications",
+     "quote": "Seller | Business / Merchant | Party accepting payment",
+     "check": "OK",
+     "check_fp": "bd03cfc16c"
+    },
+    {
+     "text": "Seller Platform.",
+     "type": "fact",
+     "source": "rfc-handlers",
+     "section": "4.2 Terminology Clarifications",
+     "quote": "Infrastructure/system that sellers use for commerce (e.g., Shopify)",
+     "check": "OK",
+     "check_fp": "4fb872272d"
+    },
+    {
+     "text": "PSP.",
+     "type": "fact",
+     "source": "rfc-handlers",
+     "section": "4.2 Terminology Clarifications",
+     "quote": "Service processing payment transactions (e.g., Stripe, Adyen)",
+     "check": "OK",
+     "check_fp": "3529f93772"
+    },
+    {
+     "text": "Agent.",
+     "type": "fact",
+     "source": "rfc-handlers",
+     "section": "4.2 Terminology Clarifications",
+     "quote": "Agent | Facilitator / Orchestrator | Party orchestrating checkout on behalf of user",
+     "check": "OK",
+     "check_fp": "258069c21a"
+    },
+    {
+     "text": "Buyers are one of the three groups the protocol connects.",
+     "type": "fact",
+     "source": "readme",
+     "section": "Agentic Commerce Protocol (ACP)",
+     "quote": "connecting buyers, their AI agents, and businesses",
+     "check": "OK",
+     "check_fp": "071c81548b"
+    },
+    {
+     "text": "Authentication Providers implement the delegated authentication API.",
+     "type": "fact",
+     "source": "rfc-auth",
+     "section": "RFC: Agentic Commerce - Delegate Authentication API, introduction",
+     "quote": "This RFC defines a standardized REST API contract that authentication providers SHOULD implement to enable delegated consumer authentication with merchant-specified authentication providers.",
+     "check": "OK",
+     "check_fp": "f5e0d77688"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Dated releases, still labelled beta; OpenAI and Stripe use it",
+   "answer": "Released in dated versions (latest 2026-04-17, previous versions deprecated), but the repository says the specification is in beta and its RFC documents are marked Draft or Proposal. OpenAI documents ChatGPT calling merchants' ACP checkout endpoints, the README names OpenAI and Stripe as first implementers, and Stripe describes ACP as created by Stripe, OpenAI and Meta. OpenAI's current payments guide describes a separate ChatGPT Wallet flow on merchant websites.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: named deployments exist, but the maintainers still call the specification beta and mark its RFCs Draft or Proposal, so it does not meet the 'released and ready for use' test for green (borderline; tie rule applied).",
+   "claims": [
+    {
+     "text": "Beta status.",
+     "type": "fact",
+     "source": "readme",
+     "section": "Agentic Commerce Protocol (ACP)",
+     "quote": "The specification is maintained by OpenAI and Stripe and is currently in beta.",
+     "check": "OK",
+     "check_fp": "b89479dcae"
+    },
+    {
+     "text": "Latest dated release and deprecation of the previous one.",
+     "type": "fact",
+     "source": "changelog",
+     "section": "Version Compatibility",
+     "quote": "Previous version 2026-01-30 deprecated",
+     "check": "OK",
+     "check_fp": "9f93f7128b"
+    },
+    {
+     "text": "The core checkout RFC is marked Draft.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "RFC header",
+     "quote": "Status: Draft",
+     "check": "OK",
+     "check_fp": "3ad93f1de5"
+    },
+    {
+     "text": "OpenAI and Stripe implementations.",
+     "type": "fact",
+     "source": "readme",
+     "section": "Getting Started",
+     "quote": "ACP has been first implemented by both OpenAI and Stripe, providing production-ready reference implementations for merchants and developers",
+     "check": "OK",
+     "check_fp": "934f99983a"
+    },
+    {
+     "text": "OpenAI's deployer documentation: ChatGPT calls merchants.",
+     "type": "fact",
+     "source": "openai-checkout",
+     "section": "REST endpoints",
+     "quote": "Merchants must implement the following five endpoints to place orders on behalf of ChatGPT users.",
+     "check": "WEB-OK",
+     "check_fp": "eda5243798"
+    },
+    {
+     "text": "Stripe's description of the protocol and its creators.",
+     "type": "fact",
+     "source": "stripe-docs",
+     "section": "Agentic Commerce Protocol",
+     "quote": "is an open standard created by Stripe, OpenAI, and Meta that defines how AI agents interact with businesses to complete purchases on behalf of buyers.",
+     "check": "WEB-OK",
+     "check_fp": "612666c107"
+    },
+    {
+     "text": "Meta is listed as a lead maintainer.",
+     "type": "fact",
+     "source": "maintainers",
+     "section": "Lead maintainers",
+     "quote": "Meta",
+     "check": "OK",
+     "check_fp": "8d546a6dea"
+    },
+    {
+     "text": "OpenAI's current payments guide describes relaying user signals in the Forwarded header for purchases on merchant websites, and does not name ACP.",
+     "type": "fact",
+     "source": "openai-payments-guide",
+     "section": "Accept payments, risk handling",
+     "quote": "OpenAI is rolling out support for relaying user signals through the Forwarded HTTP header.",
+     "check": "WEB-OK",
+     "check_fp": "25e6f9683f"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "Bearer API keys, JSON signatures, 3-D Secure, RFC 8615",
+   "answer": "HTTP bearer authentication carrying an API key; an ACP-specific detached signature over canonical JSON with an RFC 3339 timestamp (not RFC 9421 HTTP Message Signatures, and not yet formally specified); RFC 9535 JSONPath in errors; an RFC 8615 well-known discovery document; OpenAPI 3.1 and JSON Schema for the API definitions; EMV 3-D Secure 2 for delegated buyer authentication; and PCI DSS for card data handling. TLS 1.3 is required for checkout and delegate payment calls.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Bearer scheme with API key format.",
+     "type": "fact",
+     "source": "oas-checkout",
+     "section": "components.securitySchemes.bearerAuth",
+     "quote": "bearerFormat: API Key",
+     "check": "OK",
+     "check_fp": "de2d8d38b4"
+    },
+    {
+     "text": "Signature over canonical JSON with an RFC 3339 timestamp.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "2.1 Initialization",
+     "quote": "client SHOULD sign requests (Signature) over canonical JSON with an accompanying Timestamp (RFC 3339).",
+     "check": "OK",
+     "check_fp": "73692b2cd3"
+    },
+    {
+     "text": "Request signing is not yet formally specified.",
+     "type": "fact",
+     "source": "rfc-discovery",
+     "section": "11. Future Extensions",
+     "quote": "Deferred pending formalization of ACP's request signing specification.",
+     "check": "OK",
+     "check_fp": "d3eaefedc4"
+    },
+    {
+     "text": "Delegated authentication covers 3-D Secure 2 only.",
+     "type": "fact",
+     "source": "rfc-auth",
+     "section": "1. Scope & Goals",
+     "quote": "3D Secure 2 (3DS2) authentication only",
+     "check": "OK",
+     "check_fp": "0bfd6047d7"
+    },
+    {
+     "text": "Discovery document per RFC 8615.",
+     "type": "fact",
+     "source": "changelog",
+     "section": "Discovery Well-Known Document",
+     "quote": "A static, publicly accessible JSON document served at the origin root per RFC 8615.",
+     "check": "OK",
+     "check_fp": "1be14f261f"
+    },
+    {
+     "text": "TLS 1.3 for checkout.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "7. Security Considerations",
+     "quote": "TLS 1.3 MUST be used.",
+     "check": "OK",
+     "check_fp": "3439b99bb9"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Agent platform's API key",
+   "answer": "Partly. Every request must carry Authorization: Bearer with a token that the OpenAPI definition describes as an API key, so the merchant knows which agent platform (e.g. ChatGPT) is calling. The same key is used for all of that platform's calls and users. A User-Agent string naming the client software is recommended but self-asserted. The specification does not say who issues the key.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: the identifier names the agent platform (its API key), shared by all its agents and users (same as MCP Authorization's client_id and Visa TAP's keyid).",
+   "claims": [
+    {
+     "text": "The bearer token is required.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "7. Security Considerations",
+     "quote": "Authentication: Authorization: Bearer <token> REQUIRED.",
+     "check": "OK",
+     "check_fp": "446c04af2e"
+    },
+    {
+     "text": "The bearer token is an API key.",
+     "type": "fact",
+     "source": "oas-checkout",
+     "section": "components.parameters.Authorization",
+     "quote": "Bearer token for API authentication",
+     "check": "OK",
+     "check_fp": "07032ddf17"
+    },
+    {
+     "text": "OpenAI's documentation describes it as the API key used to make requests.",
+     "type": "fact",
+     "source": "openai-checkout",
+     "section": "Request headers",
+     "quote": "API Key used to make requests",
+     "check": "WEB-OK",
+     "check_fp": "138370b1b8"
+    },
+    {
+     "text": "User-Agent is only recommended.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "3.1 Common Requirements",
+     "quote": "User-Agent: <string> (RECOMMENDED)",
+     "check": "OK",
+     "check_fp": "ff22facbee"
+    },
+    {
+     "text": "Searched the checkout, delegate payment and discovery RFCs for how API keys are issued or bound to an agent. Nothing is defined.",
+     "type": "silent",
+     "source": "rfc-checkout",
+     "section": "2.1 Initialization; 3.1 Common Requirements; 7. Security Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. ACP carries per-request and per-session identifiers (Request-Id, Idempotency-Key, the checkout session id) and a merchant-side customer id, but none of these identify the agent instance that sent the request. The API key identifies the platform as a whole.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Request-Id is only a recommended correlation header.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "3.1 Common Requirements",
+     "quote": "Request-Id: <string> (RECOMMENDED)",
+     "check": "OK",
+     "check_fp": "f74ac942fa"
+    },
+    {
+     "text": "Searched the request headers, Buyer, CheckoutSession and RiskSignals schemas for an agent instance identifier. None is defined.",
+     "type": "silent",
+     "source": "oas-checkout",
+     "section": "components.parameters; components.schemas (Buyer, RiskSignals)",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Optional buyer details, self-asserted",
+   "answer": "Partly. The agent may send a Buyer object (name, email, phone, company, loyalty data) when creating or completing a session; email is required only if the object is sent. These are contact details supplied by the agent, not a verified identity, and the merchant may map them to its own customer id. Account linking (e.g. OAuth 2.0 identity linking) is listed only as future work.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY*",
+   "rating_reason": "Yellow: the protocol defines the buyer object, but it is optional in session creation and completion, and self-asserted (similar to Visa TAP's optional consumer object).",
+   "claims": [
+    {
+     "text": "Buyer details are optional when creating a session.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "2.2 Session Lifecycle",
+     "quote": "initializes a session from items and optional buyer/address.",
+     "check": "OK",
+     "check_fp": "cbd72e7bc6"
+    },
+    {
+     "text": "What the Buyer object contains.",
+     "type": "fact",
+     "source": "oas-checkout",
+     "section": "components.schemas.Buyer",
+     "quote": "Information about the buyer including contact details, company info, and loyalty status",
+     "check": "OK",
+     "check_fp": "08c15a9db3"
+    },
+    {
+     "text": "Merchant-side customer identifier field.",
+     "type": "fact",
+     "source": "oas-checkout",
+     "section": "components.schemas.Buyer.customer_id",
+     "quote": "Merchant's internal customer identifier",
+     "check": "OK",
+     "check_fp": "abec1f2d1b"
+    },
+    {
+     "text": "Identity linking is future work.",
+     "type": "fact",
+     "source": "rfc-discovery",
+     "section": "11. Future Extensions",
+     "quote": "Declaring supported authentication mechanisms (e.g., OAuth 2.0 identity linking) when those capabilities are added to ACP.",
+     "check": "OK",
+     "check_fp": "67f0af415a"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Bearer API key; signature recommended",
+   "answer": "A bearer API key on every request, meaning whoever holds the key can use it; it is not proof of possession. The specification also recommends a Signature header (a detached signature over the canonical JSON body) with a Timestamp, but it does not cover the method, path or other headers, and the algorithms are agreed out of band. For payment, the merchant receives a one-time vault token in the complete request, issued by its PSP.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a defined credential (bearer API key) is required on every request; the answer states it is not proof of possession (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Bearer token required.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "7. Security Considerations",
+     "quote": "Authentication: Authorization: Bearer <token> REQUIRED.",
+     "check": "OK",
+     "check_fp": "446c04af2e"
+    },
+    {
+     "text": "Signature and Timestamp are recommended, and checked within a clock-skew window.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "7. Security Considerations",
+     "quote": "Integrity & Freshness: Signature over canonical JSON and Timestamp SHOULD be verified with a bounded clock‑skew window.",
+     "check": "OK",
+     "check_fp": "dd879f89d4"
+    },
+    {
+     "text": "The delegate payment RFC describes it as a detached signature made with the client's private key.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "2.2 Preparation & Signing",
+     "quote": "Client MUST compute a detached signature with its private key, base64url-encode it, and place it in the Signature header.",
+     "check": "OK",
+     "check_fp": "f2590abbeb"
+    },
+    {
+     "text": "Algorithms are advertised out of band.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "2.1 Initialization",
+     "quote": "Server advertises acceptable signature algorithms (e.g., Ed25519, ES256) out-of-band.",
+     "check": "OK",
+     "check_fp": "7b91454a46"
+    },
+    {
+     "text": "The released checkout OpenAPI describes the Signature header differently, as an HMAC for webhook verification (inconsistency noted).",
+     "type": "fact",
+     "source": "oas-checkout",
+     "section": "components.parameters.Signature",
+     "quote": "HMAC signature for webhook verification",
+     "check": "OK",
+     "check_fp": "629970164b"
+    },
+    {
+     "text": "The released delegate payment OpenAPI describes Signature as a detached JSON signature.",
+     "type": "fact",
+     "source": "oas-payment",
+     "section": "components.parameters.Signature",
+     "quote": "Detached JSON signature for request verification",
+     "check": "OK",
+     "check_fp": "5b34e6cfcb"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Key: none; signature window unspecified",
+   "answer": "Partly. No lifetime is defined for the bearer API key. Where signatures are used, the Timestamp should be checked within a bounded clock-skew window, but no number is given. The delegated payment token must stop working at its allowance expiry time, which the agent sets in each request with no maximum defined, and it is one-time use.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: a freshness check is recommended for verifiers but with no specific number, and the bearer key has no lifetime (comparable to MCP Authorization's 'short-lived' with no number).",
+   "claims": [
+    {
+     "text": "Freshness check without a number.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "6. Security Considerations",
+     "quote": "Freshness: Timestamp SHOULD be required and checked within an acceptable clock-skew window.",
+     "check": "OK",
+     "check_fp": "e9596f5657"
+    },
+    {
+     "text": "Payment token expiry.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "2.5 Usage & Expiry",
+     "quote": "The token MUST become invalid at or after allowance.expires_at.",
+     "check": "OK",
+     "check_fp": "132d445238"
+    },
+    {
+     "text": "Allowance is one-time.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "3.5 Allowance (REQUIRED)",
+     "quote": "reason: MUST be one_time",
+     "check": "OK",
+     "check_fp": "cb67a186de"
+    },
+    {
+     "text": "Searched the checkout RFC, the OpenAPI security scheme and the delegate payment RFC for a lifetime or rotation rule for the bearer API key. None is defined.",
+     "type": "silent",
+     "source": "rfc-checkout",
+     "section": "3.1 Common Requirements; 7. Security Considerations",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Only with keys agreed in advance",
+   "answer": "Only after prior setup. The merchant checks the bearer API key against the keys it has handed out, and, if signatures are used, verifies the signature and timestamp with algorithms and keys agreed out of band. There is no published key directory for agent platforms; publishing signing keys in the discovery document is deferred. The PSP checks the payment token against its allowance when the merchant charges it.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: validation is possible only after a bilateral setup between merchant and agent platform; unlike the three calibration examples (green), there are no published keys or named authorization server.",
+   "claims": [
+    {
+     "text": "Algorithms are agreed out of band.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "2.1 Initialization",
+     "quote": "Server SHOULD publish acceptable signature algorithms out‑of‑band",
+     "check": "OK",
+     "check_fp": "86d83a7255"
+    },
+    {
+     "text": "Publishing signing keys is deferred.",
+     "type": "fact",
+     "source": "rfc-discovery",
+     "section": "11. Future Extensions",
+     "quote": "Signing keys: Public key advertisement (JWK format) for signature verification, enabling agents to verify the authenticity of responses.",
+     "check": "OK",
+     "check_fp": "83da3f7ab5"
+    },
+    {
+     "text": "The conformance checklist only asks merchants to verify auth and signatures where applicable.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "10. Conformance Checklist",
+     "quote": "Verifies auth; signs/verifies requests where applicable",
+     "check": "OK",
+     "check_fp": "9f22974369"
+    },
+    {
+     "text": "The payment token is limited to its allowance.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "2.5 Usage & Expiry",
+     "quote": "The returned token MUST ONLY be usable within the provided Allowance (reason, max_amount, currency, expiry).",
+     "check": "OK",
+     "check_fp": "c28a7072d8"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "No, platform API key only",
+   "answer": "No. The merchant checks the agent platform's API key (and optionally a signature from the platform), which is shared by every agent and user of that platform. The merchant does not authenticate the buyer through ACP: buyer details are supplied by the agent, and 3-D Secure, when used, is run by the card issuer through an authentication provider, with the merchant only receiving the result.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: the merchant only verifies a platform-level key; buyer authentication happens at the card issuer, which does not count (same as Visa TAP).",
+   "claims": [
+    {
+     "text": "Only a bearer token is required.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "7. Security Considerations",
+     "quote": "Authentication: Authorization: Bearer <token> REQUIRED.",
+     "check": "OK",
+     "check_fp": "446c04af2e"
+    },
+    {
+     "text": "The agent runs 3-D Secure directly with the authentication provider, not through the merchant.",
+     "type": "fact",
+     "source": "rfc-auth",
+     "section": "1. Scope & Goals",
+     "quote": "Allow clients to execute consumer authentication directly with the specified server using standardized endpoints, without routing through the merchant.",
+     "check": "OK",
+     "check_fp": "0d8923b29b"
+    },
+    {
+     "text": "The merchant receives the authentication result in the complete call.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "4.4 Complete Session",
+     "quote": "MUST return the authentication_result in the POST /complete request body, regardless of the authentication outcome.",
+     "check": "OK",
+     "check_fp": "9bb7d4d8a6"
+    },
+    {
+     "text": "Searched for a buyer sign-in or account-linking flow at the merchant. Only listed as future work.",
+     "type": "silent",
+     "source": "rfc-discovery",
+     "section": "11. Future Extensions",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Payment allowance only; no API scopes",
+   "answer": "Partly. A delegated payment token can only be used within its allowance: one time, up to a maximum amount in one currency, for one merchant and checkout session, before an expiry time; the PSP enforces this when the merchant charges it. The API key itself carries no scopes, so the merchant learns nothing about what the agent may do beyond paying. Payment handlers can opt out of delegation.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: per-purchase limits exist but only for the payment credential and are enforced by the PSP, while the API calls carry no scopes (more specific than Visa TAP's browse/pay split, less than MCP Authorization's scopes).",
+   "claims": [
+    {
+     "text": "Allowance fields.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "2.5 Usage & Expiry",
+     "quote": "The returned token MUST ONLY be usable within the provided Allowance (reason, max_amount, currency, expiry).",
+     "check": "OK",
+     "check_fp": "c28a7072d8"
+    },
+    {
+     "text": "Allowance is tied to a checkout session and merchant.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "3.5 Allowance (REQUIRED)",
+     "quote": "merchant_id: string (≤256)",
+     "check": "OK",
+     "check_fp": "18524a3004"
+    },
+    {
+     "text": "Delegation is the recommended default, and handlers can opt out.",
+     "type": "fact",
+     "source": "rfc-handlers",
+     "section": "3.3 Why require delegate_payment by default?",
+     "quote": "Making delegate_payment the recommended default (via requires_delegate_payment: true) ensures these properties are preserved while allowing handlers to opt out when the pattern doesn't fit",
+     "check": "OK",
+     "check_fp": "f20ee22035"
+    },
+    {
+     "text": "Searched the OpenAPI security scheme and checkout RFC for scopes or permissions on the API key. None is defined.",
+     "type": "silent",
+     "source": "oas-checkout",
+     "section": "components.securitySchemes",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Merchant can require 3-D Secure or biometric",
+   "answer": "Partly. The merchant can declare required buyer interventions (3ds or biometric) for a session, enforced always or depending on risk, and can flag messages that need the buyer's review. 3-D Secure runs through the delegated authentication API, where the card issuer may challenge the buyer. ACP defines no general step in which the buyer confirms each purchase; that happens in the agent's own interface.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY*",
+   "rating_reason": "Yellow: approval steps are defined but optional and only for some transactions, triggered by the merchant or issuer.",
+   "claims": [
+    {
+     "text": "Required interventions per session.",
+     "type": "fact",
+     "source": "rfc-capabilities",
+     "section": "interventions (object, OPTIONAL)",
+     "quote": "Intervention methods required for this session. If empty or absent, no specific interventions are required.",
+     "check": "OK",
+     "check_fp": "42ac72e36b"
+    },
+    {
+     "text": "Default enforcement is conditional.",
+     "type": "fact",
+     "source": "rfc-capabilities",
+     "section": "interventions (object, OPTIONAL)",
+     "quote": "conditional — Required interventions enforced based on risk signals (default)",
+     "check": "OK",
+     "check_fp": "81479adc3b"
+    },
+    {
+     "text": "Challenge flow in delegated authentication.",
+     "type": "fact",
+     "source": "rfc-auth",
+     "section": "2.2 Authentication Lifecycle",
+     "quote": "Returns challenge action if required, or frictionless result.",
+     "check": "OK",
+     "check_fp": "7146ce7adc"
+    },
+    {
+     "text": "Messages can require buyer review.",
+     "type": "fact",
+     "source": "changelog",
+     "section": "Message Resolution Field",
+     "quote": "requires_buyer_review: Buyer must authorize before order placement due to policy, regulatory, or entitlement rules (checkout complete)",
+     "check": "OK",
+     "check_fp": "22bbe05b23"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Bilateral, outside the protocol",
+   "answer": "Not defined. A merchant relies on an agent platform because it has given that platform an API key, which happens outside ACP (OpenAI, for example, onboards merchants through its own process). The specification names no party that vouches for agent platforms and defines no registry. The delegated authentication API requires providers to accept only requests from the agent's verified infrastructure, but does not say how that is established.",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "none",
+   "rating_reason": "Red: trust is bilateral and set up outside the protocol; no party is named to vouch (unlike MCP Authorization's authorization server or Visa TAP's key store).",
+   "claims": [
+    {
+     "text": "Delegated authentication relies on allowlisting the agent's infrastructure.",
+     "type": "fact",
+     "source": "rfc-auth",
+     "section": "8. Security Considerations",
+     "quote": "Agent Infrastructure Allowlisting: Authentication Providers MUST enforce origin restrictions to prevent abuse,",
+     "check": "OK",
+     "check_fp": "7bd885fe47"
+    },
+    {
+     "text": "Searched the README, governance and the checkout, delegate payment and discovery RFCs for onboarding, certification or a registry of agent platforms. None is defined.",
+     "type": "silent",
+     "source": "rfc-checkout",
+     "section": "2.1 Initialization; 7. Security Considerations",
+     "quote": ""
+    },
+    {
+     "text": "No central handler registry either.",
+     "type": "fact",
+     "source": "rfc-handlers",
+     "section": "2.2 Non-Goals",
+     "quote": "Creating a centralized handler registry (handlers are discovered per-session)",
+     "check": "OK",
+     "check_fp": "81e693decf"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Not defined; merchant can drop the key",
+   "answer": "Not defined. ACP has no revocation mechanism for API keys or agent platforms. A merchant can stop accepting a platform's API key in its own systems, which cuts off that whole platform and all its users at once. Delegated payment tokens are one-time and expire at the allowance expiry, and ACP defines no call to revoke one earlier.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no revocation is defined; dropping a key is coarse and outside the protocol (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the checkout, delegate payment, delegate authentication and discovery RFCs and the 2026-04-17 OpenAPI files for revoke, revocation or key removal. None is defined.",
+     "type": "silent",
+     "source": "rfc-payment",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "Payment tokens expire.",
+     "type": "fact",
+     "source": "rfc-payment",
+     "section": "2.5 Usage & Expiry",
+     "quote": "The token MUST become invalid at or after allowance.expires_at.",
+     "check": "OK",
+     "check_fp": "132d445238"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No. ACP defines no contact or escalation field for the agent platform. The merchant knows the platform it gave an API key to, and sends order updates to the platform's webhook, but neither is a defined channel for reporting misbehaviour.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field or process is defined (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the checkout and delegate payment RFCs, the discovery document schema and the OpenAPI headers for contact, support or abuse fields for the agent side. None is defined.",
+     "type": "silent",
+     "source": "oas-checkout",
+     "section": "components.parameters; components.schemas",
+     "quote": ""
+    },
+    {
+     "text": "Order updates go to the platform's webhook receiver.",
+     "type": "fact",
+     "source": "rfc-checkout",
+     "section": "2.3 Webhooks (Separate Spec)",
+     "quote": "Order lifecycle updates (order_create, order_update) MUST be emitted to the application's webhook receiver",
+     "check": "OK",
+     "check_fp": "33fd4ab640"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. Risk signals in ACP flow from the agent to the merchant and PSP about the buyer and transaction (e.g. a card-testing score, IP address, device fingerprint). Nothing lets one merchant warn others about an agent platform.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed; risk signals go from the agent to the merchant, not between services.",
+   "claims": [
+    {
+     "text": "Risk signals describe the checkout, sent by the agent.",
+     "type": "fact",
+     "source": "oas-checkout",
+     "section": "components.schemas.RiskSignals",
+     "quote": "Risk and fraud detection signals for the checkout session",
+     "check": "OK",
+     "check_fp": "dc7b4f4ab7"
+    },
+    {
+     "text": "Searched all RFCs for reputation, shared signals or reports between merchants. None is defined.",
+     "type": "silent",
+     "source": "rfc-checkout",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. The recommended User-Agent header names the client software (the example is ChatGPT/2.0), not the AI model, and it is self-asserted.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing identifies the model (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "User-Agent example names client software.",
+     "type": "fact",
+     "source": "oas-checkout",
+     "section": "components.parameters.UserAgent",
+     "quote": "ChatGPT/2.0 (Mac OS X 15.0.1; arm64; build 0)",
+     "check": "OK",
+     "check_fp": "eb953d44f3"
+    },
+    {
+     "text": "Searched headers and schemas for a model or provenance field. None is defined.",
+     "type": "silent",
+     "source": "oas-checkout",
+     "section": "components.parameters; components.schemas",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The merchant can allow or refuse an agent platform by its API key, and the payment token limits each purchase to one merchant, one session, a maximum amount and an expiry. It cannot tell individual agents or verified users apart, and the API key carries no scopes.",
+  "incident_response": "A merchant can stop accepting a platform's API key, which cuts off the whole platform and all its users, and payment tokens expire on their own. ACP defines no revocation, contact channel or way to warn other merchants.",
+  "accountability": "An order can be traced to the agent platform (by API key), to the buyer details the agent supplied, and to the payment credential and any 3-D Secure result. Without request signing in practice, the platform's role in a specific request is not provable to a third party."
+ },
+ "notes": [
+  "Name collision: 'ACP' is also used for the Agent Communication Protocol (IBM BeeAI, later merged into A2A), the Agent Client Protocol (Zed, editor to coding agent) and AGNTCY's Agent Connect Protocol. This analysis covers the Agentic Commerce Protocol by OpenAI and Stripe.",
+  "Version: the latest dated release is 2026-04-17. The RFC design documents in rfcs/ are not snapshotted per release; their headers carry older version dates and statuses Draft or Proposal, and they were read at commit 7fdd78d. Where the RFCs and the released OpenAPI differ, both are cited.",
+  "Inconsistency: the delegate payment RFC says the client MUST sign requests (section 2.2) but lists the Signature header as RECOMMENDED (section 2.3); the checkout OpenAPI describes Signature as an HMAC for webhook verification, the delegate payment OpenAPI as a detached JSON signature.",
+  "Most RFC text uses RFC 2119 keywords. Where the requirement tag has an asterisk, the point rests on schema optionality or the lowercase word 'optional' rather than a keyword.",
+  "Stripe's documentation describes ACP's delegate authentication as delegating authorization with OAuth 2.0, while the specification at this commit defines delegate authentication as 3-D Secure 2 only and lists OAuth 2.0 identity linking as future work. This analysis follows the specification.",
+  "The OpenAI documentation pages were fetched with a web tool; agenticcommerce.dev could not be fetched in this session.",
+  "OpenAI's Delegated Payment page (developers.openai.com/commerce/specs/payment) now shows an 'Accept payments' guide for ChatGPT Wallet and the Forwarded header, not the delegated payment specification; older search snippets of that page are out of date, so it was not used as a source."
+ ],
+ "open_questions": [
+  "Who issues the bearer API key in deployments other than ChatGPT, and is it ever bound to an individual user or agent?",
+  "Is request signing actually used in production, with which algorithm (asymmetric or HMAC), and how are keys exchanged?",
+  "Will the OAuth 2.0 identity linking mentioned by Stripe and the discovery RFC be added to the specification, and would it identify the buyer to the merchant?",
+  "Is there a maximum allowance expiry that PSPs enforce for delegated payment tokens?"
+ ]
+}</script></body></html>

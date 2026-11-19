@@ -1,0 +1,1053 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Verifiable Intent: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>Verifiable Intent<small>Verifiable Intent (VI)</small></h1><ul class="facts"><li><b>Specification:</b> v0.1-draft as on the main branch at commit 356c296 (spec headers still read &#x27;Version 0.1-draft, Date 2026-02-18&#x27;)</li><li><b>Date:</b> 2026-04-20 (latest commit); spec headers dated 2026-02-18; tag v0.1.0 dated 2026-02-19</li><li><b>Maintainer:</b> Mastercard (co-developed with Google); documents authored by the &#x27;Verifiable Intent Working Group&#x27;</li><li><b>Analysed:</b> 2026-11-19</li><li><b>Version note:</b> The tagged release v0.1.0 (commit 1dc3d41) is older than main: two later commits (2026-04-17 and 2026-04-20) changed field names, versioned the mandate types and added risk_data and other fields, without changing the version header. This analysis uses main at 356c296, the latest content. Open pull requests were not considered.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agentic commerce</span><span class="chip"><b>Also:</b> Agent authorization</span><span class="chip"><b>Also:</b> Credentials trust</span><span class="chip"><b>Mechanism:</b> Verifiable credential, Proof-of-possession token</span><span class="chip"><b>Venue:</b> Vendor</span><span class="chip"><b>Maturity:</b> Draft</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>Verifiable Intent (VI) gives merchants and payment networks signed proof of what a user allowed an AI shopping agent to buy, and that the agent stayed within it. It addresses a gap in agentic commerce: today&#x27;s payment systems assume a person is present at checkout, so nobody can check whether an agent&#x27;s purchase matches the user&#x27;s wishes. Mastercard publishes and maintains it, co-developed with Google and aligned with Google&#x27;s AP2 and UCP. It is an open draft (v0.1) under Apache 2.0, with a Python reference SDK; Mastercard has announced plans to integrate it into its Agent Pay APIs.</p><p>VI is a credential format, not a transport: it rides inside other commerce protocols. It chains three layers of selective-disclosure JWTs (SD-JWT). A card issuer signs a long-lived credential binding the user&#x27;s key; the user signs a mandate with either the final cart and payment (Immediate mode) or limits such as amount, merchants and products plus the agent&#x27;s key (Autonomous mode); in Autonomous mode the agent signs short-lived final values for the merchant and the payment network. Each party sees only its part. VI leaves out revocation (deferred), transport, agent key provisioning, contact channels, cross-party signalling and model identity.</p><h2 id="how">How it works</h2><ol class="steps"><li>Setup: the user registers a public key with a card issuer (a bank or payment network such as Mastercard), which signs a Layer 1 (L1) credential binding that key to an opaque user identifier and card details. It sits in a Credential Provider&#x27;s wallet and lasts about a year.</li><li>When the user asks an agent to buy something, the user (or a wallet holding the user&#x27;s key) signs a Layer 2 (L2) credential: either the final cart and payment values (Immediate mode, valid about 15 minutes) or constraints such as amount range, allowed merchants and products, plus the agent&#x27;s public key (Autonomous mode, typically 24 hours to 30 days).</li><li>In Autonomous mode the agent picks the products, obtains the checkout contents and signs two Layer 3 (L3) credentials with its own key, valid about 5 minutes and at most 1 hour: L3b with the checkout for the merchant and L3a with the payment for the payment network, linked by a shared hash.</li><li>The agent hands the chain to the merchant and the payment network inside whatever commerce protocol is in use, disclosing only the checkout parts to the merchant and only the payment parts to the network.</li><li>The merchant verifies the issuer&#x27;s signature on L1 using the issuer&#x27;s published keys, the user&#x27;s signature on L2, the agent&#x27;s signature on L3b (in Autonomous mode), the hash links and expiry times, and checks the checkout against the disclosed constraints and its own records.</li><li>The payment network does the same for the payment side, checks payment constraints, enforces one purchase per mandate and tracks cumulative spend, then routes the authorization; the issuer makes the final decision.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Verifiable Intent</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Signed chain proving a shopping agent stayed within user limits</td></tr><tr><td class="prop">Use cases</td><td class="">Agent purchases; credential carried inside other protocols</td></tr><tr><td class="prop">Parties involved</td><td class="">Issuer, Credential Provider, User, Agent, Merchant, Payment Network, Verifier</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">v0.1 draft (Mastercard); Agent Pay integration announced</td></tr><tr><td class="prop">Building blocks</td><td class="">SD-JWT (RFC 9901), JWS, JWK, ES256, RFC 7800 cnf</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">Platform URL; agent key ID in Autonomous mode</td></tr><tr><td class="prop">Agent instance identifier</td><td class="yellow">Per-delegation agent key, Autonomous mode only</td></tr><tr><td class="prop">Acting for (authority)</td><td class="green">Yes, issuer-signed user identifier</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="yellow">Key-bound SD-JWT chain, per purchase</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Agent layer max 1 hour; delegation up to 30 days</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, from the issuer&#x27;s published keys</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="yellow">Partly: agent or user key signatures</td></tr><tr><td class="prop">Scoped authorization</td><td class="green">Yes, user-signed purchase constraints</td></tr><tr><td class="prop">Human approval</td><td class="green">Yes, user signs the mandate</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="green">Card issuer vouches for user; user for agent</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="red">Not defined in v0.1; short lifetimes</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">No</td></tr><tr><td class="prop">Model identity</td><td class="red">No; attestation slot without schemes</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The merchant can check that a purchase was authorized by an issuer-known user and stays within user-signed limits (merchants, items, amounts), and the payment network enforces payment limits and budgets. VI does not control access to the merchant&#x27;s other endpoints.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>There is no revocation in v0.1; short agent credentials and mandate expiry limit damage, an issuer can pull a signing key (affecting all its credentials) or block the card. A single delegation cannot be cut off early, and there is no contact channel.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>The chain gives signed evidence linking the issuer, a pseudonymous user, the user&#x27;s exact instructions and, in Autonomous mode, the agent key that executed, which any party can verify in a dispute. It identifies the agent platform only by URL and not the model.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Revocation:</b> Not defined in v0.1; short lifetimes (not addressed by the specification)</li><li><b>Contact and escalation:</b> No (explicitly out of scope)</li><li><b>Cross-party signalling:</b> No (not addressed by the specification)</li><li><b>Model identity:</b> No; attestation slot without schemes (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Verifiable Intent</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">A Mastercard draft credential format where a card issuer, the user and (in Autonomous mode) the agent each sign a layer of selective-disclosure JWTs, so merchants and payment networks can verify what the user authorized and that the agent&#x27;s purchase stays within it.<details><summary>Evidence (2)</summary><div class="claim">The specification&#x27;s own abstract. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“Verifiable Intent (VI) defines a layered SD-JWT credential format that creates a cryptographically verifiable chain binding an AI agent&#x27;s commercial actions to an end-user&#x27;s explicitly stated purchase intent.”</blockquote></div><div class="claim">Merchants and payment networks are the primary verifiers. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 2. Terminology (Verifier). <span class="chk">(quote verified against the source)</span><blockquote>“Any party that validates a VI credential chain. Merchants and payment networks are the primary verifiers.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Purchases made or assisted by an AI agent: user-confirmed carts (Immediate mode) and delegated shopping, replenishment or price-watching within limits (Autonomous mode). VI is a token format carried inside other commerce protocols (e.g. AP2 or UCP mandate fields, or an ACP extension); it defines no transport of its own. The merchant, or a processor or gateway acting for it, verifies the checkout side, and the payment network verifies the payment side.<details><summary>Evidence (3)</summary><div class="claim">Use cases per mode. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/README.md">verifiable-intent repository, README.md</a>, Two Execution Modes. <span class="chk">(quote verified against the source)</span><blockquote>“Delegated shopping, automated replenishment, price-watching agents”</blockquote></div><div class="claim">VI rides alongside other protocols. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/protocol-landscape/protocols.md">Verifiable Intent, Protocol Ecosystem (protocol-landscape/protocols.md)</a>, The Core Relationship. <span class="chk">(quote verified against the source)</span><blockquote>“VI rides alongside whatever protocol is already in use, adding a verifiable trust layer without requiring changes to the underlying transport.”</blockquote></div><div class="claim">Verification can be delegated to a processor or gateway. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 5.3 Verification Requirements Per Role. <span class="chk">(quote verified against the source)</span><blockquote>“In deployments where the merchant delegates credential verification to a payment processor or gateway, these requirements apply to the entity performing verification on the merchant&#x27;s behalf.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Issuer: a bank or payment network that signs the Layer 1 credential and publishes its keys (a trusted third party). Credential Provider: hosts the wallet where Layer 1 is stored and Layer 2 is created. User: the delegating principal and root of authority. Agent: AI software acting for the user, which signs Layer 3 in Autonomous mode. Merchant: sells the goods, creates checkouts and verifies. Payment Network: routes and settles payments and verifies the chain before authorization. Verifier: any party that validates the chain.<details><summary>Evidence (7)</summary><div class="claim">Issuer. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 2. Terminology (Issuer). <span class="chk">(quote verified against the source)</span><blockquote>“Either a financial institution (bank) that issued the user&#x27;s payment card, or a payment network (Mastercard) acting on the bank&#x27;s behalf.”</blockquote></div><div class="claim">Credential Provider. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 2. Terminology (Credential Provider). <span class="chk">(quote verified against the source)</span><blockquote>“Entity that hosts the wallet infrastructure where L1 credentials are stored and where users create L2 credentials.”</blockquote></div><div class="claim">User. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 2. Terminology (User). <span class="chk">(quote verified against the source)</span><blockquote>“The user is the ultimate authority in the delegation chain.”</blockquote></div><div class="claim">Agent. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 2. Terminology (Agent). <span class="chk">(quote verified against the source)</span><blockquote>“AI-powered software that acts on behalf of the user.”</blockquote></div><div class="claim">Merchant. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 2. Terminology (Merchant). <span class="chk">(quote verified against the source)</span><blockquote>“The merchant creates signed checkout JWTs and processes checkout requests.”</blockquote></div><div class="claim">Payment Network. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 2. Terminology (Payment Network). <span class="chk">(quote verified against the source)</span><blockquote>“Validates the VI credential chain as a pre-authorization step during transaction routing.”</blockquote></div><div class="claim">Verifier. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 2. Terminology (Verifier). <span class="chk">(quote verified against the source)</span><blockquote>“Any party that validates a VI credential chain.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Draft. The repository marks the specification as Draft v0.1, maintained by Mastercard and open to contributions, with a Python reference SDK under Apache 2.0. Mastercard announced it with Google on 5 March 2026 and said it would be integrated into Mastercard Agent Pay&#x27;s intent APIs in the coming months; no named production deployment was found in a deployer&#x27;s own source. The main branch has changed since the v0.1.0 tag without a new version number.<div class="meta">Why this rating: Still a draft with no confirmed production deployment; not red because it is a complete published draft with a reference implementation rather than an early exploration.</div><details><summary>Evidence (5)</summary><div class="claim">Draft status and maintainer. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/README.md">verifiable-intent repository, README.md</a>, Verifiable Intent (VI). <span class="chk">(quote verified against the source)</span><blockquote>“Status: Draft (v0.1). Maintained by Mastercard; open to multi-stakeholder contribution.”</blockquote></div><div class="claim">Specification header. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, Header. <span class="chk">(quote verified against the source)</span><blockquote>“Version: 0.1-draft”</blockquote></div><div class="claim">Open-sourced with a reference implementation. <i>Source states</i> <a href="https://www.mastercard.com/us/en/news-and-trends/stories/2026/verifiable-intent.html">Mastercard, When AI starts buying for you, trust becomes the product (Verifiable Intent announcement)</a>, Announcement. <span class="chk">(quote verified against the source)</span><blockquote>“Today, Mastercard is open-sourcing the Verifiable Intent specification and an initial reference implementation”</blockquote></div><div class="claim">Planned Agent Pay integration. <i>Source states</i> <a href="https://www.mastercard.com/us/en/news-and-trends/stories/2026/verifiable-intent.html">Mastercard, When AI starts buying for you, trust becomes the product (Verifiable Intent announcement)</a>, Announcement. <span class="chk">(quote verified against the source)</span><blockquote>“In the coming months, Verifiable Intent will be integrated directly into Mastercard Agent Pay”</blockquote></div><div class="claim">Co-developed with Google. <i>Source states</i> <a href="https://www.mastercard.com/us/en/news-and-trends/stories/2026/verifiable-intent.html">Mastercard, When AI starts buying for you, trust becomes the product (Verifiable Intent announcement)</a>, Announcement. <span class="chk">(quote verified against the source)</span><blockquote>“we’re collaborating with Google to introduce Verifiable Intent, a new open, standards-based trust layer for agentic commerce”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">Selective Disclosure JWT (SD-JWT, RFC 9901) as the base format, with JWS (RFC 7515), JWK (RFC 7517), JWT (RFC 7519) and ES256 from JWA (RFC 7518) as the only required algorithm. The cnf confirmation claim (RFC 7800) binds each layer&#x27;s key to the next. SHA-256 and base64url (RFC 4648) are used for hashes. Token Status List (RFC 9701) is only mentioned as a possible future revocation mechanism. VI positions itself as a concrete credential format for AP2&#x27;s verifiable digital credentials.<details><summary>Evidence (4)</summary><div class="claim">SD-JWT is the base format. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 6. Technology Foundations. <span class="chk">(quote verified against the source)</span><blockquote>“Base credential format; provides selective disclosure of claims via salted hash commitments”</blockquote></div><div class="claim">ES256 is required. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 6. Technology Foundations, Algorithm Requirements. <span class="chk">(quote verified against the source)</span><blockquote>“Implementations MUST support ES256 (ECDSA using the P-256 curve and SHA-256) as defined in [RFC 7518] Section 3.4.”</blockquote></div><div class="claim">cnf for key binding. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 6. Technology Foundations. <span class="chk">(quote verified against the source)</span><blockquote>“cnf claim for key binding at each delegation layer”</blockquote></div><div class="claim">Positioning relative to AP2. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/protocol-landscape/protocols.md">Verifiable Intent, Protocol Ecosystem (protocol-landscape/protocols.md)</a>, Universal Commerce Protocol (UCP). <span class="chk">(quote verified against the source)</span><blockquote>“AP2 leaves the VDC format open; VI provides a concrete option.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The user&#x27;s Layer 2 carries an audience (aud) that identifies the agent, typically the agent platform&#x27;s URL, and is always visible. In Autonomous mode the user also binds the agent&#x27;s public key with a key identifier (kid), and each Layer 3 carries that kid in its header, so the merchant can tell which delegated agent key signed. In Immediate mode there is no agent key, only the platform audience.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The always-present identifier names the agent platform; an agent-level key identifier exists only in Autonomous mode.</div><details><summary>Evidence (4)</summary><div class="claim">L2 aud identifies the agent, typically the platform URL. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 4.3 JWT Payload, Always-Visible Claims. <span class="chk">(quote verified against the source)</span><blockquote>“In L2, aud identifies the agent (the party to which the user is delegating) — typically the agent platform URL.”</blockquote></div><div class="claim">Agent key and kid bound in Autonomous mandates. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 3.2 Delegation Chain. <span class="chk">(quote verified against the source)</span><blockquote>“In Autonomous mode, each Layer 2 mandate cnf claim MUST contain jwk with the agent&#x27;s public key and kid with a key identifier.”</blockquote></div><div class="claim">L3 header kid. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 3.2 Delegation Chain. <span class="chk">(quote verified against the source)</span><blockquote>“Each Layer 3 JWT header MUST contain a kid parameter matching L2 cnf.jwk.kid.”</blockquote></div><div class="claim">No agent key in Immediate mode. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 3.2 Delegation Chain. <span class="chk">(quote verified against the source)</span><blockquote>“In Immediate mode, Layer 2 mandates MUST NOT contain a cnf claim.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. In Autonomous mode, the merchant sees the kid of the agent key that the user bound for this delegation, and the security model recommends that platforms generate a fresh key pair per delegation session, so the key can single out one delegated agent. The dispute evidence table says the agent key signature shows the specific agent that executed the transaction. This exists only in Autonomous mode, and fresh keys are a recommendation.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: A per-agent key is defined but only in Autonomous mode, and per-session freshness is only SHOULD (all three calibration examples are red).</div><details><summary>Evidence (3)</summary><div class="claim">Fresh key pairs per delegation session are recommended. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 3.3 Agent Key Provisioning. <span class="chk">(quote verified against the source)</span><blockquote>“Agent platforms SHOULD generate fresh key pairs per delegation session to limit the impact of key compromise.”</blockquote></div><div class="claim">The agent key signature identifies the specific agent. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 2.5 Dispute Evidence. <span class="chk">(quote verified against the source)</span><blockquote>“The specific agent that executed the transaction”</blockquote></div><div class="claim">Agent key provisioning is not specified. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 3.3 Agent Key Provisioning. <span class="chk">(quote verified against the source)</span><blockquote>“VI binds an agent key via the L2 mandate&#x27;s cnf.jwk but does not specify how that key is generated, communicated to the user&#x27;s L2 construction environment, or stored.”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Every chain starts with the Layer 1 credential, which the merchant must verify, and which always shows an opaque, stable user identifier (sub) assigned by the issuer, plus the card&#x27;s last four digits and scheme. The user&#x27;s email is selectively disclosable and shown only when needed. Layer 2 is signed with the user&#x27;s key bound in Layer 1, so the merchant learns which issuer-known user authorized the purchase, though only through a pseudonymous identifier.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The protocol requires an issuer-signed user identifier in the root credential that the merchant receives and verifies (unlike Visa TAP&#x27;s optional consumer object).</div><details><summary>Evidence (4)</summary><div class="claim">sub is required in L1. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 3.3 JWT Payload, Always-Visible Claims. <span class="chk">(quote verified against the source)</span><blockquote>“Subject identifier. An opaque, stable identifier for the user within the Issuer&#x27;s system.”</blockquote></div><div class="claim">Email is selectively disclosable. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 3.4 JWT Payload, Selectively Disclosable Claims. <span class="chk">(quote verified against the source)</span><blockquote>“User&#x27;s email address. Selectively disclosable. Disclosed only when needed for user identity verification.”</blockquote></div><div class="claim">The merchant must verify L1 and L2. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 5.3 Verification Requirements Per Role. <span class="chk">(quote verified against the source)</span><blockquote>“Verify L2 signature against the key in L1 cnf.jwk”</blockquote></div><div class="claim">sub is always visible and linkable. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 6.2 sub Claim Linkability. <span class="chk">(quote verified against the source)</span><blockquote>“A verifier receiving multiple transactions can link them to the same user via sub.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly, per purchase rather than per request. The merchant receives a chain of SD-JWTs signed with ES256: the issuer&#x27;s Layer 1, the user&#x27;s key-bound Layer 2 and, in Autonomous mode, the agent&#x27;s Layer 3b. Each later layer is signed with the key named in the previous one, which is proof of possession, and carries a nonce, an audience, issue and expiry times and a hash of the layer below. VI defines no transport, so it is presented with the purchase, not on every HTTP request.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A strong, verifiable credential, but defined only for the purchase presentation and not for every request to the merchant (transport is out of scope); borderline green.</div><details><summary>Evidence (3)</summary><div class="claim">Key binding through each layer. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 3.2 Delegation Chain. <span class="chk">(quote verified against the source)</span><blockquote>“Each layer cryptographically binds the next layer&#x27;s signing authority through the cnf (confirmation) claim defined in [RFC 7800].”</blockquote></div><div class="claim">nonce and aud are required in L3. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 5.3 JWT Payload, Always-Visible Claims (L3a and L3b). <span class="chk">(quote verified against the source)</span><blockquote>“Cryptographically random nonce. MUST be distinct from the L2 nonce.”</blockquote></div><div class="claim">Transport is out of scope. <i>Out of scope per</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/README.md">verifiable-intent repository, README.md</a>, What VI Does. <span class="chk">(quote verified against the source)</span><blockquote>“Out of scope: Transport protocols, key management/provisioning, credential provider enrollment, agent platform APIs, dispute resolution, regulatory compliance mapping (PCI DSS, PSD2, etc.).”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The agent&#x27;s Layer 3 must not exceed 1 hour (5 minutes recommended), and an Immediate-mode Layer 2 should last no more than 15 minutes. Verifiers must reject any layer whose expiry has passed (with about 300 seconds of clock skew). However, the user&#x27;s Autonomous delegation (Layer 2) may last up to 30 days or longer, up to the Layer 1 expiry of about a year, and verifiers are not told to reject Layer 3 credentials issued with a window longer than 1 hour.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The 1-hour maximum is a rule for the agent, not one verifiers are told to enforce, and the delegated authority itself can last weeks (stricter than Web Bot Auth, but not Visa TAP&#x27;s verifier-enforced window); borderline green.</div><details><summary>Evidence (4)</summary><div class="claim">L3 maximum. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 5.3 JWT Payload, Always-Visible Claims (L3a and L3b). <span class="chk">(quote verified against the source)</span><blockquote>“Expiration time. RECOMMENDED: 5 minutes from iat. MUST NOT exceed 1 hour from iat.”</blockquote></div><div class="claim">L2 lifetimes. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 4.3 JWT Payload, Always-Visible Claims. <span class="chk">(quote verified against the source)</span><blockquote>“Immediate mode: SHOULD be no more than 15 minutes from iat. Autonomous mode: SHOULD be no more than 30 days from iat; SHOULD use the shortest duration appropriate for the use case.”</blockquote></div><div class="claim">Verifiers reject expired credentials. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 5.7 Processing Rules, L3 Verification. <span class="chk">(quote verified against the source)</span><blockquote>“Verifiers MUST reject L3 credentials with exp in the past (clock skew tolerance: 300 seconds recommended).”</blockquote></div><div class="claim">Autonomous L2 is bounded only by L1 expiry. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 7. Credential Lifetime. <span class="chk">(quote verified against the source)</span><blockquote>“MUST NOT exceed L1 exp”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. The merchant fetches the issuer&#x27;s public key from its published key set (JWKS) using the kid, verifies the Layer 1 signature, then verifies Layer 2 with the user key inside Layer 1 and Layer 3 with the agent key inside Layer 2, checks the hash links, the typ header of each layer and the expiry times. No prior relationship with the agent is needed; the merchant only needs the issuer&#x27;s keys.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Verifiable against published keys with expiry checks and no prior relationship with the agent (same as the three calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">Issuer key from JWKS. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 3.5 Processing Rules. <span class="chk">(quote verified against the source)</span><blockquote>“Verifiers MUST resolve the Issuer&#x27;s public key using the kid header parameter against the Issuer&#x27;s JWKS endpoint.”</blockquote></div><div class="claim">Signatures at every layer. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 10.4 Verifier Conformance. <span class="chk">(quote verified against the source)</span><blockquote>“MUST verify ES256 signatures at every layer of the presented chain.”</blockquote></div><div class="claim">Hash links between layers. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 10.4 Verifier Conformance. <span class="chk">(quote verified against the source)</span><blockquote>“MUST verify sd_hash bindings between adjacent layers.”</blockquote></div><div class="claim">Agent key resolved from L2, not from L3. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 10.4 Verifier Conformance. <span class="chk">(quote verified against the source)</span><blockquote>“MUST NOT trust a self-asserted jwk in L3 headers.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The merchant itself verifies proof from individual keys: in Autonomous mode, Layer 3b signed by the agent key that the user bound for this delegation; in both modes, Layer 2 signed by the user&#x27;s key that the issuer bound. But VI binds keys, not people: the user&#x27;s key may be held by a platform on the user&#x27;s behalf, which verifiers cannot tell apart, and whether each agent gets its own key is only recommended.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: Per-agent and per-user key proofs are verified by the merchant, but per-agent keys are only SHOULD and custodial user keys are allowed, so the proof may not belong to the individual (tie rule applied; all three calibration examples are red).</div><details><summary>Evidence (4)</summary><div class="claim">The merchant verifies the agent&#x27;s signature in Autonomous mode. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 5.3 Verification Requirements Per Role. <span class="chk">(quote verified against the source)</span><blockquote>“In Autonomous mode: resolve agent key from L2 cnf.jwk via L3b header kid match against L2 cnf.jwk.kid, then verify L3b signature”</blockquote></div><div class="claim">VI does not authenticate the person. <i>Out of scope per</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 2.4 What VI Does Not Protect. <span class="chk">(quote verified against the source)</span><blockquote>“User authentication — VI binds a key, not a person.”</blockquote></div><div class="claim">Custodial user keys are allowed and indistinguishable. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 3.5 Deployment Models. <span class="chk">(quote verified against the source)</span><blockquote>“Verifiers cannot and need not distinguish between deployment models.”</blockquote></div><div class="claim">Custodial platforms must authenticate the user first. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 3.5 Deployment Models. <span class="chk">(quote verified against the source)</span><blockquote>“The platform MUST authenticate the user before signing L2 mandates on their behalf.”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. In Autonomous mode, the user&#x27;s signed Layer 2 carries typed constraints: allowed merchants, line items, allowed payees, amount range, total budget, recurrence and a checkout-payment reference. Verifiers must check the agent&#x27;s final values against the disclosed constraints; the merchant checks the checkout side and the payment network the payment side, including cumulative budgets. In Immediate mode the user signs the final cart and amount directly. Unknown constraint types are skipped by default (permissive mode).<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The credential carries fine-grained, user-signed limits that verifiers must enforce (same colour as MCP Authorization&#x27;s scopes).</div><details><summary>Evidence (6)</summary><div class="claim">Verifiers check L3 against disclosed constraints. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 10.4 Verifier Conformance. <span class="chk">(quote verified against the source)</span><blockquote>“Machine-enforceable constraints (amount range, allowed payee, merchant, line items) MUST be verified; descriptive fields (product description, brand, color, size) are informational and not subject to automated verification.”</blockquote></div><div class="claim">What constraints are. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/constraints.md">Verifiable Intent, Constraint Type Definitions and Validation Rules (spec/constraints.md)</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“Constraints are structured conditions set by the user that bound an AI agent&#x27;s delegated authority — restricting what products it may purchase, which merchants it may transact with, and how much it may spend.”</blockquote></div><div class="claim">Eight registered types. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/constraints.md">Verifiable Intent, Constraint Type Definitions and Validation Rules (spec/constraints.md)</a>, 4. Registered Constraint Types. <span class="chk">(quote verified against the source)</span><blockquote>“VI defines eight registered constraint types. Verifiers MUST support all registered types.”</blockquote></div><div class="claim">Constraint namespaces. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 9.1 Constraint Type Registry. <span class="chk">(quote verified against the source)</span><blockquote>“Implementations MUST support all registered constraint types.”</blockquote></div><div class="claim">Payment networks track cumulative spend. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 5.7 Processing Rules, L3 Verification. <span class="chk">(quote verified against the source)</span><blockquote>“Payment networks MUST track cumulative L3 spend per L2 and reject L3s that exceed L2 spending constraints.”</blockquote></div><div class="claim">Permissive mode default. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 6.5 PERMISSIVE Mode Default. <span class="chk">(quote verified against the source)</span><blockquote>“The default strictness mode for constraint validation is PERMISSIVE, which silently skips unknown constraint types”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Every purchase rests on a Layer 2 that the user signs: in Immediate mode the user reviews and confirms the final cart and payment, and in Autonomous mode the user signs the limits and the agent&#x27;s key before the agent can act. Wallets should ask for confirmation (e.g. biometric or PIN) before signing. The merchant cannot request a fresh approval through VI itself.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A user-signed approval step is required before the agent gets authority (same colour as MCP Authorization&#x27;s consent step).</div><details><summary>Evidence (3)</summary><div class="claim">Immediate mode: user confirms final values. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 3.3 Two Execution Modes. <span class="chk">(quote verified against the source)</span><blockquote>“User reviews and confirms final values”</blockquote></div><div class="claim">L2 must be signed by the user&#x27;s key. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 3.2 Delegation Chain. <span class="chk">(quote verified against the source)</span><blockquote>“Layer 2 MUST be signed by the corresponding private key.”</blockquote></div><div class="claim">Confirmation before signing is recommended. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 3.4 User Key Management. <span class="chk">(quote verified against the source)</span><blockquote>“L2 construction implementations SHOULD require user confirmation before signing L2 mandates”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="green"><span class="badge">Addressed</span><br>The card issuer and the user. The issuer, called a trusted third party, signs Layer 1 to vouch for the user and the user&#x27;s key; the user then vouches for the agent by binding its key in a signed mandate. Only agents a verified user has delegated to can produce a valid chain. Nobody vets the agent platform itself, and VI does not say how a merchant decides which issuers to accept.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: Named parties vouch (the issuer for the user, the user for the agent), comparable to MCP Authorization&#x27;s authorization server plus user consent.</div><details><summary>Evidence (4)</summary><div class="claim">Issuer is a trusted third party. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 5.1 Roles. <span class="chk">(quote verified against the source)</span><blockquote>“Creates and signs L1 credentials; maintains user identity binding; provides JWKS endpoint for key discovery”</blockquote></div><div class="claim">Issuer signature as evidence. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 2.5 Dispute Evidence. <span class="chk">(quote verified against the source)</span><blockquote>“The user&#x27;s identity was vouched for by a known issuer (bank/network)”</blockquote></div><div class="claim">User signature as evidence of delegation. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 2.5 Dispute Evidence. <span class="chk">(quote verified against the source)</span><blockquote>“The user explicitly authorized this delegation”</blockquote></div><div class="claim">Searched the overview, credential format and security model for how verifiers choose which issuers to trust, or for any vetting of agent platforms. Neither is defined. <i>Not found in</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 5. Trust Model; 10.4 Verifier Conformance.</div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="red"><span class="badge">Not addressed</span><br>Not defined. Version 0.1 has no credential revocation; the specification lists it as a known limitation and names Token Status List as a candidate. Meanwhile, short lifetimes limit exposure, an issuer can remove a compromised signing key from its JWKS (which invalidates every Layer 1 signed with it), and issuers keep their usual card-level blocks. A single delegation cannot be revoked before it expires, so an Autonomous mandate can stay usable for weeks.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Revocation is not defined; key removal is coarse and outside the per-delegation level (same as the three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">No revocation protocol. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 6.1 Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“VI v0.1 does not define a credential-layer revocation protocol.”</blockquote></div><div class="claim">JWKS key removal for issuer key compromise. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 6.1 Revocation. <span class="chk">(quote verified against the source)</span><blockquote>“For L1 signing key compromise, the Issuer SHOULD remove the key from its JWKS endpoint, which invalidates all credentials signed with that key.”</blockquote></div><div class="claim">Expiry is the main limit on delegated authority. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 6.7 L2 Lifetime Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“L2 expiration is the primary mechanism for time-bounding delegated authority in the absence of revocation.”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. VI defines no contact or escalation field for the agent, its platform or the user. It provides evidence for disputes but leaves dispute initiation, routing and escalation to payment network rules; the issuer and payment network are known parties through the chain.<div class="meta">Explicitly out of scope</div><div class="meta">Why this rating: No contact channel; dispute choreography is explicitly out of scope.</div><details><summary>Evidence (2)</summary><div class="claim">Dispute routing and escalation are not defined. <i>Out of scope per</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, 2.5 Dispute Evidence. <span class="chk">(quote verified against the source)</span><blockquote>“VI does not define how disputes are initiated, routed between parties, escalated, or resolved.”</blockquote></div><div class="claim">Searched the claim tables of all three layers for contact or support fields. None is defined. <i>Not found in</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 3.3, 4.3, 5.3 claim tables.</div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The payment network keeps state across transactions to enforce one purchase per mandate and cumulative budgets, and the user&#x27;s mandate may carry device risk data for issuers, but VI defines no way for merchants or networks to warn one another about a misbehaving agent.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Not addressed.</div><details><summary>Evidence (2)</summary><div class="claim">Risk data is for issuers and networks to correlate consent with device telemetry. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a>, 4.5.2 Autonomous Payment Mandate. <span class="chk">(quote verified against the source)</span><blockquote>“its purpose is to let issuers and networks correlate the L2 consent event with device telemetry.”</blockquote></div><div class="claim">Searched the specification and security model for reputation, reporting or shared signals between verifiers. None is defined. <i>Not found in</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a>, Whole document.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. VI reserves an optional agent_attestation claim for agent identity or security attestations, but defines no attestation scheme, and verifiers ignore types they do not recognise. Nothing identifies the AI model.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Only an empty extension point; no model identity is defined.</div><details><summary>Evidence (2)</summary><div class="claim">Optional attestation claim. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 9.2 Agent Attestation. <span class="chk">(quote verified against the source)</span><blockquote>“VI supports an optional agent_attestation claim for carrying agent identity or security attestations”</blockquote></div><div class="claim">No schemes yet. <i>Source states</i> <a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a>, 9.2 Agent Attestation. <span class="chk">(quote verified against the source)</span><blockquote>“Future companion documents will define specific attestation schemes.”</blockquote></div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md">Verifiable Intent, Specification Overview (spec/README.md)</a> (0.1-draft, commit 356c296, 2026-04-20)</li><li><a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md">Verifiable Intent, Credential Format Specification (spec/credential-format.md)</a> (0.1-draft, commit 356c296, 2026-04-20)</li><li><a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/constraints.md">Verifiable Intent, Constraint Type Definitions and Validation Rules (spec/constraints.md)</a> (0.1-draft, commit 356c296, 2026-04-20)</li><li><a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md">Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)</a> (0.1-draft, commit 356c296, 2026-04-20)</li><li><a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/README.md">verifiable-intent repository, README.md</a> (commit 356c296, 2026-04-20)</li><li><a href="https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/protocol-landscape/protocols.md">Verifiable Intent, Protocol Ecosystem (protocol-landscape/protocols.md)</a> (commit 356c296, 2026-04-20)</li><li><a href="https://www.mastercard.com/us/en/news-and-trends/stories/2026/verifiable-intent.html">Mastercard, When AI starts buying for you, trust becomes the product (Verifiable Intent announcement)</a> (2026-03-05)</li></ul><h2>Notes</h2><ul class="plain"><li>No name collision found for &#x27;Verifiable Intent&#x27; as a protocol name; it is distinct from the W3C Verifiable Credentials data model, which Mastercard says it will integrate with later.</li><li>Version drift: the spec headers say 0.1-draft dated 2026-02-18, but main was changed after the v0.1.0 tag (2026-04-17 &#x27;BREAKING: field alignment per AP2 schema updates&#x27; and 2026-04-20 additions) without a version bump or changelog entry.</li><li>Terminology inconsistency: the overview&#x27;s verification lists say merchants verify L1 against the &#x27;Credential Provider&#x27;s published JWKS&#x27;, while the credential format says the Issuer signs L1 and publishes the JWKS.</li><li>The specification uses RFC 2119 keywords.</li><li>VI is a credential format, not a request protocol, so properties about every request are read as &#x27;every purchase presentation&#x27;.</li><li>The Mastercard announcement page was checked with a web tool; the web tool limits quotes to about 125 characters, so two quotes are sentence fragments.</li></ul><h2>Open questions</h2><ul class="plain"><li>Which issuers sign L1 credentials in practice, and how does a merchant obtain the list of issuers whose JWKS it should accept?</li><li>Has the announced integration into Mastercard Agent Pay shipped, and which merchants or processors verify VI chains in production?</li><li>Which commerce protocol carries VI to merchants in practice (AP2/UCP mandate fields or an ACP extension), and does that carrier send the full chain including L1?</li><li>Will a future version require verifiers to reject L3 credentials with a validity window longer than 1 hour?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (66 of 66 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-19. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-19",
+ "protocol": {
+  "name": "Verifiable Intent",
+  "full_name": "Verifiable Intent (VI)",
+  "spec_version": "v0.1-draft as on the main branch at commit 356c296 (spec headers still read 'Version 0.1-draft, Date 2026-02-18')",
+  "spec_date": "2026-04-20 (latest commit); spec headers dated 2026-02-18; tag v0.1.0 dated 2026-02-19",
+  "maintainer": "Mastercard (co-developed with Google); documents authored by the 'Verifiable Intent Working Group'",
+  "newer_version_note": "The tagged release v0.1.0 (commit 1dc3d41) is older than main: two later commits (2026-04-17 and 2026-04-20) changed field names, versioned the mandate types and added risk_data and other fields, without changing the version header. This analysis uses main at 356c296, the latest content. Open pull requests were not considered."
+ },
+ "profile": {
+  "id": "verifiable-intent",
+  "category": "agentic-commerce",
+  "secondary_categories": [
+   "agent-authorization",
+   "credentials-trust"
+  ],
+  "mechanisms": [
+   "verifiable-credential",
+   "pop-token"
+  ],
+  "venue": "vendor",
+  "maturity": "draft",
+  "openness": "open-specification",
+  "layers": [
+   "token",
+   "application-message"
+  ],
+  "building_blocks": [
+   "RFC 9901",
+   "RFC 7515",
+   "RFC 7517",
+   "RFC 7518",
+   "RFC 7519",
+   "RFC 7800",
+   "RFC 4648"
+  ],
+  "website": "https://verifiableintent.dev",
+  "first_published": "2026-03"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "Verifiable Intent (VI) gives merchants and payment networks signed proof of what a user allowed an AI shopping agent to buy, and that the agent stayed within it. It addresses a gap in agentic commerce: today's payment systems assume a person is present at checkout, so nobody can check whether an agent's purchase matches the user's wishes. Mastercard publishes and maintains it, co-developed with Google and aligned with Google's AP2 and UCP. It is an open draft (v0.1) under Apache 2.0, with a Python reference SDK; Mastercard has announced plans to integrate it into its Agent Pay APIs.",
+  "VI is a credential format, not a transport: it rides inside other commerce protocols. It chains three layers of selective-disclosure JWTs (SD-JWT). A card issuer signs a long-lived credential binding the user's key; the user signs a mandate with either the final cart and payment (Immediate mode) or limits such as amount, merchants and products plus the agent's key (Autonomous mode); in Autonomous mode the agent signs short-lived final values for the merchant and the payment network. Each party sees only its part. VI leaves out revocation (deferred), transport, agent key provisioning, contact channels, cross-party signalling and model identity."
+ ],
+ "how_it_works": [
+  "Setup: the user registers a public key with a card issuer (a bank or payment network such as Mastercard), which signs a Layer 1 (L1) credential binding that key to an opaque user identifier and card details. It sits in a Credential Provider's wallet and lasts about a year.",
+  "When the user asks an agent to buy something, the user (or a wallet holding the user's key) signs a Layer 2 (L2) credential: either the final cart and payment values (Immediate mode, valid about 15 minutes) or constraints such as amount range, allowed merchants and products, plus the agent's public key (Autonomous mode, typically 24 hours to 30 days).",
+  "In Autonomous mode the agent picks the products, obtains the checkout contents and signs two Layer 3 (L3) credentials with its own key, valid about 5 minutes and at most 1 hour: L3b with the checkout for the merchant and L3a with the payment for the payment network, linked by a shared hash.",
+  "The agent hands the chain to the merchant and the payment network inside whatever commerce protocol is in use, disclosing only the checkout parts to the merchant and only the payment parts to the network.",
+  "The merchant verifies the issuer's signature on L1 using the issuer's published keys, the user's signature on L2, the agent's signature on L3b (in Autonomous mode), the hash links and expiry times, and checks the checkout against the disclosed constraints and its own records.",
+  "The payment network does the same for the payment side, checks payment constraints, enforces one purchase per mandate and tracks cumulative spend, then routes the authorization; the issuer makes the final decision."
+ ],
+ "sources": [
+  {
+   "id": "vi-overview",
+   "title": "Verifiable Intent, Specification Overview (spec/README.md)",
+   "url": "https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md",
+   "fetch_url": "https://raw.githubusercontent.com/agent-intent/verifiable-intent/356c29635f1c44df7de02edb58699ca9f29bece6/spec/README.md",
+   "version": "0.1-draft, commit 356c296",
+   "date": "2026-04-20",
+   "kind": "primary"
+  },
+  {
+   "id": "vi-format",
+   "title": "Verifiable Intent, Credential Format Specification (spec/credential-format.md)",
+   "url": "https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md",
+   "fetch_url": "https://raw.githubusercontent.com/agent-intent/verifiable-intent/356c29635f1c44df7de02edb58699ca9f29bece6/spec/credential-format.md",
+   "version": "0.1-draft, commit 356c296",
+   "date": "2026-04-20",
+   "kind": "primary"
+  },
+  {
+   "id": "vi-constraints",
+   "title": "Verifiable Intent, Constraint Type Definitions and Validation Rules (spec/constraints.md)",
+   "url": "https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/constraints.md",
+   "fetch_url": "https://raw.githubusercontent.com/agent-intent/verifiable-intent/356c29635f1c44df7de02edb58699ca9f29bece6/spec/constraints.md",
+   "version": "0.1-draft, commit 356c296",
+   "date": "2026-04-20",
+   "kind": "primary"
+  },
+  {
+   "id": "vi-security",
+   "title": "Verifiable Intent, Security Model and Threat Analysis (spec/security-model.md)",
+   "url": "https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md",
+   "fetch_url": "https://raw.githubusercontent.com/agent-intent/verifiable-intent/356c29635f1c44df7de02edb58699ca9f29bece6/spec/security-model.md",
+   "version": "0.1-draft, commit 356c296",
+   "date": "2026-04-20",
+   "kind": "primary"
+  },
+  {
+   "id": "vi-readme",
+   "title": "verifiable-intent repository, README.md",
+   "url": "https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/README.md",
+   "fetch_url": "https://raw.githubusercontent.com/agent-intent/verifiable-intent/356c29635f1c44df7de02edb58699ca9f29bece6/README.md",
+   "version": "commit 356c296",
+   "date": "2026-04-20",
+   "kind": "primary"
+  },
+  {
+   "id": "vi-landscape",
+   "title": "Verifiable Intent, Protocol Ecosystem (protocol-landscape/protocols.md)",
+   "url": "https://github.com/agent-intent/verifiable-intent/blob/356c29635f1c44df7de02edb58699ca9f29bece6/protocol-landscape/protocols.md",
+   "fetch_url": "https://raw.githubusercontent.com/agent-intent/verifiable-intent/356c29635f1c44df7de02edb58699ca9f29bece6/protocol-landscape/protocols.md",
+   "version": "commit 356c296",
+   "date": "2026-04-20",
+   "kind": "primary"
+  },
+  {
+   "id": "mc-story",
+   "title": "Mastercard, When AI starts buying for you, trust becomes the product (Verifiable Intent announcement)",
+   "url": "https://www.mastercard.com/us/en/news-and-trends/stories/2026/verifiable-intent.html",
+   "version": "",
+   "date": "2026-03-05",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Signed chain proving a shopping agent stayed within user limits",
+   "answer": "A Mastercard draft credential format where a card issuer, the user and (in Autonomous mode) the agent each sign a layer of selective-disclosure JWTs, so merchants and payment networks can verify what the user authorized and that the agent's purchase stays within it.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "The specification's own abstract.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "Abstract",
+     "quote": "Verifiable Intent (VI) defines a layered SD-JWT credential format that creates a cryptographically verifiable chain binding an AI agent's commercial actions to an end-user's explicitly stated purchase intent.",
+     "check": "OK",
+     "check_fp": "ac060a4140"
+    },
+    {
+     "text": "Merchants and payment networks are the primary verifiers.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "2. Terminology (Verifier)",
+     "quote": "Any party that validates a VI credential chain. Merchants and payment networks are the primary verifiers.",
+     "check": "OK",
+     "check_fp": "59050e6571"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agent purchases; credential carried inside other protocols",
+   "answer": "Purchases made or assisted by an AI agent: user-confirmed carts (Immediate mode) and delegated shopping, replenishment or price-watching within limits (Autonomous mode). VI is a token format carried inside other commerce protocols (e.g. AP2 or UCP mandate fields, or an ACP extension); it defines no transport of its own. The merchant, or a processor or gateway acting for it, verifies the checkout side, and the payment network verifies the payment side.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Use cases per mode.",
+     "type": "fact",
+     "source": "vi-readme",
+     "section": "Two Execution Modes",
+     "quote": "Delegated shopping, automated replenishment, price-watching agents",
+     "check": "OK",
+     "check_fp": "8d97c17a4d"
+    },
+    {
+     "text": "VI rides alongside other protocols.",
+     "type": "fact",
+     "source": "vi-landscape",
+     "section": "The Core Relationship",
+     "quote": "VI rides alongside whatever protocol is already in use, adding a verifiable trust layer without requiring changes to the underlying transport.",
+     "check": "OK",
+     "check_fp": "79c51534b1"
+    },
+    {
+     "text": "Verification can be delegated to a processor or gateway.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "5.3 Verification Requirements Per Role",
+     "quote": "In deployments where the merchant delegates credential verification to a payment processor or gateway, these requirements apply to the entity performing verification on the merchant's behalf.",
+     "check": "OK",
+     "check_fp": "52c8d2f178"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Issuer, Credential Provider, User, Agent, Merchant, Payment Network, Verifier",
+   "answer": "Issuer: a bank or payment network that signs the Layer 1 credential and publishes its keys (a trusted third party). Credential Provider: hosts the wallet where Layer 1 is stored and Layer 2 is created. User: the delegating principal and root of authority. Agent: AI software acting for the user, which signs Layer 3 in Autonomous mode. Merchant: sells the goods, creates checkouts and verifies. Payment Network: routes and settles payments and verifies the chain before authorization. Verifier: any party that validates the chain.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Issuer.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "2. Terminology (Issuer)",
+     "quote": "Either a financial institution (bank) that issued the user's payment card, or a payment network (Mastercard) acting on the bank's behalf.",
+     "check": "OK",
+     "check_fp": "c8c556f95c"
+    },
+    {
+     "text": "Credential Provider.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "2. Terminology (Credential Provider)",
+     "quote": "Entity that hosts the wallet infrastructure where L1 credentials are stored and where users create L2 credentials.",
+     "check": "OK",
+     "check_fp": "33c5c6bca9"
+    },
+    {
+     "text": "User.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "2. Terminology (User)",
+     "quote": "The user is the ultimate authority in the delegation chain.",
+     "check": "OK",
+     "check_fp": "77eb94f72f"
+    },
+    {
+     "text": "Agent.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "2. Terminology (Agent)",
+     "quote": "AI-powered software that acts on behalf of the user.",
+     "check": "OK",
+     "check_fp": "edf13bd75e"
+    },
+    {
+     "text": "Merchant.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "2. Terminology (Merchant)",
+     "quote": "The merchant creates signed checkout JWTs and processes checkout requests.",
+     "check": "OK",
+     "check_fp": "54397e62e1"
+    },
+    {
+     "text": "Payment Network.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "2. Terminology (Payment Network)",
+     "quote": "Validates the VI credential chain as a pre-authorization step during transaction routing.",
+     "check": "OK",
+     "check_fp": "89910d9c1d"
+    },
+    {
+     "text": "Verifier.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "2. Terminology (Verifier)",
+     "quote": "Any party that validates a VI credential chain.",
+     "check": "OK",
+     "check_fp": "a9897d0fba"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "v0.1 draft (Mastercard); Agent Pay integration announced",
+   "answer": "Draft. The repository marks the specification as Draft v0.1, maintained by Mastercard and open to contributions, with a Python reference SDK under Apache 2.0. Mastercard announced it with Google on 5 March 2026 and said it would be integrated into Mastercard Agent Pay's intent APIs in the coming months; no named production deployment was found in a deployer's own source. The main branch has changed since the v0.1.0 tag without a new version number.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: still a draft with no confirmed production deployment; not red because it is a complete published draft with a reference implementation rather than an early exploration.",
+   "claims": [
+    {
+     "text": "Draft status and maintainer.",
+     "type": "fact",
+     "source": "vi-readme",
+     "section": "Verifiable Intent (VI)",
+     "quote": "Status: Draft (v0.1). Maintained by Mastercard; open to multi-stakeholder contribution.",
+     "check": "OK",
+     "check_fp": "353ad4b092"
+    },
+    {
+     "text": "Specification header.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "Header",
+     "quote": "Version: 0.1-draft",
+     "check": "OK",
+     "check_fp": "b3a13f8af5"
+    },
+    {
+     "text": "Open-sourced with a reference implementation.",
+     "type": "fact",
+     "source": "mc-story",
+     "section": "Announcement",
+     "quote": "Today, Mastercard is open-sourcing the Verifiable Intent specification and an initial reference implementation",
+     "check": "WEB-OK",
+     "check_fp": "6348f6c4d1"
+    },
+    {
+     "text": "Planned Agent Pay integration.",
+     "type": "fact",
+     "source": "mc-story",
+     "section": "Announcement",
+     "quote": "In the coming months, Verifiable Intent will be integrated directly into Mastercard Agent Pay",
+     "check": "WEB-OK",
+     "check_fp": "74988d0aac"
+    },
+    {
+     "text": "Co-developed with Google.",
+     "type": "fact",
+     "source": "mc-story",
+     "section": "Announcement",
+     "quote": "we’re collaborating with Google to introduce Verifiable Intent, a new open, standards-based trust layer for agentic commerce",
+     "check": "WEB-OK",
+     "check_fp": "8db44ef6bf"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "SD-JWT (RFC 9901), JWS, JWK, ES256, RFC 7800 cnf",
+   "answer": "Selective Disclosure JWT (SD-JWT, RFC 9901) as the base format, with JWS (RFC 7515), JWK (RFC 7517), JWT (RFC 7519) and ES256 from JWA (RFC 7518) as the only required algorithm. The cnf confirmation claim (RFC 7800) binds each layer's key to the next. SHA-256 and base64url (RFC 4648) are used for hashes. Token Status List (RFC 9701) is only mentioned as a possible future revocation mechanism. VI positions itself as a concrete credential format for AP2's verifiable digital credentials.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "SD-JWT is the base format.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "6. Technology Foundations",
+     "quote": "Base credential format; provides selective disclosure of claims via salted hash commitments",
+     "check": "OK",
+     "check_fp": "9a0f483aeb"
+    },
+    {
+     "text": "ES256 is required.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "6. Technology Foundations, Algorithm Requirements",
+     "quote": "Implementations MUST support ES256 (ECDSA using the P-256 curve and SHA-256) as defined in [RFC 7518] Section 3.4.",
+     "check": "OK",
+     "check_fp": "cea5f7315a"
+    },
+    {
+     "text": "cnf for key binding.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "6. Technology Foundations",
+     "quote": "cnf claim for key binding at each delegation layer",
+     "check": "OK",
+     "check_fp": "1885623bd2"
+    },
+    {
+     "text": "Positioning relative to AP2.",
+     "type": "fact",
+     "source": "vi-landscape",
+     "section": "Universal Commerce Protocol (UCP)",
+     "quote": "AP2 leaves the VDC format open; VI provides a concrete option.",
+     "check": "OK",
+     "check_fp": "3e9f6e7caa"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Platform URL; agent key ID in Autonomous mode",
+   "answer": "Partly. The user's Layer 2 carries an audience (aud) that identifies the agent, typically the agent platform's URL, and is always visible. In Autonomous mode the user also binds the agent's public key with a key identifier (kid), and each Layer 3 carries that kid in its header, so the merchant can tell which delegated agent key signed. In Immediate mode there is no agent key, only the platform audience.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: the always-present identifier names the agent platform; an agent-level key identifier exists only in Autonomous mode.",
+   "claims": [
+    {
+     "text": "L2 aud identifies the agent, typically the platform URL.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "4.3 JWT Payload, Always-Visible Claims",
+     "quote": "In L2, aud identifies the agent (the party to which the user is delegating) — typically the agent platform URL.",
+     "check": "OK",
+     "check_fp": "daf3c3d00b"
+    },
+    {
+     "text": "Agent key and kid bound in Autonomous mandates.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "3.2 Delegation Chain",
+     "quote": "In Autonomous mode, each Layer 2 mandate cnf claim MUST contain jwk with the agent's public key and kid with a key identifier.",
+     "check": "OK",
+     "check_fp": "3ccb4db531"
+    },
+    {
+     "text": "L3 header kid.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "3.2 Delegation Chain",
+     "quote": "Each Layer 3 JWT header MUST contain a kid parameter matching L2 cnf.jwk.kid.",
+     "check": "OK",
+     "check_fp": "447978b992"
+    },
+    {
+     "text": "No agent key in Immediate mode.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "3.2 Delegation Chain",
+     "quote": "In Immediate mode, Layer 2 mandates MUST NOT contain a cnf claim.",
+     "check": "OK",
+     "check_fp": "8515313f6b"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Per-delegation agent key, Autonomous mode only",
+   "answer": "Partly. In Autonomous mode, the merchant sees the kid of the agent key that the user bound for this delegation, and the security model recommends that platforms generate a fresh key pair per delegation session, so the key can single out one delegated agent. The dispute evidence table says the agent key signature shows the specific agent that executed the transaction. This exists only in Autonomous mode, and fresh keys are a recommendation.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: a per-agent key is defined but only in Autonomous mode, and per-session freshness is only SHOULD (all three calibration examples are red).",
+   "claims": [
+    {
+     "text": "Fresh key pairs per delegation session are recommended.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "3.3 Agent Key Provisioning",
+     "quote": "Agent platforms SHOULD generate fresh key pairs per delegation session to limit the impact of key compromise.",
+     "check": "OK",
+     "check_fp": "38fe8e554a"
+    },
+    {
+     "text": "The agent key signature identifies the specific agent.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "2.5 Dispute Evidence",
+     "quote": "The specific agent that executed the transaction",
+     "check": "OK",
+     "check_fp": "442d6f777b"
+    },
+    {
+     "text": "Agent key provisioning is not specified.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "3.3 Agent Key Provisioning",
+     "quote": "VI binds an agent key via the L2 mandate's cnf.jwk but does not specify how that key is generated, communicated to the user's L2 construction environment, or stored.",
+     "check": "OK",
+     "check_fp": "5579c7f24e"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Yes, issuer-signed user identifier",
+   "answer": "Yes. Every chain starts with the Layer 1 credential, which the merchant must verify, and which always shows an opaque, stable user identifier (sub) assigned by the issuer, plus the card's last four digits and scheme. The user's email is selectively disclosable and shown only when needed. Layer 2 is signed with the user's key bound in Layer 1, so the merchant learns which issuer-known user authorized the purchase, though only through a pseudonymous identifier.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the protocol requires an issuer-signed user identifier in the root credential that the merchant receives and verifies (unlike Visa TAP's optional consumer object).",
+   "claims": [
+    {
+     "text": "sub is required in L1.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "3.3 JWT Payload, Always-Visible Claims",
+     "quote": "Subject identifier. An opaque, stable identifier for the user within the Issuer's system.",
+     "check": "OK",
+     "check_fp": "57df96ff68"
+    },
+    {
+     "text": "Email is selectively disclosable.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "3.4 JWT Payload, Selectively Disclosable Claims",
+     "quote": "User's email address. Selectively disclosable. Disclosed only when needed for user identity verification.",
+     "check": "OK",
+     "check_fp": "f76211965f"
+    },
+    {
+     "text": "The merchant must verify L1 and L2.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "5.3 Verification Requirements Per Role",
+     "quote": "Verify L2 signature against the key in L1 cnf.jwk",
+     "check": "OK",
+     "check_fp": "457306a6c9"
+    },
+    {
+     "text": "sub is always visible and linkable.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "6.2 sub Claim Linkability",
+     "quote": "A verifier receiving multiple transactions can link them to the same user via sub.",
+     "check": "OK",
+     "check_fp": "b0131ba559"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Key-bound SD-JWT chain, per purchase",
+   "answer": "Partly, per purchase rather than per request. The merchant receives a chain of SD-JWTs signed with ES256: the issuer's Layer 1, the user's key-bound Layer 2 and, in Autonomous mode, the agent's Layer 3b. Each later layer is signed with the key named in the previous one, which is proof of possession, and carries a nonce, an audience, issue and expiry times and a hash of the layer below. VI defines no transport, so it is presented with the purchase, not on every HTTP request.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: a strong, verifiable credential, but defined only for the purchase presentation and not for every request to the merchant (transport is out of scope); borderline green.",
+   "claims": [
+    {
+     "text": "Key binding through each layer.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "3.2 Delegation Chain",
+     "quote": "Each layer cryptographically binds the next layer's signing authority through the cnf (confirmation) claim defined in [RFC 7800].",
+     "check": "OK",
+     "check_fp": "326121506f"
+    },
+    {
+     "text": "nonce and aud are required in L3.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "5.3 JWT Payload, Always-Visible Claims (L3a and L3b)",
+     "quote": "Cryptographically random nonce. MUST be distinct from the L2 nonce.",
+     "check": "OK",
+     "check_fp": "fd58c4f870"
+    },
+    {
+     "text": "Transport is out of scope.",
+     "type": "out_of_scope",
+     "source": "vi-readme",
+     "section": "What VI Does",
+     "quote": "Out of scope: Transport protocols, key management/provisioning, credential provider enrollment, agent platform APIs, dispute resolution, regulatory compliance mapping (PCI DSS, PSD2, etc.).",
+     "check": "OK",
+     "check_fp": "a8efcc0f13"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Agent layer max 1 hour; delegation up to 30 days",
+   "answer": "Partly. The agent's Layer 3 must not exceed 1 hour (5 minutes recommended), and an Immediate-mode Layer 2 should last no more than 15 minutes. Verifiers must reject any layer whose expiry has passed (with about 300 seconds of clock skew). However, the user's Autonomous delegation (Layer 2) may last up to 30 days or longer, up to the Layer 1 expiry of about a year, and verifiers are not told to reject Layer 3 credentials issued with a window longer than 1 hour.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: the 1-hour maximum is a rule for the agent, not one verifiers are told to enforce, and the delegated authority itself can last weeks (stricter than Web Bot Auth, but not Visa TAP's verifier-enforced window); borderline green.",
+   "claims": [
+    {
+     "text": "L3 maximum.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "5.3 JWT Payload, Always-Visible Claims (L3a and L3b)",
+     "quote": "Expiration time. RECOMMENDED: 5 minutes from iat. MUST NOT exceed 1 hour from iat.",
+     "check": "OK",
+     "check_fp": "062791547a"
+    },
+    {
+     "text": "L2 lifetimes.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "4.3 JWT Payload, Always-Visible Claims",
+     "quote": "Immediate mode: SHOULD be no more than 15 minutes from iat. Autonomous mode: SHOULD be no more than 30 days from iat; SHOULD use the shortest duration appropriate for the use case.",
+     "check": "OK",
+     "check_fp": "00d78588db"
+    },
+    {
+     "text": "Verifiers reject expired credentials.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "5.7 Processing Rules, L3 Verification",
+     "quote": "Verifiers MUST reject L3 credentials with exp in the past (clock skew tolerance: 300 seconds recommended).",
+     "check": "OK",
+     "check_fp": "c9dfb8817a"
+    },
+    {
+     "text": "Autonomous L2 is bounded only by L1 expiry.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "7. Credential Lifetime",
+     "quote": "MUST NOT exceed L1 exp",
+     "check": "OK",
+     "check_fp": "10aea11159"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, from the issuer's published keys",
+   "answer": "Yes. The merchant fetches the issuer's public key from its published key set (JWKS) using the kid, verifies the Layer 1 signature, then verifies Layer 2 with the user key inside Layer 1 and Layer 3 with the agent key inside Layer 2, checks the hash links, the typ header of each layer and the expiry times. No prior relationship with the agent is needed; the merchant only needs the issuer's keys.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: verifiable against published keys with expiry checks and no prior relationship with the agent (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "Issuer key from JWKS.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "3.5 Processing Rules",
+     "quote": "Verifiers MUST resolve the Issuer's public key using the kid header parameter against the Issuer's JWKS endpoint.",
+     "check": "OK",
+     "check_fp": "5c212c0b8c"
+    },
+    {
+     "text": "Signatures at every layer.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "10.4 Verifier Conformance",
+     "quote": "MUST verify ES256 signatures at every layer of the presented chain.",
+     "check": "OK",
+     "check_fp": "6730d42239"
+    },
+    {
+     "text": "Hash links between layers.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "10.4 Verifier Conformance",
+     "quote": "MUST verify sd_hash bindings between adjacent layers.",
+     "check": "OK",
+     "check_fp": "4baad3acc7"
+    },
+    {
+     "text": "Agent key resolved from L2, not from L3.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "10.4 Verifier Conformance",
+     "quote": "MUST NOT trust a self-asserted jwk in L3 headers.",
+     "check": "OK",
+     "check_fp": "d2d2d89bb1"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Partly: agent or user key signatures",
+   "answer": "Partly. The merchant itself verifies proof from individual keys: in Autonomous mode, Layer 3b signed by the agent key that the user bound for this delegation; in both modes, Layer 2 signed by the user's key that the issuer bound. But VI binds keys, not people: the user's key may be held by a platform on the user's behalf, which verifiers cannot tell apart, and whether each agent gets its own key is only recommended.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: per-agent and per-user key proofs are verified by the merchant, but per-agent keys are only SHOULD and custodial user keys are allowed, so the proof may not belong to the individual (tie rule applied; all three calibration examples are red).",
+   "claims": [
+    {
+     "text": "The merchant verifies the agent's signature in Autonomous mode.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "5.3 Verification Requirements Per Role",
+     "quote": "In Autonomous mode: resolve agent key from L2 cnf.jwk via L3b header kid match against L2 cnf.jwk.kid, then verify L3b signature",
+     "check": "OK",
+     "check_fp": "4ab90e2650"
+    },
+    {
+     "text": "VI does not authenticate the person.",
+     "type": "out_of_scope",
+     "source": "vi-security",
+     "section": "2.4 What VI Does Not Protect",
+     "quote": "User authentication — VI binds a key, not a person.",
+     "check": "OK",
+     "check_fp": "a2e6018b96"
+    },
+    {
+     "text": "Custodial user keys are allowed and indistinguishable.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "3.5 Deployment Models",
+     "quote": "Verifiers cannot and need not distinguish between deployment models.",
+     "check": "OK",
+     "check_fp": "06615e8a57"
+    },
+    {
+     "text": "Custodial platforms must authenticate the user first.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "3.5 Deployment Models",
+     "quote": "The platform MUST authenticate the user before signing L2 mandates on their behalf.",
+     "check": "OK",
+     "check_fp": "795b50084e"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Yes, user-signed purchase constraints",
+   "answer": "Yes. In Autonomous mode, the user's signed Layer 2 carries typed constraints: allowed merchants, line items, allowed payees, amount range, total budget, recurrence and a checkout-payment reference. Verifiers must check the agent's final values against the disclosed constraints; the merchant checks the checkout side and the payment network the payment side, including cumulative budgets. In Immediate mode the user signs the final cart and amount directly. Unknown constraint types are skipped by default (permissive mode).",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the credential carries fine-grained, user-signed limits that verifiers must enforce (same colour as MCP Authorization's scopes).",
+   "claims": [
+    {
+     "text": "Verifiers check L3 against disclosed constraints.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "10.4 Verifier Conformance",
+     "quote": "Machine-enforceable constraints (amount range, allowed payee, merchant, line items) MUST be verified; descriptive fields (product description, brand, color, size) are informational and not subject to automated verification.",
+     "check": "OK",
+     "check_fp": "c62a69dc39"
+    },
+    {
+     "text": "What constraints are.",
+     "type": "fact",
+     "source": "vi-constraints",
+     "section": "Abstract",
+     "quote": "Constraints are structured conditions set by the user that bound an AI agent's delegated authority — restricting what products it may purchase, which merchants it may transact with, and how much it may spend.",
+     "check": "OK",
+     "check_fp": "82a58c029a"
+    },
+    {
+     "text": "Eight registered types.",
+     "type": "fact",
+     "source": "vi-constraints",
+     "section": "4. Registered Constraint Types",
+     "quote": "VI defines eight registered constraint types. Verifiers MUST support all registered types.",
+     "check": "OK",
+     "check_fp": "c7ebd68eb1"
+    },
+    {
+     "text": "Constraint namespaces.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "9.1 Constraint Type Registry",
+     "quote": "Implementations MUST support all registered constraint types.",
+     "check": "OK",
+     "check_fp": "11db124203"
+    },
+    {
+     "text": "Payment networks track cumulative spend.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "5.7 Processing Rules, L3 Verification",
+     "quote": "Payment networks MUST track cumulative L3 spend per L2 and reject L3s that exceed L2 spending constraints.",
+     "check": "OK",
+     "check_fp": "e9de0f73ff"
+    },
+    {
+     "text": "Permissive mode default.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "6.5 PERMISSIVE Mode Default",
+     "quote": "The default strictness mode for constraint validation is PERMISSIVE, which silently skips unknown constraint types",
+     "check": "OK",
+     "check_fp": "89ea700de9"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Yes, user signs the mandate",
+   "answer": "Yes. Every purchase rests on a Layer 2 that the user signs: in Immediate mode the user reviews and confirms the final cart and payment, and in Autonomous mode the user signs the limits and the agent's key before the agent can act. Wallets should ask for confirmation (e.g. biometric or PIN) before signing. The merchant cannot request a fresh approval through VI itself.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a user-signed approval step is required before the agent gets authority (same colour as MCP Authorization's consent step).",
+   "claims": [
+    {
+     "text": "Immediate mode: user confirms final values.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "3.3 Two Execution Modes",
+     "quote": "User reviews and confirms final values",
+     "check": "OK",
+     "check_fp": "f7c7851d9c"
+    },
+    {
+     "text": "L2 must be signed by the user's key.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "3.2 Delegation Chain",
+     "quote": "Layer 2 MUST be signed by the corresponding private key.",
+     "check": "OK",
+     "check_fp": "d4e33ca8f5"
+    },
+    {
+     "text": "Confirmation before signing is recommended.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "3.4 User Key Management",
+     "quote": "L2 construction implementations SHOULD require user confirmation before signing L2 mandates",
+     "check": "OK",
+     "check_fp": "4ee5144e8d"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Card issuer vouches for user; user for agent",
+   "answer": "The card issuer and the user. The issuer, called a trusted third party, signs Layer 1 to vouch for the user and the user's key; the user then vouches for the agent by binding its key in a signed mandate. Only agents a verified user has delegated to can produce a valid chain. Nobody vets the agent platform itself, and VI does not say how a merchant decides which issuers to accept.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Green: named parties vouch (the issuer for the user, the user for the agent), comparable to MCP Authorization's authorization server plus user consent.",
+   "claims": [
+    {
+     "text": "Issuer is a trusted third party.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "5.1 Roles",
+     "quote": "Creates and signs L1 credentials; maintains user identity binding; provides JWKS endpoint for key discovery",
+     "check": "OK",
+     "check_fp": "81bbb9aa5f"
+    },
+    {
+     "text": "Issuer signature as evidence.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "2.5 Dispute Evidence",
+     "quote": "The user's identity was vouched for by a known issuer (bank/network)",
+     "check": "OK",
+     "check_fp": "3168569bd3"
+    },
+    {
+     "text": "User signature as evidence of delegation.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "2.5 Dispute Evidence",
+     "quote": "The user explicitly authorized this delegation",
+     "check": "OK",
+     "check_fp": "484885d58a"
+    },
+    {
+     "text": "Searched the overview, credential format and security model for how verifiers choose which issuers to trust, or for any vetting of agent platforms. Neither is defined.",
+     "type": "silent",
+     "source": "vi-overview",
+     "section": "5. Trust Model; 10.4 Verifier Conformance",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Not defined in v0.1; short lifetimes",
+   "answer": "Not defined. Version 0.1 has no credential revocation; the specification lists it as a known limitation and names Token Status List as a candidate. Meanwhile, short lifetimes limit exposure, an issuer can remove a compromised signing key from its JWKS (which invalidates every Layer 1 signed with it), and issuers keep their usual card-level blocks. A single delegation cannot be revoked before it expires, so an Autonomous mandate can stay usable for weeks.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: revocation is not defined; key removal is coarse and outside the per-delegation level (same as the three calibration examples).",
+   "claims": [
+    {
+     "text": "No revocation protocol.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "6.1 Revocation",
+     "quote": "VI v0.1 does not define a credential-layer revocation protocol.",
+     "check": "OK",
+     "check_fp": "3af49e79fb"
+    },
+    {
+     "text": "JWKS key removal for issuer key compromise.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "6.1 Revocation",
+     "quote": "For L1 signing key compromise, the Issuer SHOULD remove the key from its JWKS endpoint, which invalidates all credentials signed with that key.",
+     "check": "OK",
+     "check_fp": "981a575344"
+    },
+    {
+     "text": "Expiry is the main limit on delegated authority.",
+     "type": "fact",
+     "source": "vi-security",
+     "section": "6.7 L2 Lifetime Considerations",
+     "quote": "L2 expiration is the primary mechanism for time-bounding delegated authority in the absence of revocation.",
+     "check": "OK",
+     "check_fp": "d777189816"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No",
+   "answer": "No. VI defines no contact or escalation field for the agent, its platform or the user. It provides evidence for disputes but leaves dispute initiation, routing and escalation to payment network rules; the issuer and payment network are known parties through the chain.",
+   "rating": "red",
+   "coverage": "out_of_scope",
+   "requirement": "none",
+   "rating_reason": "Red: no contact channel; dispute choreography is explicitly out of scope.",
+   "claims": [
+    {
+     "text": "Dispute routing and escalation are not defined.",
+     "type": "out_of_scope",
+     "source": "vi-security",
+     "section": "2.5 Dispute Evidence",
+     "quote": "VI does not define how disputes are initiated, routed between parties, escalated, or resolved.",
+     "check": "OK",
+     "check_fp": "fca31070a9"
+    },
+    {
+     "text": "Searched the claim tables of all three layers for contact or support fields. None is defined.",
+     "type": "silent",
+     "source": "vi-format",
+     "section": "3.3, 4.3, 5.3 claim tables",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "No",
+   "answer": "No. The payment network keeps state across transactions to enforce one purchase per mandate and cumulative budgets, and the user's mandate may carry device risk data for issuers, but VI defines no way for merchants or networks to warn one another about a misbehaving agent.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: not addressed.",
+   "claims": [
+    {
+     "text": "Risk data is for issuers and networks to correlate consent with device telemetry.",
+     "type": "fact",
+     "source": "vi-format",
+     "section": "4.5.2 Autonomous Payment Mandate",
+     "quote": "its purpose is to let issuers and networks correlate the L2 consent event with device telemetry.",
+     "check": "OK",
+     "check_fp": "2d52612db3"
+    },
+    {
+     "text": "Searched the specification and security model for reputation, reporting or shared signals between verifiers. None is defined.",
+     "type": "silent",
+     "source": "vi-security",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No; attestation slot without schemes",
+   "answer": "No. VI reserves an optional agent_attestation claim for agent identity or security attestations, but defines no attestation scheme, and verifiers ignore types they do not recognise. Nothing identifies the AI model.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: only an empty extension point; no model identity is defined.",
+   "claims": [
+    {
+     "text": "Optional attestation claim.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "9.2 Agent Attestation",
+     "quote": "VI supports an optional agent_attestation claim for carrying agent identity or security attestations",
+     "check": "OK",
+     "check_fp": "2695cafa20"
+    },
+    {
+     "text": "No schemes yet.",
+     "type": "fact",
+     "source": "vi-overview",
+     "section": "9.2 Agent Attestation",
+     "quote": "Future companion documents will define specific attestation schemes.",
+     "check": "OK",
+     "check_fp": "5e17b653ea"
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The merchant can check that a purchase was authorized by an issuer-known user and stays within user-signed limits (merchants, items, amounts), and the payment network enforces payment limits and budgets. VI does not control access to the merchant's other endpoints.",
+  "incident_response": "There is no revocation in v0.1; short agent credentials and mandate expiry limit damage, an issuer can pull a signing key (affecting all its credentials) or block the card. A single delegation cannot be cut off early, and there is no contact channel.",
+  "accountability": "The chain gives signed evidence linking the issuer, a pseudonymous user, the user's exact instructions and, in Autonomous mode, the agent key that executed, which any party can verify in a dispute. It identifies the agent platform only by URL and not the model."
+ },
+ "notes": [
+  "No name collision found for 'Verifiable Intent' as a protocol name; it is distinct from the W3C Verifiable Credentials data model, which Mastercard says it will integrate with later.",
+  "Version drift: the spec headers say 0.1-draft dated 2026-02-18, but main was changed after the v0.1.0 tag (2026-04-17 'BREAKING: field alignment per AP2 schema updates' and 2026-04-20 additions) without a version bump or changelog entry.",
+  "Terminology inconsistency: the overview's verification lists say merchants verify L1 against the 'Credential Provider's published JWKS', while the credential format says the Issuer signs L1 and publishes the JWKS.",
+  "The specification uses RFC 2119 keywords.",
+  "VI is a credential format, not a request protocol, so properties about every request are read as 'every purchase presentation'.",
+  "The Mastercard announcement page was checked with a web tool; the web tool limits quotes to about 125 characters, so two quotes are sentence fragments."
+ ],
+ "open_questions": [
+  "Which issuers sign L1 credentials in practice, and how does a merchant obtain the list of issuers whose JWKS it should accept?",
+  "Has the announced integration into Mastercard Agent Pay shipped, and which merchants or processors verify VI chains in production?",
+  "Which commerce protocol carries VI to merchants in practice (AP2/UCP mandate fields or an ACP extension), and does that carrier send the full chain including L1?",
+  "Will a future version require verifiers to reject L3 credentials with a validity window longer than 1 hour?"
+ ]
+}</script></body></html>
