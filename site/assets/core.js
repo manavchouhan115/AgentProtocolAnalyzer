@@ -259,6 +259,8 @@ export function hideTip() { document.getElementById("tip").classList.remove("sho
 
 // ---------- compare tray ----------
 export const MAX_COMPARE = 4;
+// Where people can download the protocol-analyzer skill.
+export const SKILL_URL = "https://drive.google.com/drive/folders/1QaKJ1ngJ2Dw5tPssELHjXJTAfV73cUz-?usp=drive_link";
 export function toggleCompare(id) {
   const i = state.compare.indexOf(id);
   if (i >= 0) state.compare.splice(i, 1);

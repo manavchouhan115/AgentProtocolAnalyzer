@@ -112,6 +112,10 @@ needs no hard-coded rubric.
 - Class names are shared across views; check for collisions (e.g. `.prop` is the
   protocol-page property row, the matrix header uses `.mprop`).
 
+## Skill download link
+The public download link for the skill is `SKILL_URL` in `site/assets/core.js` (also in
+the footer of `site/index.html`). It is shown on the overview, Add a report and About pages.
+
 ## Conventions
 - Never invent analysis content in the site; everything shown comes from the dataset.
 - Ratings are drafts until reviewed; always show the review status.

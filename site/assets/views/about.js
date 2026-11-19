@@ -1,4 +1,4 @@
-import { state, esc, scoredProps, goals } from "../core.js";
+import { state, esc, scoredProps, goals, SKILL_URL } from "../core.js";
 
 export function renderAbout(el) {
   document.title = "About | Protocol Explorer";
@@ -27,6 +27,15 @@ export function renderAbout(el) {
 
     <h2 style="margin-top:36px">Evidence and review</h2>
     <p>Every statement in an analysis is backed by a source, a section and a short verbatim quote. Quotes are checked automatically against the source where possible. Analyses marked “Draft analysis” were produced by the analysis skill and have not yet been checked by a person.</p>
+
+    <h2 style="margin-top:36px">Analyse a protocol yourself</h2>
+    <p>Every analysis here was made with the protocol-analyzer skill, and you can use it too.</p>
+    <ol class="plain-num">
+      <li><a href="${SKILL_URL}" target="_blank" rel="noopener">Download the protocol-analyzer skill</a>.</li>
+      <li>Add it to Claude as a skill.</li>
+      <li>Ask Claude to analyse a protocol by name, specification or website, for example “Analyse AAuth using the protocol analyzer skill”.</li>
+      <li>You get one HTML report. Open it in a browser to read it, or <a href="#/add">add it to this explorer</a>.</li>
+    </ol>
 
     <h2 style="margin-top:36px">How ranking works</h2>
     <p>On the <a href="#/rank">Rank</a> page you say how much each goal matters. Each property is linked to the goals it mainly serves, shown below. A property's weight is the average weight of its goals, which you can double or ignore for single properties. A protocol's score is the share of the weighted points it earns, out of 100. The links between properties and goals are this explorer's own reading of the framework, not part of the analyses.</p>

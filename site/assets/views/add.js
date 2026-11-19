@@ -1,4 +1,4 @@
-import { state, esc, checkServer, loadData, fingerprint, label, toast } from "../core.js";
+import { state, esc, checkServer, loadData, fingerprint, label, toast, SKILL_URL } from "../core.js";
 
 const DATA_ID = "protocol-analysis-data";
 
@@ -6,7 +6,8 @@ export async function renderAdd(el) {
   document.title = "Add a report | Protocol Explorer";
   el.innerHTML = `<div class="wrap page">
     <div class="page-head"><div><h1>Add a report</h1>
-      <p>Add a protocol by uploading the HTML report the protocol-analyzer skill produced. The report is checked before it is added.</p></div></div>
+      <p>Add a protocol by uploading the HTML report the protocol-analyzer skill produced. The report is checked before it is added.</p>
+      <p>Don't have a report yet? <a href="${SKILL_URL}" target="_blank" rel="noopener">Download the protocol-analyzer skill</a>, add it to Claude, and ask it to analyse a protocol, for example “Analyse AAuth using the protocol analyzer skill”.</p></div></div>
     <div id="add-body" class="prose" style="max-width:760px"><p class="muted">Checking whether uploads are available</p></div>
   </div>`;
   const body = el.querySelector("#add-body");

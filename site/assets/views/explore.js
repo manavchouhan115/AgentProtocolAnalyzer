@@ -61,7 +61,7 @@ export function renderExplore(el, _parts, params) {
 }
 
 function readState(params) {
-  const st = { q: params.get("q") || "", sort: params.get("sort") || "coverage", group: params.get("group") || "none", sel: {}, addresses: params.get("addresses") || "", partly: params.get("partly") === "1" };
+  const st = { q: params.get("q") || "", sort: params.get("sort") || "coverage", group: params.get("group") || "none", sel: {}, addresses: params.get("addresses") || "", strict: params.get("strict") === "1" };
   FACETS.forEach((f) => { st.sel[f.key] = new Set((params.get(f.key) || "").split(",").filter(Boolean)); });
   if (!SORTS[st.sort]) st.sort = "coverage";
   if (!GROUPS[st.group]) st.group = "none";
@@ -73,7 +73,7 @@ function writeState(st) {
   if (st.q) p.set("q", st.q);
   FACETS.forEach((f) => { if (st.sel[f.key].size) p.set(f.key, [...st.sel[f.key]].join(",")); });
   if (st.addresses) p.set("addresses", st.addresses);
-  if (st.partly) p.set("partly", "1");
+  if (st.strict) p.set("strict", "1");
   if (st.sort !== "coverage") p.set("sort", st.sort);
   if (st.group !== "none") p.set("group", st.group);
   setQuery(p);
@@ -87,7 +87,7 @@ function matches(p, st, skipFacet) {
   }
   if (st.addresses) {
     const r = rowOf(p, st.addresses).rating;
-    if (!(r === "green" || (st.partly && r === "yellow"))) return false;
+    if (!(r === "green" || (!st.strict && r === "yellow"))) return false;
   }
   if (st.q) {
     const hay = [name(p), p.protocol?.full_name, ...(p.summary || []), ...(p.rows || []).flatMap((r) => [r.short, r.answer, ...(r.claims || []).map((c) => c.quote)]),
@@ -117,7 +117,7 @@ function drawFilters(box, st, update) {
   box.innerHTML = `
     <fieldset><legend>Addresses</legend>
       <select class="input" id="addr" style="width:100%" aria-label="Show protocols that address this property"><option value="">Any property</option>${propOpts}</select>
-      <label class="opt" style="margin-top:6px"><input type="checkbox" id="partly" ${st.partly ? "checked" : ""} ${st.addresses ? "" : "disabled"}> Include partly addressed</label>
+      <label class="opt" style="margin-top:6px"><input type="checkbox" id="partly" ${st.strict ? "checked" : ""} ${st.addresses ? "" : "disabled"}> Remove partly addressed</label>
     </fieldset>
     ${facetHtml}
     ${any ? `<button class="btn small" type="button" id="clear">Clear all filters</button>` : ""}`;
@@ -127,10 +127,10 @@ function drawFilters(box, st, update) {
     update();
   }));
   box.querySelector("#addr").addEventListener("change", (e) => { st.addresses = e.target.value; update(); });
-  box.querySelector("#partly").addEventListener("change", (e) => { st.partly = e.target.checked; update(); });
+  box.querySelector("#partly").addEventListener("change", (e) => { st.strict = e.target.checked; update(); });
   const clear = box.querySelector("#clear");
   if (clear) clear.addEventListener("click", () => {
-    st.q = ""; st.addresses = ""; st.partly = false; FACETS.forEach((f) => st.sel[f.key].clear());
+    st.q = ""; st.addresses = ""; st.strict = false; FACETS.forEach((f) => st.sel[f.key].clear());
     document.getElementById("q").value = "";
     update();
   });
@@ -181,7 +181,7 @@ function drawResults(box, countEl, st, update) {
   if (!list.length) {
     box.innerHTML = `<div class="empty"><h3>No protocols match</h3><p>Try fewer filters or a shorter search. <button class="btn small" type="button" id="clear2">Clear all filters</button></p></div>`;
     box.querySelector("#clear2").addEventListener("click", () => {
-      st.q = ""; st.addresses = ""; st.partly = false; FACETS.forEach((f) => st.sel[f.key].clear());
+      st.q = ""; st.addresses = ""; st.strict = false; FACETS.forEach((f) => st.sel[f.key].clear());
       document.getElementById("q").value = ""; update();
     });
     return;

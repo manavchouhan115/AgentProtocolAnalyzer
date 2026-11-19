@@ -1,11 +1,9 @@
-import { state, esc, name, pid, rowOf, RATING, coverage, shortLabel, label, showTip, hideTip, store } from "../core.js";
+import { state, esc, name, pid, rowOf, RATING, coverage, shortLabel, label, showTip, hideTip, store, SKILL_URL } from "../core.js";
 
 export function renderOverview(el) {
   document.title = "Protocol Explorer";
   const ps = state.current;
   const rated = state.rated;
-  const reviewed = ps.filter((p) => p.review?.status === "reviewed").length;
-  const cats = new Set(ps.map((p) => p.profile?.category));
 
   // group headers for the matrix
   const groups = [];
@@ -72,11 +70,10 @@ export function renderOverview(el) {
     <section class="hero">
       <h1>How AI agent protocols identify, authorize and answer for agents</h1>
       <p>Each protocol is rated on ${rated.length} properties from the side of the service that receives an agent's request. Every rating links to the quotes from the specification behind it.</p>
-      <div class="actions"><a class="btn primary" href="#/rank">Rank by what matters to you</a><a class="btn" href="#/landscape">See the landscape</a></div>
+      <div class="actions"><a class="btn primary" href="#/explore">Explore each protocol</a><a class="btn" href="#/rank">Rank by what matters to you</a><a class="btn" href="#/landscape">See the landscape</a></div>
+      <p class="skill-cta">Want to analyse a protocol yourself? <a href="${SKILL_URL}" target="_blank" rel="noopener">Get the protocol-analyzer skill</a> and add your report here.</p>
       <div class="stats">
         <div><b>${ps.length}</b><span>protocols</span></div>
-        <div><b>${cats.size}</b><span>categories</span></div>
-        <div><b>${reviewed} of ${ps.length}</b><span>reviewed by a person</span></div>
       </div>
     </section>
 
