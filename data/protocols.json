@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-19T06:59:29Z",
+ "generated_at": "2026-11-19T09:37:50Z",
  "rubric_version": [
   "2.1"
  ],
@@ -212,193 +212,238 @@
   "category": [
    {
     "value": "agent-authorization",
-    "label": "Agent authorization"
+    "label": "Agent authorization",
+    "description": "delegated access and authorization for agents calling APIs, tools or services on behalf of users or organisations"
    },
    {
     "value": "agent-communication",
-    "label": "Agent communication"
+    "label": "Agent communication",
+    "description": "messaging and collaboration between agents, including its identity layer"
    },
    {
     "value": "agentic-commerce",
-    "label": "Agentic commerce"
+    "label": "Agentic commerce",
+    "description": "agents browsing, buying and paying for users"
    },
    {
     "value": "attestation-provenance",
-    "label": "Attestation provenance"
+    "label": "Attestation provenance",
+    "description": "evidence of what runs behind an agent (model, code, environment)"
    },
    {
     "value": "credentials-trust",
-    "label": "Credentials trust"
+    "label": "Credentials trust",
+    "description": "verifiable credentials, decentralised identifiers and trust frameworks applied to agents"
    },
    {
     "value": "discovery-registry",
-    "label": "Discovery registry"
+    "label": "Discovery registry",
+    "description": "finding agents and their metadata (registries, directories, name services, agent cards)"
    },
    {
     "value": "other",
-    "label": "Other"
+    "label": "Other",
+    "description": ""
    },
    {
     "value": "web-bot-identity",
-    "label": "Web bot identity"
+    "label": "Web bot identity",
+    "description": "identifying bots and agents to websites they visit"
    },
    {
     "value": "workload-identity",
-    "label": "Workload identity"
+    "label": "Workload identity",
+    "description": "identity for software workloads and services, including agents"
    }
   ],
   "mechanisms": [
    {
     "value": "api-key",
-    "label": "API key"
+    "label": "API key",
+    "description": "shared secret keys"
    },
    {
     "value": "bearer-token",
-    "label": "Bearer token"
+    "label": "Bearer token",
+    "description": "a token that works for whoever holds it"
    },
    {
     "value": "did",
-    "label": "DID"
+    "label": "DID",
+    "description": "decentralised identifiers"
    },
    {
     "value": "http-message-signature",
-    "label": "HTTP Message Signatures"
+    "label": "HTTP Message Signatures",
+    "description": "requests signed with HTTP Message Signatures (RFC 9421) or a similar request-signing scheme"
    },
    {
     "value": "mtls",
-    "label": "mTLS"
+    "label": "mTLS",
+    "description": "mutual TLS client certificates"
    },
    {
     "value": "other",
-    "label": "Other"
+    "label": "Other",
+    "description": ""
    },
    {
     "value": "pop-token",
-    "label": "Proof-of-possession token"
+    "label": "Proof-of-possession token",
+    "description": "a token bound to a key the presenter must prove it holds (e.g. DPoP, tokens with a `cnf` key)"
    },
    {
     "value": "signed-metadata",
-    "label": "Signed metadata"
+    "label": "Signed metadata",
+    "description": "signed documents describing the agent (e.g. signed cards or manifests)"
    },
    {
     "value": "verifiable-credential",
-    "label": "Verifiable credential"
+    "label": "Verifiable credential",
+    "description": "W3C Verifiable Credentials or similar signed claims"
    },
    {
     "value": "x509-certificate",
-    "label": "X.509 certificate"
+    "label": "X.509 certificate",
+    "description": "X.509 certificates used outside TLS"
    }
   ],
   "venue": [
    {
     "value": "community",
-    "label": "Community"
+    "label": "Community",
+    "description": "an independent open-source project or individual authors"
    },
    {
     "value": "foundation",
-    "label": "Foundation"
+    "label": "Foundation",
+    "description": "an open-source or industry foundation (e.g. under the Linux Foundation)"
    },
    {
     "value": "government",
-    "label": "Government"
+    "label": "Government",
+    "description": "a government body or agency"
    },
    {
     "value": "ietf-individual",
-    "label": "IETF individual draft"
+    "label": "IETF individual draft",
+    "description": "an individual Internet-Draft, not adopted by a working group"
    },
    {
     "value": "ietf-wg",
-    "label": "IETF working group"
+    "label": "IETF working group",
+    "description": "adopted by an IETF working group"
    },
    {
     "value": "oidf",
-    "label": "OpenID Foundation"
+    "label": "OpenID Foundation",
+    "description": "an OpenID Foundation working group"
    },
    {
     "value": "other",
-    "label": "Other"
+    "label": "Other",
+    "description": ""
    },
    {
     "value": "other-sdo",
-    "label": "Other standards body"
+    "label": "Other standards body",
+    "description": "another standards body (e.g. ISO, ITU, ETSI)"
    },
    {
     "value": "vendor",
-    "label": "Vendor"
+    "label": "Vendor",
+    "description": "a single company"
    },
    {
     "value": "w3c",
-    "label": "W3C"
+    "label": "W3C",
+    "description": "a W3C working group or community group"
    }
   ],
   "maturity": [
    {
     "value": "deprecated",
-    "label": "Deprecated"
+    "label": "Deprecated",
+    "description": "replaced or withdrawn"
    },
    {
     "value": "draft",
-    "label": "Draft"
+    "label": "Draft",
+    "description": "a working-group draft or a published draft still expected to change"
    },
    {
     "value": "proposal",
-    "label": "Proposal"
+    "label": "Proposal",
+    "description": "an individual draft, exploration or early proposal"
    },
    {
     "value": "stable",
-    "label": "Stable"
+    "label": "Stable",
+    "description": "a released version its maintainers say is ready for use, but not a formal standard (e.g. a dated protocol revision, a launched vendor specification)"
    },
    {
     "value": "standard",
-    "label": "Standard"
+    "label": "Standard",
+    "description": "a published standard (e.g. an RFC or a final W3C Recommendation)"
    }
   ],
   "openness": [
    {
     "value": "closed",
-    "label": "Closed"
+    "label": "Closed",
+    "description": "not publicly available"
    },
    {
     "value": "open-specification",
-    "label": "Open specification"
+    "label": "Open specification",
+    "description": "published openly by a project or foundation for anyone to implement"
    },
    {
     "value": "open-standard",
-    "label": "Open standard"
+    "label": "Open standard",
+    "description": "developed under a standards body's open process and IPR rules"
    },
    {
     "value": "vendor-terms",
-    "label": "Vendor terms"
+    "label": "Vendor terms",
+    "description": "available, but use is under a vendor's licence or terms"
    }
   ],
   "layers": [
    {
     "value": "application-message",
-    "label": "Application message"
+    "label": "Application message",
+    "description": "inside application-level messages (e.g. agent-to-agent messages)"
    },
    {
     "value": "http-body",
-    "label": "HTTP body"
+    "label": "HTTP body",
+    "description": "in the HTTP request body"
    },
    {
     "value": "http-header",
-    "label": "HTTP header"
+    "label": "HTTP header",
+    "description": "in HTTP request headers"
    },
    {
     "value": "metadata-document",
-    "label": "Metadata document"
+    "label": "Metadata document",
+    "description": "in a published document about the agent or client"
    },
    {
     "value": "other",
-    "label": "Other"
+    "label": "Other",
+    "description": ""
    },
    {
     "value": "token",
-    "label": "Token"
+    "label": "Token",
+    "description": "inside an access token or other token"
    },
    {
     "value": "transport",
-    "label": "Transport"
+    "label": "Transport",
+    "description": "at the connection level (e.g. TLS)"
    }
   ]
  },
@@ -4629,7 +4674,7 @@
      "pop-token",
      "signed-metadata"
     ],
-    "venue": "vendor",
+    "venue": "other-sdo",
     "maturity": "draft",
     "openness": "open-specification",
     "layers": [
@@ -5622,7 +5667,7 @@
    "notes": [
     "The receiving service is taken to be the merchant (which verifies the Checkout Mandate); rows mention the credential provider and payment processor where they are the verifier.",
     "AP2 v0.2 replaced the v0.1 Intent and Cart Mandates with Checkout and Payment Mandates; descriptions of v0.1 elsewhere do not apply.",
-    "The repository is still under google-agentic-commerce, while Google states that standardisation continues in the FIDO Alliance; venue is recorded as vendor for this version.",
+    "Venue is recorded as another standards body: Google donated AP2 to the FIDO Alliance, where standardisation continues in FIDO working groups. The v0.2 text analysed here is still published in Google's repository google-agentic-commerce/AP2.",
     "AP2 uses RFC 2119-style keywords but does not cite RFC 2119; requirement levels are taken as written."
    ],
    "open_questions": [
@@ -10161,6 +10206,995 @@
    "rubric_version": "2.1",
    "analysed_on": "2026-11-19",
    "protocol": {
+    "name": "OAuth 2.0 AI Agent Instance Profile",
+    "full_name": "OAuth 2.0 AI Agent Instance Profile (draft-mcguinness-oauth-ai-agent-instance)",
+    "spec_version": "draft-mcguinness-oauth-ai-agent-instance-00",
+    "spec_date": "2026-07-04",
+    "maintainer": "Karl McGuinness (independent), individual Internet-Draft aimed at the IETF OAuth working group",
+    "newer_version_note": "-00 is the only revision submitted to the IETF. The author's repository README (14 September 2026) marks it superseded and not being progressed, replaced by an agent federation profile together with Client Instance Identification (draft-mcguinness-oauth-client-instance-id). The successors were not analysed."
+   },
+   "profile": {
+    "id": "oauth-ai-agent-instance",
+    "category": "agent-authorization",
+    "secondary_categories": [
+     "attestation-provenance"
+    ],
+    "mechanisms": [
+     "pop-token"
+    ],
+    "venue": "ietf-individual",
+    "maturity": "proposal",
+    "openness": "open-standard",
+    "layers": [
+     "token",
+     "http-header"
+    ],
+    "building_blocks": [
+     "OAuth 2.0",
+     "RFC 6749",
+     "RFC 7519",
+     "RFC 8693",
+     "RFC 9449",
+     "RFC 8705",
+     "RFC 9068",
+     "RFC 7662",
+     "RFC 7009",
+     "RFC 9711",
+     "RFC 7591",
+     "RFC 8414",
+     "Client Instance Assertion (draft)",
+     "Attestation-Based Client Authentication (draft)",
+     "OAuth Entity Profiles (draft)",
+     "OAuth Actor Profile (draft)"
+    ],
+    "website": "https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/",
+    "first_published": "2026-07"
+   },
+   "review": {
+    "status": "draft",
+    "reviewed_by": "",
+    "reviewed_on": ""
+   },
+   "summary": [
+    "Many AI agent platforms register one OAuth client and run thousands of agent sessions under it, so a service receiving their access tokens sees only the platform, never the specific agent. The OAuth 2.0 AI Agent Instance Profile tries to fix this by giving each running agent instance its own attested identifier and carrying it into the access tokens that services receive. It is aimed at agent platforms, authorization servers and the APIs or MCP servers they call. It is an individual Internet-Draft by Karl McGuinness, version -00 from July 2026, with no named deployments, and the author has since marked it superseded and not being progressed.",
+    "It is a profile of a companion draft, the OAuth 2.0 Client Instance Assertion. An Agent Attester (usually the platform's control plane) signs evidence naming the instance (agent_instance_id), optionally its platform, model and runtime, and binds it to a key the instance holds. The authorization server checks this evidence and issues an access token that names the user in sub and the agent instance in act.sub, and that is bound to the instance's key (DPoP or mutual TLS, never a bearer token). Sub-agents get nested act chains through token exchange. The profile leaves agent permissions, contact channels and signals between services out, and its model claims are only as reliable as the Attester."
+   ],
+   "how_it_works": [
+    "The agent platform registers its OAuth client for the profile (ai_agent_instance_profile set to true) and names its Agent Attester, either in its instance_issuers client metadata or by agreement with an authorization server that trusts that Attester.",
+    "When the platform starts an agent instance (a session, task or runtime), the Agent Attester mints signed evidence for it: a unique agent_instance_id, optional agent_platform, agent_model and agent_runtime claims, and a cnf claim binding a key that only this instance holds.",
+    "The instance asks the authorization server for a token (e.g. redeeming an authorization code after the user approved the client), presenting the evidence and a DPoP proof. The authorization server checks the signature, the client binding, replay and possession of the bound key.",
+    "The authorization server issues a sender-constrained access token: sub names the user, act.sub names the agent instance with sub_profile ai_agent, and the model may be surfaced if local policy allows. For a self-acting agent the instance itself is sub.",
+    "The instance calls the resource server (e.g. an MCP server) with the token and a fresh proof of possession. The resource server validates both and can key policy, rate limits and audit records on the instance, not only on the platform.",
+    "If the instance spawns a sub-agent, the sub-agent exchanges the token while presenting its own evidence, producing a nested act chain. If an instance misbehaves, the authorization server can revoke all tokens for that one instance."
+   ],
+   "sources": [
+    {
+     "id": "spec",
+     "title": "OAuth 2.0 AI Agent Instance Profile, draft-mcguinness-oauth-ai-agent-instance-00",
+     "url": "https://datatracker.ietf.org/doc/draft-mcguinness-oauth-ai-agent-instance/00/",
+     "fetch_url": "https://raw.githubusercontent.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion/3a42e234c228f359bc8a4da5aa25b30f2d84cbc1/draft-mcguinness-oauth-ai-agent-instance.md",
+     "version": "-00 (repository tag draft-mcguinness-oauth-ai-agent-instance-00, commit 3a42e23)",
+     "date": "2026-07-04",
+     "kind": "primary"
+    },
+    {
+     "id": "cia",
+     "title": "OAuth 2.0 Client Instance Assertion, draft-mcguinness-oauth-client-instance-assertion-01 (CIA-CORE, normative base)",
+     "url": "https://datatracker.ietf.org/doc/draft-mcguinness-oauth-client-instance-assertion/01/",
+     "fetch_url": "https://raw.githubusercontent.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion/ccfebdf6563e108bc7752159222a122a066d049d/draft-mcguinness-oauth-client-instance-assertion.md",
+     "version": "-01 (repository tag draft-mcguinness-oauth-client-instance-assertion-01, commit ccfebdf)",
+     "date": "2026-06-23",
+     "kind": "primary"
+    },
+    {
+     "id": "readme",
+     "title": "Author's repository README (status of the drafts)",
+     "url": "https://github.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion",
+     "fetch_url": "https://raw.githubusercontent.com/mcguinness/draft-mcguinness-oauth-client-instance-assertion/3fd47b9675d6bfe124fa6effa77374f18797333a/README.md",
+     "version": "commit 3fd47b9",
+     "date": "2026-09-14",
+     "kind": "primary"
+    }
+   ],
+   "rows": [
+    {
+     "id": "summary",
+     "group": "What is it?",
+     "property": "Summary",
+     "short": "Per-agent-instance identity inside OAuth access tokens",
+     "answer": "An OAuth profile in which an attester signs an identifier for each running AI agent instance, so that the access tokens a service receives name that specific instance (and optionally its model), bound to a key only that instance holds.",
+     "rating": "n/a",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "",
+     "claims": [
+      {
+       "text": "The profile targets platforms where one client identifier covers many agent instances.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Abstract",
+       "quote": "This specification profiles the OAuth 2.0 Client Instance Assertion for AI agent deployments, where a single OAuth client identifier represents an agent platform running many concurrent agent instances.",
+       "check": "OK",
+       "check_fp": "8a08b39849"
+      },
+      {
+       "text": "The instance identity reaches access tokens and is bound to the instance's key.",
+       "type": "fact",
+       "source": "spec",
+       "section": "1. Introduction",
+       "quote": "sender-constrained to a key the instance holds.",
+       "check": "OK",
+       "check_fp": "23d84fa69d"
+      }
+     ]
+    },
+    {
+     "id": "use_cases",
+     "group": "What is it?",
+     "property": "Use cases",
+     "short": "Agent platforms calling APIs and MCP servers",
+     "answer": "AI agent platforms (hosted orchestrators, and also command-line or desktop agents) that call APIs or MCP servers through OAuth. The identity travels inside the OAuth access token, which the resource server validates itself on each request. The authorization server does most of the work: it checks the Attester's evidence at its token endpoint and decides what goes into the token.",
+     "rating": "n/a",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "",
+     "claims": [
+      {
+       "text": "Resource servers, including MCP servers, are the intended beneficiaries.",
+       "type": "fact",
+       "source": "spec",
+       "section": "1. Introduction",
+       "quote": "Resource servers receiving access tokens from these platforms see only the platform's `client_id`; this includes Model Context Protocol servers ({{MCP}}), which use OAuth for authorization.",
+       "check": "OK",
+       "check_fp": "1706d66eb0"
+      },
+      {
+       "text": "Local agents on end-user machines are covered.",
+       "type": "fact",
+       "source": "spec",
+       "section": "12. Local and Public-Client Agent Instances",
+       "quote": "command-line and desktop agents execute on end-user machines, typically as public clients ({{RFC6749}}) using the `authorization_code` grant with PKCE ({{RFC7636}}) and without a client-level credential.",
+       "check": "OK",
+       "check_fp": "d2402cb591"
+      },
+      {
+       "text": "The evidence is presented to the authorization server at its token endpoint.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3. Relationship to Other Specifications",
+       "quote": "conveying attested agent instance identity and provenance to the OAuth token endpoint, and representing that identity in issued access tokens.",
+       "check": "OK",
+       "check_fp": "c1f54cec28"
+      }
+     ]
+    },
+    {
+     "id": "actors",
+     "group": "What is it?",
+     "property": "Parties involved",
+     "short": "Platform, instance, Attester, AS, resource server, user",
+     "answer": "Agent: software, typically driven by a machine-learning model, that performs tasks by calling APIs. Agent Platform: the OAuth client under which agent instances run; it spawns, supervises and terminates them. Agent Instance: one specific agent session, task execution or runtime. Agent Attester: the authority that authenticates instances and mints their claims, usually the platform's control plane but possibly a separate party. The authorization server validates evidence and issues tokens; the resource server receives them; the user (or other principal) authorizes the client.",
+     "rating": "n/a",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "",
+     "claims": [
+      {
+       "text": "Definition of Agent.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Conventions and Definitions",
+       "quote": "An autonomous or semi-autonomous software actor, typically driven by a machine-learning model, that performs tasks by calling APIs, optionally on behalf of a user or another principal.",
+       "check": "OK",
+       "check_fp": "756cb31530"
+      },
+      {
+       "text": "Definition of Agent Platform.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Conventions and Definitions",
+       "quote": "The OAuth client under which agent instances run. The platform holds the client registration and operates the control plane that spawns, supervises, and terminates agent instances.",
+       "check": "OK",
+       "check_fp": "b9a9c38eb8"
+      },
+      {
+       "text": "Definition of Agent Instance.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Conventions and Definitions",
+       "quote": "A client instance ({{CIA-CORE}}) that is an agent: a specific agent session, task execution, or runtime.",
+       "check": "OK",
+       "check_fp": "da97b3ba38"
+      },
+      {
+       "text": "Definition of Agent Attester.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Conventions and Definitions",
+       "quote": "The authority that authenticates agent instances and mints the agent instance claims defined in {{agent-claims}}.",
+       "check": "OK",
+       "check_fp": "9e80bf2b86"
+      },
+      {
+       "text": "The worked example lists the user, client, Attester, authorization server and resource server.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Worked Example: Agent Calling an MCP Server",
+       "quote": "MCP resource server: `https://mcp.example.org` (fronting the project tracker)",
+       "check": "OK",
+       "check_fp": "43e11d2f42"
+      }
+     ]
+    },
+    {
+     "id": "status_adoption",
+     "group": "What is it?",
+     "property": "Status and adoption",
+     "short": "Individual draft -00, superseded, no deployments",
+     "answer": "Early proposal, now superseded. Version -00 (4 July 2026) is an individual Internet-Draft, not adopted by a working group, and the only revision submitted. In September 2026 the author's repository marked it superseded and not being progressed, pointing to an agent federation profile and Client Instance Identification instead. It also depends on drafts (Client Instance Assertion, Attestation-Based Client Authentication, Entity Profiles). No named deployment was found.",
+     "rating": "red",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "Red: an individual draft with no named deployments, now marked superseded by its author.",
+     "claims": [
+      {
+       "text": "The repository holds superseded individual drafts.",
+       "type": "fact",
+       "source": "readme",
+       "section": "OAuth Drafts",
+       "quote": "This repository retains superseded individual Internet-Drafts.",
+       "check": "OK",
+       "check_fp": "8431eb4b78"
+      },
+      {
+       "text": "The author marks this profile superseded.",
+       "type": "fact",
+       "source": "readme",
+       "section": "OAuth 2.0 AI Agent Instance Profile",
+       "quote": "Replaced by the agent federation profile together with Client Instance Identification below.",
+       "check": "OK",
+       "check_fp": "3d0ed67ae1"
+      },
+      {
+       "text": "Only -00 exists in the document history.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Document History",
+       "quote": "Initial version.",
+       "check": "OK",
+       "check_fp": "2d2745c6a5"
+      },
+      {
+       "text": "No implementation or deployment is named in the draft or found by web search.",
+       "type": "silent",
+       "source": "spec",
+       "section": "All sections; web search for the profile name and ai_agent_instance_profile",
+       "quote": ""
+      }
+     ]
+    },
+    {
+     "id": "building_blocks",
+     "group": "What is it?",
+     "property": "Building blocks",
+     "short": "OAuth, CIA-CORE, Token Exchange, DPoP, EAT",
+     "answer": "OAuth 2.0 (RFC 6749) with JWTs (RFC 7519). The companion draft OAuth 2.0 Client Instance Assertion (CIA-CORE) supplies token-endpoint processing, key binding, token format and revocation. Token Exchange (RFC 8693) provides the act claim for delegation chains; DPoP (RFC 9449) or mutual TLS (RFC 8705) bind tokens to a key. Attestation-Based Client Authentication (an OAuth working-group draft) is an alternative carrier, Entity Attestation Token (RFC 9711) carries runtime evidence, and the OAuth Entity Profiles draft supplies the ai_agent label.",
+     "rating": "n/a",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "",
+     "claims": [
+      {
+       "text": "CIA-CORE is the normative base.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3. Relationship to Other Specifications",
+       "quote": "This profile depends normatively on {{CIA-CORE}} for token-endpoint processing, sender-constraint binding, access-token representation, refresh-token semantics, and resource-server processing.",
+       "check": "OK",
+       "check_fp": "ca1dcec31d"
+      },
+      {
+       "text": "Delegation chains use RFC 8693.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3. Relationship to Other Specifications",
+       "quote": "Delegation-chain construction follows the `act` semantics of {{RFC8693}} as profiled by {{CIA-CORE}}.",
+       "check": "OK",
+       "check_fp": "243a0d7421"
+      },
+      {
+       "text": "The attestation carrier uses ATTEST-CLIENT-AUTH and DPoP.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3. Relationship to Other Specifications",
+       "quote": "When the Client Attestation carrier is used, it depends on {{ATTEST-CLIENT-AUTH}} for attestation validation, including DPoP combined mode ({{RFC9449}}).",
+       "check": "OK",
+       "check_fp": "baa5b2da5f"
+      },
+      {
+       "text": "Runtime evidence uses EAT.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3. Relationship to Other Specifications",
+       "quote": "Runtime-environment evidence is conveyed using the Entity Attestation Token ({{RFC9711}}) via the `agent_runtime` claim",
+       "check": "OK",
+       "check_fp": "463aeccda6"
+      }
+     ]
+    },
+    {
+     "id": "identifier",
+     "group": "Who is being identified?",
+     "property": "Identifier",
+     "short": "Attester-minted agent_instance_id per instance",
+     "answer": "Yes, per instance. Each agent instance gets an agent_instance_id, a string or URI minted by the Agent Attester (recommended to be a URL in the Attester's own namespace). It must be unique across everything that Attester attests, stable for the instance's lifetime, and not derived from a key, so it survives key rotation. The platform is still named separately by the OAuth client_id.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: the identifier names the individual agent instance; this differs from MCP Authorization, Web Bot Auth and TAP, which only name the client or provider.",
+     "claims": [
+      {
+       "text": "agent_instance_id identifies the instance and is minted by the Attester.",
+       "type": "fact",
+       "source": "spec",
+       "section": "4. Agent Instance Claims",
+       "quote": "A StringOrURI ({{RFC7519}}) identifying this agent instance, minted by the Agent Attester.",
+       "check": "OK",
+       "check_fp": "0a16311dbd"
+      },
+      {
+       "text": "Uniqueness is mandatory.",
+       "type": "fact",
+       "source": "spec",
+       "section": "4. Agent Instance Claims",
+       "quote": "The value MUST be unique among all instances attested by this Attester",
+       "check": "OK",
+       "check_fp": "3b958d9dcd"
+      },
+      {
+       "text": "The identifier is not a key.",
+       "type": "fact",
+       "source": "spec",
+       "section": "4. Agent Instance Claims",
+       "quote": "The value MUST NOT be derived from a proof-of-possession key: keys are binding material, not identity",
+       "check": "OK",
+       "check_fp": "455b8b88ea"
+      },
+      {
+       "text": "The platform remains identified by client_id.",
+       "type": "fact",
+       "source": "spec",
+       "section": "4. Agent Instance Claims",
+       "quote": "The value identifies software operated by the Agent Platform, not the OAuth client identity, which continues to be conveyed by `client_id`.",
+       "check": "OK",
+       "check_fp": "d485c25f24"
+      }
+     ]
+    },
+    {
+     "id": "instance_identifier",
+     "group": "Who is being identified?",
+     "property": "Agent instance identifier",
+     "short": "Yes, act.sub or sub in every token",
+     "answer": "Yes. For a client registered for the profile, the authorization server must require instance evidence and must put the instance identifier into every issued token: as act.sub when the agent acts for a user, or as sub when it acts for itself. Here an instance means a session, task execution or runtime, not an install. The client or authorization server may exempt grant types not used by agents (e.g. the platform's own client_credentials), and those tokens carry no instance.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: each instance has its own identifier and the service sees it in the token by default; the calibration examples are all red because they define none.",
+     "claims": [
+      {
+       "text": "The instance subject is surfaced in the token.",
+       "type": "fact",
+       "source": "spec",
+       "section": "8. Access Token Surfacing",
+       "quote": "Access-token representation follows {{CIA-CORE}}: the instance subject appears as `act.sub` in delegation cases and as top-level `sub` in self-acting cases",
+       "check": "OK",
+       "check_fp": "2450f15ccb"
+      },
+      {
+       "text": "Evidence is mandatory for registered clients.",
+       "type": "fact",
+       "source": "spec",
+       "section": "6. Client and Authorization Server Metadata",
+       "quote": "The AS MUST require Agent Instance Evidence on every token request from the client on the grants covered by {{CIA-CORE}}'s access-token classification",
+       "check": "OK",
+       "check_fp": "c41ee8ea51"
+      },
+      {
+       "text": "Some grant types can be exempted.",
+       "type": "fact",
+       "source": "spec",
+       "section": "6. Client and Authorization Server Metadata",
+       "quote": "The client's registration or AS policy MAY exempt designated grant types whose requests are not made by agent instances",
+       "check": "OK",
+       "check_fp": "4eee21bd66"
+      },
+      {
+       "text": "Instance means a session, task execution or runtime.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Conventions and Definitions",
+       "quote": "A client instance ({{CIA-CORE}}) that is an agent: a specific agent session, task execution, or runtime.",
+       "check": "OK",
+       "check_fp": "da97b3ba38"
+      }
+     ]
+    },
+    {
+     "id": "acting_for",
+     "group": "Who is being identified?",
+     "property": "Acting for (authority)",
+     "short": "Yes, the user in sub",
+     "answer": "Yes, when there is a user. The token's classification follows the grant: for an authorization code, JWT bearer or token exchange grant, the access token's sub must name the principal (e.g. the user who authorized the client) and the agent appears in act. For client_credentials there is no other principal and the agent instance itself is sub. The format of the user identifier is up to the authorization server.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: the base specification the profile normatively depends on requires the principal in sub for delegated tokens; MCP Authorization is red because it defines no such rule.",
+     "claims": [
+      {
+       "text": "Classification depends on the grant.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.6.1. Classification",
+       "quote": "The AS classifies the request based on whether the grant produces a principal distinct from the client instance presenting the Client Instance Assertion:",
+       "check": "OK",
+       "check_fp": "cc59c5ac1d"
+      },
+      {
+       "text": "The principal must be in sub for delegation.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.6.2. Delegation Case",
+       "quote": "The access token's `sub` MUST be the principal identified by the grant (e.g., the authenticated user).",
+       "check": "OK",
+       "check_fp": "3eda0c319e"
+      },
+      {
+       "text": "Self-acting tokens have no other principal.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.6.3. Self-Acting Case",
+       "quote": "When the request is classified as self-acting, the instance is the principal and there is no other party on whose behalf it acts.",
+       "check": "OK",
+       "check_fp": "d943737f85"
+      },
+      {
+       "text": "The worked example shows both the user and the instance in the token.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Worked Example: Agent Calling an MCP Server",
+       "quote": "\"`alice@example.com` via agent instance `sess-9f2c` (model `atlas` 7.3) updated issue 4711.\"",
+       "check": "OK",
+       "check_fp": "41f60bd447"
+      }
+     ]
+    },
+    {
+     "id": "credential_type",
+     "group": "Credential and validity",
+     "property": "Credential type",
+     "short": "Sender-constrained OAuth access token (DPoP/mTLS)",
+     "answer": "An OAuth access token that must be sender-constrained: bound through DPoP or mutual TLS to a key specific to that agent instance, so a stolen token alone cannot be used. Bearer tokens are forbidden under the profile. On each request the instance presents the token plus a proof of possession (a DPoP proof signed with its key, or the TLS client certificate). The token can be a JWT or an opaque token checked through introspection.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: a defined credential on every request that the service can verify, here with proof of possession (stronger than MCP Authorization's bearer token).",
+     "claims": [
+      {
+       "text": "Bearer tokens are not allowed.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.5. Sender-Constrained Access Tokens",
+       "quote": "The AS MUST NOT issue a bearer access token under this profile.",
+       "check": "OK",
+       "check_fp": "512cc698fb"
+      },
+      {
+       "text": "DPoP and mutual TLS are the binding mechanisms.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.5. Sender-Constrained Access Tokens",
+       "quote": "Established mechanisms include `DPoP` {{RFC9449}} and Mutual-TLS-bound access tokens {{RFC8705}}.",
+       "check": "OK",
+       "check_fp": "1c94e82617"
+      },
+      {
+       "text": "The key is per instance.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.5. Sender-Constrained Access Tokens",
+       "quote": "The binding key MUST be specific to the validated client instance.",
+       "check": "OK",
+       "check_fp": "76017af03a"
+      },
+      {
+       "text": "On the attestation carrier, tokens are DPoP-bound.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.2. Client Attestation Carrier",
+       "quote": "the issued access token MUST be DPoP-bound to that key.",
+       "check": "OK",
+       "check_fp": "73d17e47c5"
+      },
+      {
+       "text": "JWT or opaque tokens are both possible.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.6. Access Token Representation",
+       "quote": "JWT access tokens issued under this profile follow {{RFC9068}}; opaque (reference) access tokens carry the same set of claims through introspection",
+       "check": "OK",
+       "check_fp": "3c46b55a60"
+      }
+     ]
+    },
+    {
+     "id": "credential_lifetime",
+     "group": "Credential and validity",
+     "property": "Credential lifetime",
+     "short": "Short recommended, no number for tokens",
+     "answer": "Short is recommended, with no number for the token the service receives. The instance evidence presented to the authorization server SHOULD live five minutes or less, but the access-token lifetime is left to the authorization server; the profile only says it SHOULD be short relative to how often the platform upgrades models, where services gate on the model. No rule tells the resource server to reject long-lived tokens.",
+     "rating": "yellow",
+     "coverage": "optional",
+     "requirement": "SHOULD",
+     "rating_reason": "Yellow: recommended only, with no specific limit for the access token and no verifier rule (same as MCP Authorization).",
+     "claims": [
+      {
+       "text": "Short access tokens are recommended in one context.",
+       "type": "fact",
+       "source": "spec",
+       "section": "15.1. Attestation Freshness and Model Drift",
+       "quote": "ASes serving such resource servers SHOULD keep access-token lifetimes short relative to the deployment's model upgrade cadence.",
+       "check": "OK",
+       "check_fp": "08db45a450"
+      },
+      {
+       "text": "The evidence presented to the authorization server has a five-minute recommendation.",
+       "type": "fact",
+       "source": "cia",
+       "section": "7.2. JWT Claims",
+       "quote": "Issuers SHOULD set short lifetimes (e.g., five minutes or less)",
+       "check": "OK",
+       "check_fp": "18dc78a5be"
+      },
+      {
+       "text": "Searched: Searched 8.6 Access Token Representation, 9 Resource Server Processing, 12.2 Trust-Withdrawal Latency for an access-token maximum. No numeric access-token lifetime or verifier rule.",
+       "type": "silent",
+       "source": "cia",
+       "section": "Searched 8.6 Access Token Representation, 9 Resource Server Processing, 12.2 Trust-Withdrawal Latency for an access-token maximum",
+       "quote": ""
+      }
+     ]
+    },
+    {
+     "id": "validity",
+     "group": "Credential and validity",
+     "property": "Validity (credential validation)",
+     "short": "Yes, token plus proof of possession",
+     "answer": "Yes. The resource server validates the access token as an ordinary OAuth JWT access token (RFC 9068, which includes issuer, audience and expiry checks) or through introspection, and then checks the proof of possession against the token's cnf key. Introspection must report revoked tokens as inactive. All of this uses the service's own authorization server, with no prior relationship with the agent platform.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: the service validates the token through its own authorization server with expiry checks (same as MCP Authorization).",
+     "claims": [
+      {
+       "text": "Resource servers validate token and sender constraint.",
+       "type": "fact",
+       "source": "cia",
+       "section": "9. Resource Server Processing",
+       "quote": "including actor authorization, JWT access token validation, sender-constraint validation against the top-level `cnf`, and introspection.",
+       "check": "OK",
+       "check_fp": "0b35299127"
+      },
+      {
+       "text": "JWT access tokens follow RFC 9068.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.6. Access Token Representation",
+       "quote": "JWT access tokens issued under this profile follow {{RFC9068}}; opaque (reference) access tokens carry the same set of claims through introspection",
+       "check": "OK",
+       "check_fp": "3c46b55a60"
+      },
+      {
+       "text": "Introspection reflects revocation.",
+       "type": "fact",
+       "source": "cia",
+       "section": "12.4.3. Introspection Behavior on Revocation",
+       "quote": "an introspection response MUST return active = false for any access token that has been revoked under either model.",
+       "check": "OK",
+       "check_fp": "3e62da08e4"
+      }
+     ]
+    },
+    {
+     "id": "authentication",
+     "group": "Authentication and authorization",
+     "property": "Authentication of the agent or user",
+     "short": "Yes, per-instance key checked each request",
+     "answer": "Yes, for the agent instance. The token is bound to a key that belongs to that one instance, and the resource server verifies proof of possession of that key on each request, which the base specification says authenticates the instance. The link between the key and the agent_instance_id rests on the Attester, whose minting practice the authorization server cannot check in-band. The user is authenticated by the authorization server, not by the resource server.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: the service verifies a per-agent key on every request; the calibration examples are red because they only check a bearer token or a provider-level key.",
+     "claims": [
+      {
+       "text": "Proof of possession authenticates the instance.",
+       "type": "fact",
+       "source": "cia",
+       "section": "9. Resource Server Processing",
+       "quote": "the instance named in `act.sub` does, and sender-constraint validation authenticates that instance.",
+       "check": "OK",
+       "check_fp": "e3750b47c7"
+      },
+      {
+       "text": "The binding key is per instance.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.5. Sender-Constrained Access Tokens",
+       "quote": "The binding key MUST be specific to the validated client instance.",
+       "check": "OK",
+       "check_fp": "76017af03a"
+      },
+      {
+       "text": "The resource server checks the top-level cnf.",
+       "type": "fact",
+       "source": "cia",
+       "section": "12.10. Sender-Constraint Requirement",
+       "quote": "Per {{ACTOR-PROFILE}}, the resource server validates proof of possession against the access token's top-level `cnf` only",
+       "check": "OK",
+       "check_fp": "20e08dd02b"
+      },
+      {
+       "text": "Attester minting practice cannot be verified in-band.",
+       "type": "fact",
+       "source": "spec",
+       "section": "15.2. Instance Identifier Lifecycle",
+       "quote": "the AS verifies the evidence signature and claims but cannot verify in-band that the Attester's minting practice is sound.",
+       "check": "OK",
+       "check_fp": "60d69fa92b"
+      }
+     ]
+    },
+    {
+     "id": "authorization",
+     "group": "Authentication and authorization",
+     "property": "Scoped authorization",
+     "short": "OAuth scopes only; agent permissions out of scope",
+     "answer": "Partly. Tokens carry the normal OAuth scopes of the underlying grant, and when a sub-agent exchanges a token the scope can be narrowed at each hop under Token Exchange. The profile itself defines no agent capability or tool permissions and says fine-grained permissions come from Rich Authorization Requests (RFC 9396) or a deployment's own scope design. What it adds is per-instance identity, so a service can enforce its own limits per agent rather than per platform.",
+     "rating": "yellow",
+     "coverage": "default",
+     "requirement": "none",
+     "rating_reason": "Yellow: tokens carry ordinary OAuth scopes in the normal flow, but the profile defines no permissions of its own and puts agent permissions out of scope; chosen as the lower of yellow and green.",
+     "claims": [
+      {
+       "text": "Agent permissions are out of scope.",
+       "type": "out_of_scope",
+       "source": "spec",
+       "section": "1. Introduction",
+       "quote": "This profile does not define agent capability or tool-permission semantics; deployments expressing fine-grained agent permissions compose this profile with Rich Authorization Requests ({{RFC9396}}) or deployment-specific scope design.",
+       "check": "OK",
+       "check_fp": "59160a97ef"
+      },
+      {
+       "text": "Scope can be narrowed at each sub-agent exchange.",
+       "type": "fact",
+       "source": "spec",
+       "section": "9. Attested Delegation Chains",
+       "quote": "scope attenuation at each exchange follows {{RFC8693}}.",
+       "check": "OK",
+       "check_fp": "192ef2d737"
+      },
+      {
+       "text": "The profile makes enforcement per agent.",
+       "type": "fact",
+       "source": "spec",
+       "section": "15.9. Scope of Protection",
+       "quote": "this profile makes its enforcement and audit per-agent rather than per-platform.",
+       "check": "OK",
+       "check_fp": "a429f36c72"
+      },
+      {
+       "text": "The worked example shows scope narrowed at a sub-agent exchange.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Worked Example: Agent Calling an MCP Server",
+       "quote": "scope was attenuated to `projects.read` at the exchange.",
+       "check": "OK",
+       "check_fp": "c23a560894"
+      }
+     ]
+    },
+    {
+     "id": "human_approval",
+     "group": "Authentication and authorization",
+     "property": "Human approval",
+     "short": "Client-level consent only; per-instance approval optional",
+     "answer": "Partly. Where a user is involved (the authorization code grant), the user approves the client as a whole, and that consent covers every instance its Attesters vouch for. An authorization server MAY require approval for a specific instance or key when the request names a key (dpop_jkt), but a standard per-instance consent step would need a separate extension. Self-acting agents (client_credentials) involve no person at all.",
+     "rating": "yellow",
+     "coverage": "optional",
+     "requirement": "MAY",
+     "rating_reason": "Yellow: user consent exists only at client level through the underlying OAuth grant, and approval of the specific agent instance is optional; lower than MCP Authorization's green, whose own flow defines the approval step.",
+     "claims": [
+      {
+       "text": "Consent covers the client, not each instance.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.4. Authorization-Time Consistency",
+       "quote": "User consent under this profile applies to the client as a whole; consent thereby covers all instances attested by listed instance issuers.",
+       "check": "OK",
+       "check_fp": "66294f1922"
+      },
+      {
+       "text": "Per-instance approval is optional.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.4. Authorization-Time Consistency",
+       "quote": "An AS MAY require per-instance or per-key authorization policy when the authorization request includes a sender-constraining key such as `dpop_jkt`.",
+       "check": "OK",
+       "check_fp": "b9f034a200"
+      },
+      {
+       "text": "Standard per-instance consent needs another extension.",
+       "type": "fact",
+       "source": "cia",
+       "section": "8.4. Authorization-Time Consistency",
+       "quote": "Deployments requiring standardized per-instance consent without an authorization-time key mapping need a separate extension.",
+       "check": "OK",
+       "check_fp": "bd7320ea3e"
+      }
+     ]
+    },
+    {
+     "id": "trust",
+     "group": "Trust",
+     "property": "Trust (who vouches for the agent)",
+     "short": "Agent Attester, endorsed by client or AS",
+     "answer": "The Agent Attester vouches for each instance, and the authorization server only issues tokens for instances with valid evidence from an Attester it accepts. With the assertion carrier, the platform lists its Attesters in its client metadata; with the attestation carrier, the authorization server configures which Attesters it trusts. The draft names three assurance tiers: platform self-attestation (the usual case), hardware-rooted and independent attestation. Deployments must not present self-attestation as one of the stronger tiers.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: the protocol names the parties that vouch (Attester and authorization server), as MCP Authorization names its authorization server; the answer notes the usual tier is self-attestation.",
+     "claims": [
+      {
+       "text": "The authorization server trusts an assertion only through the matching issuer listed by the client.",
+       "type": "fact",
+       "source": "cia",
+       "section": "5.3.2. Authority of the Authorization Server",
+       "quote": "it derives its trust in an instance assertion solely from the descriptor whose issuer member matches the instance assertion's `iss` claim.",
+       "check": "OK",
+       "check_fp": "8686374e0f"
+      },
+      {
+       "text": "The client lists its Attester on the assertion carrier.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.1. Client Instance Assertion Carrier",
+       "quote": "the platform's client metadata lists the Agent Attester in `instance_issuers`, bounding which authority may attest its instances.",
+       "check": "OK",
+       "check_fp": "4859552a17"
+      },
+      {
+       "text": "The AS configures trust on the attestation carrier.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.2. Client Attestation Carrier",
+       "quote": "Trust for this carrier is the AS-to-Attester trust of {{ATTEST-CLIENT-AUTH}}; {{CIA-CORE}}'s `instance_issuers` metadata is not consulted.",
+       "check": "OK",
+       "check_fp": "f1218cc0db"
+      },
+      {
+       "text": "Platform self-attestation is the first tier.",
+       "type": "fact",
+       "source": "spec",
+       "section": "11. Trust Model and Assurance Tiers",
+       "quote": "The Attester is the agent platform's own control plane.",
+       "check": "OK",
+       "check_fp": "571ef6984c"
+      },
+      {
+       "text": "Tiers must not be misrepresented.",
+       "type": "fact",
+       "source": "spec",
+       "section": "11. Trust Model and Assurance Tiers",
+       "quote": "Deployments SHOULD document which tier their Attester provides and MUST NOT represent platform self-attestation as hardware-rooted or independent attestation.",
+       "check": "OK",
+       "check_fp": "db54bd31f8"
+      }
+     ]
+    },
+    {
+     "id": "revocation",
+     "group": "Response and accountability",
+     "property": "Revocation",
+     "short": "Per-instance revocation defined, SHOULD",
+     "answer": "Partly. The base specification defines per-token revocation (RFC 7009) and a per-instance mode, keyed on the Attester and instance identifier, that invalidates all of one agent's tokens without touching the platform's other agents. Authorization servers SHOULD support the per-instance mode, and introspection must then report those tokens inactive. How revocation is triggered is out of scope, and a resource server validating JWTs locally keeps accepting a revoked token until it expires.",
+     "rating": "yellow",
+     "coverage": "optional",
+     "requirement": "SHOULD",
+     "rating_reason": "Yellow: revocation is defined at instance granularity but is only recommended and reaches services that validate JWTs locally only at expiry; MCP Authorization is red because it defines none.",
+     "claims": [
+      {
+       "text": "Per-instance revocation is recommended.",
+       "type": "fact",
+       "source": "cia",
+       "section": "12.4.2. Per-Instance Revocation",
+       "quote": "ASes implementing this profile SHOULD support a per-instance revocation mode keyed by the pair (instance issuer, instance subject):",
+       "check": "OK",
+       "check_fp": "27148e5f91"
+      },
+      {
+       "text": "Revocation models are optional overall.",
+       "type": "fact",
+       "source": "cia",
+       "section": "12.4. Token Revocation",
+       "quote": "Both build on {{RFC7009}}; deployments MAY support either, both, or neither.",
+       "check": "OK",
+       "check_fp": "a5e4419966"
+      },
+      {
+       "text": "Triggering is out of scope.",
+       "type": "out_of_scope",
+       "source": "cia",
+       "section": "12.4.2. Per-Instance Revocation",
+       "quote": "The mechanism for triggering per-instance revocation is deployment-specific and out of scope for this document.",
+       "check": "OK",
+       "check_fp": "746232b407"
+      },
+      {
+       "text": "Latency depends on token TTL and introspection caching.",
+       "type": "fact",
+       "source": "cia",
+       "section": "12.4.2. Per-Instance Revocation",
+       "quote": "The compromise-to-all-tokens-invalid latency is bounded by the shortest of: the access token TTL, the introspection cache TTL at any consuming resource server",
+       "check": "OK",
+       "check_fp": "650ccf8101"
+      },
+      {
+       "text": "The worked example contains one agent without revoking the platform.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Worked Example: Agent Calling an MCP Server",
+       "quote": "containing one agent without revoking the platform's client registration.",
+       "check": "OK",
+       "check_fp": "21a7cb5dfb"
+      }
+     ]
+    },
+    {
+     "id": "contact_escalation",
+     "group": "Response and accountability",
+     "property": "Contact and escalation",
+     "short": "No contact channel defined",
+     "answer": "No. The profile defines no contact or escalation field. Its worked example has the MCP server report a misbehaving instance identifier so the platform can terminate the session, but it does not say through which channel or to whom. Any contact details would have to come from outside the protocol (e.g. the client's registration).",
+     "rating": "red",
+     "coverage": "none",
+     "requirement": "none",
+     "rating_reason": "Red: no contact field is defined (same as the three calibration examples).",
+     "claims": [
+      {
+       "text": "The example assumes reporting without a defined channel.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Worked Example: Agent Calling an MCP Server",
+       "quote": "If `sess-9f2c` misbehaves, the MCP server reports `act.sub`; the platform terminates the session",
+       "check": "OK",
+       "check_fp": "1fb93daf6d"
+      },
+      {
+       "text": "Searched: Searched all sections of both drafts for contact, abuse, support and escalation. No contact field in either draft.",
+       "type": "silent",
+       "source": "spec",
+       "section": "Searched all sections of both drafts for contact, abuse, support and escalation",
+       "quote": ""
+      }
+     ]
+    },
+    {
+     "id": "cross_party_signalling",
+     "group": "Monitoring and provenance",
+     "property": "Cross-party signalling",
+     "short": "No",
+     "answer": "No. The profile defines no way for one service to warn other services or authorization servers about a misbehaving agent instance. Chains across platforms are left to the trust and federation policy of the domains involved.",
+     "rating": "red",
+     "coverage": "none",
+     "requirement": "none",
+     "rating_reason": "Red: not addressed (same as the three calibration examples).",
+     "claims": [
+      {
+       "text": "Searched: Searched all sections of both drafts for signals, events, reputation, shared signals and reporting. No signals between services.",
+       "type": "silent",
+       "source": "spec",
+       "section": "Searched all sections of both drafts for signals, events, reputation, shared signals and reporting",
+       "quote": ""
+      },
+      {
+       "text": "Cross-domain matters are left to the domains.",
+       "type": "fact",
+       "source": "spec",
+       "section": "9. Attested Delegation Chains",
+       "quote": "this profile defines no additional cross-domain rules.",
+       "check": "OK",
+       "check_fp": "aef14844f1"
+      }
+     ]
+    },
+    {
+     "id": "model_identity",
+     "group": "Monitoring and provenance",
+     "property": "Model identity",
+     "short": "Optional attested agent_model claim",
+     "answer": "Optional. The Attester may include agent_model (a model identifier and optional version) in its signed evidence, and the authorization server MAY pass it on to services. It describes the instance's primary configured model, not each call. Under platform self-attestation it is the platform's own statement, and services must not treat it as independently verified. There is no registry of model identifiers.",
+     "rating": "yellow",
+     "coverage": "optional",
+     "requirement": "MAY",
+     "rating_reason": "Yellow: the model claim is defined but optional, and verifiable only to the extent the Attester tier allows; the calibration examples are red.",
+     "claims": [
+      {
+       "text": "agent_model describes the primary model.",
+       "type": "fact",
+       "source": "spec",
+       "section": "4. Agent Instance Claims",
+       "quote": "A JSON object characterizing the primary model configured for the agent instance, as determined by the Agent Attester at evidence issuance.",
+       "check": "OK",
+       "check_fp": "ec95a0a2c6"
+      },
+      {
+       "text": "Surfacing to services is optional.",
+       "type": "fact",
+       "source": "spec",
+       "section": "8. Access Token Surfacing",
+       "quote": "The AS MAY surface `agent_platform` and `agent_model` subject to local policy and the privacy considerations of {{security-privacy}}.",
+       "check": "OK",
+       "check_fp": "2a22478745"
+      },
+      {
+       "text": "Self-attested model claims are not independent verification.",
+       "type": "fact",
+       "source": "spec",
+       "section": "15.3. Provenance Assurance",
+       "quote": "Under platform self-attestation, a model claim is the platform's statement about itself; resource servers MUST NOT treat it as independently verified.",
+       "check": "OK",
+       "check_fp": "e956c7ce12"
+      },
+      {
+       "text": "No model registry.",
+       "type": "out_of_scope",
+       "source": "spec",
+       "section": "4. Agent Instance Claims",
+       "quote": "A registry of model identifiers is out of scope",
+       "check": "OK",
+       "check_fp": "4c935b5637"
+      }
+     ]
+    }
+   ],
+   "goals_reading": {
+    "access_control": "The service sees which agent instance, on which platform and for which user, holds a key-bound token with the grant's OAuth scopes, so it can apply its own per-agent rules (e.g. read-only for older models); agent permissions themselves are not defined.",
+    "incident_response": "Access can be cut off for one agent instance without affecting the platform's other agents, through per-instance revocation at the authorization server, but only promptly for services that use introspection; how revocation is triggered and how the service reports a problem are not defined.",
+    "accountability": "An action can be traced to the user, the platform (client_id) and the specific agent instance, including each sub-agent in a delegation chain, and optionally to the model; how much this is worth depends on the Attester, which is usually the platform itself."
+   },
+   "notes": [
+    "The analysed text was taken from the author's GitHub repository at the commit tagged for the -00 submission; the file on main is unchanged since then. Section numbers follow the published -00 numbering, derived from the order of headings in the source.",
+    "The author's README (commit 3fd47b9, 14 September 2026) marks this draft superseded and not being progressed. Its successor, draft-mcguinness-oauth-client-instance-id-01 (2 November 2026), was not analysed.",
+    "Most of what the resource server sees (token format, key binding, revocation, consent) comes from the normative companion draft draft-mcguinness-oauth-client-instance-assertion-01, which is counted as part of the protocol because the profile cannot be implemented without it. That draft itself relies on the OAuth Actor Profile draft for resource-server rules, which was not read.",
+    "The specification uses RFC 2119 keywords; requirement levels are quoted as written. No instructions aimed at AI tools were found in the sources."
+   ],
+   "open_questions": [
+    "Is the agent_instance_id rating (green) still valid for the successor drafts? The README says instance identification moved to an optional claims profile, which would likely lower it.",
+    "The OAuth Actor Profile draft defines the resource-server processing rules this profile inherits; it was not read, so whether a resource server MUST reject a token whose DPoP proof is missing was taken from CIA-CORE's summary rather than checked there.",
+    "The 'agent federation profile' named as a replacement in the README could not be located; its relationship to this draft is unclear.",
+    "Scoped authorization could reasonably be rated green (OAuth scopes are always present) or yellow (no agent-specific permissions); yellow was chosen under the tie rule."
+   ],
+   "_meta": {
+    "file": "oauth-ai-agent-instance.html",
+    "current": true,
+    "versions": 1
+   }
+  },
+  {
+   "schema_version": "2.1",
+   "rubric_version": "2.1",
+   "analysed_on": "2026-11-19",
+   "protocol": {
     "name": "Poppy",
     "full_name": "Personal Agent Protocol (Poppy)",
     "spec_version": "Personal Agent Protocol 1.0 (published, frozen), repository commit 589743a",
@@ -11298,6 +12332,1011 @@
    "rubric_version": "2.1",
    "analysed_on": "2026-11-19",
    "protocol": {
+    "name": "Transaction Tokens For Agents",
+    "full_name": "Transaction Tokens For Agents (draft-araut-oauth-transaction-tokens-for-agents), an extension of OAuth Transaction Tokens",
+    "spec_version": "draft-araut-oauth-transaction-tokens-for-agents-03, building on draft-ietf-oauth-transaction-tokens-11",
+    "spec_date": "2026-10-31",
+    "maintainer": "Ashay Raut (individual Internet-Draft); the base Transaction Tokens draft is maintained by the IETF OAuth working group (editors from CrowdStrike, Practical Identity and Defakto Security)",
+    "newer_version_note": "-03 is the latest revision. Earlier versions were published as draft-oauth-transaction-tokens-for-agents-00 to -06 before the April 2026 rename. For the base draft, -11 is the latest revision; its repository already holds later edits from working-group last call that were not analysed."
+   },
+   "profile": {
+    "id": "transaction-tokens-for-agents",
+    "category": "agent-authorization",
+    "secondary_categories": [
+     "workload-identity"
+    ],
+    "mechanisms": [
+     "bearer-token"
+    ],
+    "venue": "ietf-individual",
+    "maturity": "proposal",
+    "openness": "open-standard",
+    "layers": [
+     "http-header",
+     "token"
+    ],
+    "building_blocks": [
+     "Transaction Tokens (draft-ietf-oauth-transaction-tokens)",
+     "RFC 8693",
+     "RFC 7519",
+     "RFC 7515",
+     "RFC 9068",
+     "RFC 6749",
+     "RFC 8417"
+    ],
+    "website": "https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/",
+    "first_published": "2025-11"
+   },
+   "review": {
+    "status": "draft",
+    "reviewed_by": "",
+    "reviewed_on": ""
+   },
+   "summary": [
+    "Inside a company's systems, one request often passes through many internal services, and when an AI agent started it, the services deep in that chain usually cannot tell. OAuth Transaction Tokens, an IETF OAuth working-group draft, already give each internal service a short-lived signed token describing who the transaction is for and what it is for. Transaction Tokens For Agents is an individual draft by Ashay Raut (version -03, October 2026) that adds agent context to those tokens, so internal services can tell agent-driven calls from direct human calls and audit them. No deployment is named.",
+    "A single Transaction Token Service in the trust domain issues the tokens. The extension adds an agentic_ctx claim naming the agent that started the chain and the agent at the current hop, a hop count, and an optional minimum assurance level, and fixes how the user (sub) and the delegated agent (act) are carried. Each time an agent hands work on, it gets a replacement token: identity stays fixed, the hop count rises and permissions can only shrink. The tokens are bearer-style and stay inside one trust domain. Neither draft defines revocation, contact channels, model identity or a way for services to warn each other."
+   ],
+   "how_it_works": [
+    "A user asks an agent to do a task (or the agent starts on a schedule). The agent obtains an ordinary OAuth access token, through an authorization code flow for a user or client credentials when autonomous, and calls the trust domain's external endpoint (e.g. an API gateway).",
+    "The gateway sends that access token and its own credentials to the Transaction Token Service in an OAuth token-exchange request, asking for a Transaction Token with a narrow scope for this transaction.",
+    "The Transaction Token Service authenticates the gateway, validates the access token, checks (e.g. by looking up the client_id in an Agent Attribute Store) whether the caller is an agent, and issues a short-lived signed token: sub (the user, or the agent itself), act copied from the access token, scope, a transaction ID (txn) and agentic_ctx (proximate and originating agent, hop count 1).",
+    "Each internal service receives the token in the Txn-Token HTTP header, checks its signature, trust-domain audience and expiry, and applies its own policy (e.g. restrict agent chains, or refuse beyond a hop limit).",
+    "When an internal agent takes over and calls further services, it asks for a replacement token: sub, act, txn and the originating agent stay fixed, the proximate agent changes, the hop count rises, and scope and assurance level can only go down.",
+    "The Transaction Token Service logs each issuance and replacement, so the full agent chain for a transaction ID can be reconstructed after an incident."
+   ],
+   "sources": [
+    {
+     "id": "spec",
+     "title": "Transaction Tokens For Agents, draft-araut-oauth-transaction-tokens-for-agents-03",
+     "url": "https://datatracker.ietf.org/doc/draft-araut-oauth-transaction-tokens-for-agents/03/",
+     "fetch_url": "https://raw.githubusercontent.com/ashayraut/oauth-transactiontokens-for-agents/5a40b0abe1936d65d94205150f1d2d875c9083a8/draft-oauth-transaction-tokens-for-agents.md",
+     "version": "-03 (repository commit 5a40b0a)",
+     "date": "2026-10-31",
+     "kind": "primary"
+    },
+    {
+     "id": "txn",
+     "title": "Transaction Tokens, draft-ietf-oauth-transaction-tokens-11 (OAuth working group, base specification)",
+     "url": "https://datatracker.ietf.org/doc/draft-ietf-oauth-transaction-tokens/11/",
+     "fetch_url": "https://raw.githubusercontent.com/oauth-wg/oauth-transaction-tokens/146e47d47e9f0ee276033917aa2823298e05cc5f/draft-ietf-oauth-transaction-tokens.md",
+     "version": "-11 (repository commit 146e47d)",
+     "date": "2026-07-30",
+     "kind": "primary"
+    }
+   ],
+   "rows": [
+    {
+     "id": "summary",
+     "group": "What is it?",
+     "property": "Summary",
+     "short": "Agent chain context inside internal Transaction Tokens",
+     "answer": "An individual-draft extension of OAuth Transaction Tokens: inside one trust domain, the Transaction Token Service adds an agentic_ctx claim naming the originating and current agent, a hop count and an optional minimum assurance level, so every internal service in a call chain can see that agents were involved.",
+     "rating": "n/a",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "",
+     "claims": [
+      {
+       "text": "The extension defines agentic_ctx.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Abstract",
+       "quote": "The extension defines the `agentic_ctx` claim, a structured JWT claim that carries chain-level metadata required for multi-agent flow integrity.",
+       "check": "OK",
+       "check_fp": "ec991d2065"
+      },
+      {
+       "text": "Downstream workloads use Transaction Tokens for authorization.",
+       "type": "fact",
+       "source": "txn",
+       "section": "1. Introduction",
+       "quote": "Downstream workloads use Txn-tokens to apply authorization decisions based on this context within a specific transaction.",
+       "check": "OK",
+       "check_fp": "1f8b74eed8"
+      }
+     ]
+    },
+    {
+     "id": "use_cases",
+     "group": "What is it?",
+     "property": "Use cases",
+     "short": "Internal call chains within one trust domain",
+     "answer": "Internal service chains inside one organisation's trust domain (e.g. microservices and data stores) when a request was started by an AI agent, either an outside agent entering through an API gateway or internal agents handing work to each other. The token travels in its own Txn-Token HTTP header and every internal workload verifies it itself. It must not be accepted outside its trust domain; the base draft points to Identity and Authorization Chaining for crossing domains.",
+     "rating": "n/a",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "",
+     "claims": [
+      {
+       "text": "Typical chains start with a third-party agent and pass through internal agents.",
+       "type": "fact",
+       "source": "spec",
+       "section": "4. Multi-Agent Flows",
+       "quote": "In complex agentic workflows, a transaction often originates from a 3rd-party (3P) agent and propagates through one or more 1st-party (1P) agents within the local trust domain.",
+       "check": "OK",
+       "check_fp": "2be15d5c20"
+      },
+      {
+       "text": "Tokens travel in a dedicated HTTP header.",
+       "type": "fact",
+       "source": "txn",
+       "section": "12.1. \"Txn-Token\" HTTP Header",
+       "quote": "A workload that invokes another workload using HTTP and needs to present a Txn-Token to the invoked workload MUST use the HTTP Header \"Txn-Token\" to communicate the Txn-Token in the HTTP Request.",
+       "check": "OK",
+       "check_fp": "bfcbac4649"
+      },
+      {
+       "text": "Tokens are bound to one trust domain.",
+       "type": "fact",
+       "source": "txn",
+       "section": "9.2. JWT Body Claims",
+       "quote": "A Txn-Token MUST NOT be accepted outside the Trust Domain identified by the `aud` claim.",
+       "check": "OK",
+       "check_fp": "99c9974278"
+      },
+      {
+       "text": "Crossing trust domains uses Identity Chaining.",
+       "type": "fact",
+       "source": "txn",
+       "section": "14. Preserving transaction context across Trust Domains",
+       "quote": "it SHOULD use OAuth Identity and Authorization Chaining Across Domains {{I-D.ietf-oauth-identity-chaining}}.",
+       "check": "OK",
+       "check_fp": "df1efbc69a"
+      }
+     ]
+    },
+    {
+     "id": "actors",
+     "group": "What is it?",
+     "property": "Parties involved",
+     "short": "Agent, gateway, Token Service, Attribute Store, workloads",
+     "answer": "Human subject: the user who starts a task (absent in autonomous flows). Agent application: external (3P) or internal (1P), split into an inference layer that runs the model and an infrastructure layer that handles tokens. External endpoint: the published interface (e.g. an API gateway) that first receives the request. Transaction Token Service (TTS): issues and replaces tokens, one per trust domain. Agent Attribute Store: a logical role recording which workloads are agents and their attributes. Workloads and resource servers: receive and check tokens.",
+     "rating": "n/a",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "",
+     "claims": [
+      {
+       "text": "Definition of the Transaction Token Service.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Terminology",
+       "quote": "A special service within the Trust Domain that issues Txn-Tokens to requesting workloads.",
+       "check": "OK",
+       "check_fp": "a7062b8083"
+      },
+      {
+       "text": "Definition of the Agent Attribute Store.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Terminology",
+       "quote": "A logical role — not a defined protocol interface — that MAY be realized as an agent registry, service catalog, policy engine, or any equivalent mechanism accessible within the trust domain.",
+       "check": "OK",
+       "check_fp": "a5cc11a257"
+      },
+      {
+       "text": "Definition of the external endpoint.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Terminology",
+       "quote": "A published interface to a Trust Domain that results in the invocation of a workload within the Trust Domain.",
+       "check": "OK",
+       "check_fp": "f9dd0df950"
+      },
+      {
+       "text": "Definition of the inference layer.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Terminology",
+       "quote": "The component of an agent system that runs the AI model (e.g., an LLM), processes inputs, generates plans, and produces tool calls or outputs.",
+       "check": "OK",
+       "check_fp": "38f29295fe"
+      },
+      {
+       "text": "Definition of the infrastructure layer.",
+       "type": "fact",
+       "source": "spec",
+       "section": "2. Terminology",
+       "quote": "The component of an agent system that executes tool calls, manages network I/O, enforces security policies, and interacts with external services including the Transaction Token Service.",
+       "check": "OK",
+       "check_fp": "c3e48d56b0"
+      }
+     ]
+    },
+    {
+     "id": "status_adoption",
+     "group": "What is it?",
+     "property": "Status and adoption",
+     "short": "Individual draft -03, no deployments",
+     "answer": "Early proposal. The extension is an individual, Informational Internet-Draft at version -03 (31 October 2026), not adopted by a working group; it was first published in November 2025 under the name draft-oauth-transaction-tokens-for-agents. Its base, Transaction Tokens, is an OAuth working-group draft at -11 and not yet an RFC. No named deployment of the agent extension was found.",
+     "rating": "red",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "Red: an individual draft with no named deployments, built on a base that is itself still a draft.",
+     "claims": [
+      {
+       "text": "Document name and revision.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Front matter",
+       "quote": "docname: draft-araut-oauth-transaction-tokens-for-agents-03",
+       "check": "OK",
+       "check_fp": "24acad3afb"
+      },
+      {
+       "text": "The base draft is a working-group document.",
+       "type": "fact",
+       "source": "txn",
+       "section": "Front matter",
+       "quote": "wg: oauth",
+       "check": "OK",
+       "check_fp": "f85e3c22e1"
+      },
+      {
+       "text": "Searched all sections of both drafts, and the web for agentic_ctx implementations; no implementation or deployment is named.",
+       "type": "silent",
+       "source": "spec",
+       "section": "All sections",
+       "quote": ""
+      }
+     ]
+    },
+    {
+     "id": "building_blocks",
+     "group": "What is it?",
+     "property": "Building blocks",
+     "short": "Transaction Tokens, Token Exchange, JWT/JWS",
+     "answer": "OAuth Transaction Tokens (draft-ietf-oauth-transaction-tokens) is the base: it defines the token, its claims, the Transaction Token Service and the Txn-Token header. Tokens are requested through OAuth 2.0 Token Exchange (RFC 8693), which also defines the act claim the extension reuses. Tokens are JWTs (RFC 7519) signed with JWS (RFC 7515); incoming access tokens follow RFC 9068; the transaction ID comes from Security Event Tokens (RFC 8417). The extension defines no new token or grant types.",
+     "rating": "n/a",
+     "coverage": "n/a",
+     "requirement": "none",
+     "rating_reason": "",
+     "claims": [
+      {
+       "text": "The extension reuses act and sub.",
+       "type": "fact",
+       "source": "spec",
+       "section": "Abstract",
+       "quote": "It does not define new token types or grant types; it operates entirely within the existing Transaction Token issuance and replacement mechanisms defined by the base specification.",
+       "check": "OK",
+       "check_fp": "3e204a2cdd"
+      },
+      {
+       "text": "Token requests use RFC 8693.",
+       "type": "fact",
+       "source": "txn",
+       "section": "5.1. Creation",
+       "quote": "If the transaction token request is made via HTTP to a remote server, it MUST use {{RFC8693}} as described in this specification.",
+       "check": "OK",
+       "check_fp": "ae51a0d8a4"
+      },
+      {
+       "text": "Tokens are JWS-signed JWTs.",
+       "type": "fact",
+       "source": "txn",
+       "section": "9. Txn-Token Format",
+       "quote": "A Txn-Token is a JSON Web Token {{RFC7519}} protected by a JSON Web Signature {{RFC7515}}.",
+       "check": "OK",
+       "check_fp": "b780276dff"
+      },
+      {
+       "text": "The txn claim comes from RFC 8417.",
+       "type": "fact",
+       "source": "txn",
+       "section": "9.2. JWT Body Claims",
+       "quote": "REQUIRED A unique transaction identifier as defined in Section 2.2 of {{RFC8417}}.",
+       "check": "OK",
+       "check_fp": "544d20a1fc"
+      }
+     ]
+    },
+    {
+     "id": "identifier",
+     "group": "Who is being identified?",
+     "property": "Identifier",
+     "short": "Agent ID from act.sub or client_id",
+     "answer": "Partly, and only when the caller is recognised as an agent. The Transaction Token Service then adds agentic_ctx with proximate_agent.id (the agent at the current hop) and originator.id (the agent that started the chain). The value comes from the access token's act.sub, an Agent Attribute Store lookup or the OAuth client_id, in that order, so it names the agent as a client or registered agent, shared by all its running copies. How agents are recognised is left to each deployment.",
+     "rating": "yellow",
+     "coverage": "optional",
+     "requirement": "MAY",
+     "rating_reason": "Yellow: the identifier names the agent application or client, shared by its instances (same as MCP Authorization), and the claim carrying it is optional.",
+     "claims": [
+      {
+       "text": "Where the agent identifier comes from.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5.1. Normative Fields",
+       "quote": "At initial issuance, the TTS sets this field to the agent identifier derived from the access token (via `act.sub`, Agent Attribute Store lookup, or `client_id` — in that priority order).",
+       "check": "OK",
+       "check_fp": "bdbd08008f"
+      },
+      {
+       "text": "agentic_ctx is optional overall.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5. Agentic Context",
+       "quote": "The Txn-Token MAY contain an `agentic_ctx` claim.",
+       "check": "OK",
+       "check_fp": "19f075915a"
+      },
+      {
+       "text": "It is mandatory once the caller is identified as a registered agent.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.6.1. Identification Mechanisms",
+       "quote": "The TTS MUST populate the `agentic_ctx` claim with at minimum the normative fields defined in Section 3.6.1.",
+       "check": "OK",
+       "check_fp": "b7ec9ef290"
+      },
+      {
+       "text": "Agent identification is deployment-defined.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.6.1. Identification Mechanisms",
+       "quote": "The specific mechanism for agent identification is deployment-defined.",
+       "check": "OK",
+       "check_fp": "94c37ae360"
+      }
+     ]
+    },
+    {
+     "id": "instance_identifier",
+     "group": "Who is being identified?",
+     "property": "Agent instance identifier",
+     "short": "Optional, self-asserted session_id only",
+     "answer": "Partly. agentic_ctx can carry an optional session_id for the current and for the originating agent, identifying that agent's session as known to its own runtime (e.g. assigned by its framework or SDK). The value is self-asserted by the agent's infrastructure and unverified, and services and the Transaction Token Service must not use it for authorization. Its purpose is correlation: matching a transaction to the agent team's own logs during an investigation.",
+     "rating": "yellow",
+     "coverage": "optional",
+     "requirement": "MAY",
+     "rating_reason": "Yellow: a per-session identifier for the running agent is defined but optional and unverified; the calibration examples are red because they define none. Red could be argued because the value is self-asserted (see open questions).",
+     "claims": [
+      {
+       "text": "session_id identifies the agent's runtime session.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5.1. Normative Fields",
+       "quote": "A string identifying the session of the proximate agent as known to that agent's own runtime or infrastructure",
+       "check": "OK",
+       "check_fp": "e50202459f"
+      },
+      {
+       "text": "It is self-asserted.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5.1. Normative Fields",
+       "quote": "This field is self-asserted by the agent's infrastructure layer and is therefore informational only.",
+       "check": "OK",
+       "check_fp": "7215de3771"
+      },
+      {
+       "text": "It must not be used for authorization.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5.1. Normative Fields",
+       "quote": "Resource Servers and the TTS MUST NOT use this field as an authorization criterion.",
+       "check": "OK",
+       "check_fp": "33e00fccfe"
+      },
+      {
+       "text": "It is unverified.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.15. Agent Session Identifiers",
+       "quote": "Because these fields cannot be verified by the TTS or Resource Servers, a malicious agent could report a fabricated or another session's identifier.",
+       "check": "OK",
+       "check_fp": "e3358ffba5"
+      }
+     ]
+    },
+    {
+     "id": "acting_for",
+     "group": "Who is being identified?",
+     "property": "Acting for (authority)",
+     "short": "Yes, sub names the principal",
+     "answer": "Yes. Every Transaction Token must carry sub, the principal of the transaction: the user in a user-initiated flow, or typically the agent itself when it runs autonomously. When the original access token shows delegation, its act claim (the agent acting for the user) is copied into the token and can never be changed along the chain. The sub value is unique within the trust domain; its format is up to the Transaction Token Service.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: the principal is a required claim the service receives in every token; MCP Authorization is red because it defines none.",
+     "claims": [
+      {
+       "text": "sub is required and names the principal.",
+       "type": "fact",
+       "source": "txn",
+       "section": "9.2. JWT Body Claims",
+       "quote": "REQUIRED This claim represents the principal of the transaction as defined by Section 4.1.2 of {{RFC7519}}.",
+       "check": "OK",
+       "check_fp": "6dd81f47c1"
+      },
+      {
+       "text": "In autonomous flows sub usually names the agent.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.2.2. Autonomous Flow",
+       "quote": "For autonomous agents, the `sub` claim is determined based on the `subject_token` provided in the request, which typically represents the agent's own identity.",
+       "check": "OK",
+       "check_fp": "d7ca8172b7"
+      },
+      {
+       "text": "act is copied from the access token.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.2.1. Subject-Initiated Flow",
+       "quote": "If the access token contains an `act` claim, the Txn-Token Service copies the `act` claim value to the Txn-Token's `act` field.",
+       "check": "OK",
+       "check_fp": "fffeb85c73"
+      },
+      {
+       "text": "act is immutable.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.3.1. Replacement When Caller is Identified as an Agent",
+       "quote": "The `act` claim is immutable throughout the entire transaction lifetime.",
+       "check": "OK",
+       "check_fp": "3253da4728"
+      }
+     ]
+    },
+    {
+     "id": "credential_type",
+     "group": "Credential and validity",
+     "property": "Credential type",
+     "short": "Signed JWT in Txn-Token header, not bound",
+     "answer": "A Transaction Token: a short-lived JWT signed by the Transaction Token Service, sent in its own Txn-Token HTTP header (not the Authorization header) on each call between workloads. The signature covers all claims (subject, scope, transaction ID, context and agentic_ctx), so they cannot be altered along the chain. It is not bound to the sender: the base draft says it is not resistant to replay, and it must not be used to authenticate a workload.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: a defined credential on every call that the service can verify; the answer notes it is not proof of possession (as for MCP Authorization's bearer token).",
+     "claims": [
+      {
+       "text": "Dedicated header is mandatory.",
+       "type": "fact",
+       "source": "txn",
+       "section": "12.1. \"Txn-Token\" HTTP Header",
+       "quote": "A workload that invokes another workload using HTTP and needs to present a Txn-Token to the invoked workload MUST use the HTTP Header \"Txn-Token\" to communicate the Txn-Token in the HTTP Request.",
+       "check": "OK",
+       "check_fp": "bfcbac4649"
+      },
+      {
+       "text": "Tokens are signed for integrity.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.3. Subject Context Protection",
+       "quote": "Txn-Tokens are cryptographically signed to ensure integrity.",
+       "check": "OK",
+       "check_fp": "2098e52a84"
+      },
+      {
+       "text": "No replay resistance.",
+       "type": "fact",
+       "source": "txn",
+       "section": "13.1. Txn-Token Replay Risks",
+       "quote": "A Txn-Token is not resistant to replay attacks.",
+       "check": "OK",
+       "check_fp": "97317e3609"
+      },
+      {
+       "text": "Not an authentication credential.",
+       "type": "fact",
+       "source": "txn",
+       "section": "13.12. Transaction Tokens Are Not Authentication Credentials",
+       "quote": "A workload MUST NOT use a transaction token to authenticate itself to another workload, service or the TTS.",
+       "check": "OK",
+       "check_fp": "c5e75ade3e"
+      }
+     ]
+    },
+    {
+     "id": "credential_lifetime",
+     "group": "Credential and validity",
+     "property": "Credential lifetime",
+     "short": "Minutes expected, no enforced maximum",
+     "answer": "Short, but with no enforced maximum. The base draft expects tokens to live on the order of minutes or less and says their lifetime MUST be kept short; every receiving workload must reject expired tokens. There is no maximum for verifiers to enforce, and the Transaction Token Service may issue replacement tokens that outlive the input token if its policy allows. The agent extension only adds that implementations must enforce strict lifetime validation.",
+     "rating": "yellow",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Yellow: a short lifetime is required of the issuer but stated only as 'on the order of minutes', with no maximum that verifiers must enforce; lower than Visa TAP's green (8-minute verifier rule), chosen under the tie rule.",
+     "claims": [
+      {
+       "text": "Expected lifetime is minutes or less.",
+       "type": "fact",
+       "source": "txn",
+       "section": "6. Txn-Token Lifetime",
+       "quote": "Txn-Tokens are expected to be short-lived (on the order of minutes or less), and as a result MUST be used only for the expected duration of an external or internal invocation.",
+       "check": "OK",
+       "check_fp": "06d97ec5e9"
+      },
+      {
+       "text": "Lifetime must be kept short.",
+       "type": "fact",
+       "source": "txn",
+       "section": "13.1. Txn-Token Replay Risks",
+       "quote": "For this reason, a Txn-Token lifetime MUST be kept short and follow the guidance given in {{txn-token-lifetime}}.",
+       "check": "OK",
+       "check_fp": "47d3dec414"
+      },
+      {
+       "text": "Replacement can extend lifetime.",
+       "type": "fact",
+       "source": "txn",
+       "section": "13.15. Txn-Token as a subject_token",
+       "quote": "MAY issue a replacement Txn-Token with a lifetime exceeding the lifetime of the input Txn-Token, subject to the policy of the TTS.",
+       "check": "OK",
+       "check_fp": "6ad4c4b3ae"
+      },
+      {
+       "text": "The extension requires strict lifetime validation.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.1. Token Replay Protection",
+       "quote": "Implementations MUST enforce strict token lifetime validation.",
+       "check": "OK",
+       "check_fp": "55ffcc9e75"
+      }
+     ]
+    },
+    {
+     "id": "validity",
+     "group": "Credential and validity",
+     "property": "Validity (credential validation)",
+     "short": "Yes, signature, audience and expiry",
+     "answer": "Yes, within the trust domain. Each receiving workload must check the token's signature, that its aud claim names the workload's own trust domain, and that it has not expired; the agent extension repeats that services must verify the signature before using any claim. The token is signed by the domain's single Transaction Token Service, whose signing keys are often known in advance; how they are distributed is not specified.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: the service validates the token against its own trust domain's issuer with expiry checks (same as MCP Authorization).",
+     "claims": [
+      {
+       "text": "Signature check is mandatory.",
+       "type": "fact",
+       "source": "txn",
+       "section": "12.2. Txn-Token Validation",
+       "quote": "Validate the Txn-Token JWS signature.",
+       "check": "OK",
+       "check_fp": "4aa17b8058"
+      },
+      {
+       "text": "Audience check is mandatory.",
+       "type": "fact",
+       "source": "txn",
+       "section": "12.2. Txn-Token Validation",
+       "quote": "Verify the `aud` claim identifies the Trust Domain of the workload.",
+       "check": "OK",
+       "check_fp": "8051e03013"
+      },
+      {
+       "text": "Expiry check is mandatory.",
+       "type": "fact",
+       "source": "txn",
+       "section": "12.2. Txn-Token Validation",
+       "quote": "Verify the Txn-Token is not expired.",
+       "check": "OK",
+       "check_fp": "867a6a96b7"
+      },
+      {
+       "text": "The extension repeats the signature requirement.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.4. Transaction Chain Integrity",
+       "quote": "Services MUST verify the cryptographic signature of every Txn-Token before processing its claims.",
+       "check": "OK",
+       "check_fp": "0fe24bf366"
+      },
+      {
+       "text": "Signing keys are often known in advance.",
+       "type": "fact",
+       "source": "txn",
+       "section": "9.2. JWT Body Claims",
+       "quote": "is not required as Txn-Tokens are bound to a single Trust Domain as defined by the `aud` claim and often the signing keys are known.",
+       "check": "OK",
+       "check_fp": "36b46fd89d"
+      }
+     ]
+    },
+    {
+     "id": "authentication",
+     "group": "Authentication and authorization",
+     "property": "Authentication of the agent or user",
+     "short": "No, checks a token issued by the TTS",
+     "answer": "No. A receiving service checks a token issued by the Transaction Token Service, and the base draft forbids using these tokens to authenticate a workload. The Transaction Token Service authenticates the workload that requests each token, and the extension requires mutually authenticated channels between components, but these authenticate the immediate caller (often a gateway), which the drafts do not link to the agent named in agentic_ctx. The user signs in at the original OAuth authorization server, outside this protocol.",
+     "rating": "red",
+     "coverage": "outside",
+     "requirement": "none",
+     "rating_reason": "Red: the service only checks a token issued elsewhere, and channel authentication covers the immediate caller rather than the agent (same as MCP Authorization).",
+     "claims": [
+      {
+       "text": "Tokens are not authentication credentials.",
+       "type": "fact",
+       "source": "txn",
+       "section": "13.12. Transaction Tokens Are Not Authentication Credentials",
+       "quote": "A workload MUST NOT use a transaction token to authenticate itself to another workload, service or the TTS.",
+       "check": "OK",
+       "check_fp": "c5e75ade3e"
+      },
+      {
+       "text": "The TTS authenticates the requesting workload.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.8. Infrastructure Security",
+       "quote": "The TTS MUST authenticate the requesting workload before issuing or replacing a Txn-Token, using the access token presented in the exchange request.",
+       "check": "OK",
+       "check_fp": "25fe12fbaf"
+      },
+      {
+       "text": "Channels between components are mutually authenticated.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.8. Infrastructure Security",
+       "quote": "All component communications MUST use mutually authenticated, encrypted channels (e.g., TLS with certificate validation).",
+       "check": "OK",
+       "check_fp": "d84dd7c2f9"
+      },
+      {
+       "text": "User sign-in happens in an ordinary OAuth flow before the protocol.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.2.1. Subject-Initiated Flow",
+       "quote": "The agent application authenticates using an OAuth 2.0 Authorization Code flow",
+       "check": "OK",
+       "check_fp": "39fdb8a819"
+      },
+      {
+       "text": "Searched 3.5 Agentic Context, 3.6 Agent Identification and 5.8 Infrastructure Security for a rule tying the caller's channel identity to proximate_agent.id: No link between the channel identity and agentic_ctx.",
+       "type": "silent",
+       "source": "spec",
+       "section": "Searched 3.5 Agentic Context, 3.6 Agent Identification and 5.8 Infrastructure Security for a rule tying the caller's channel identity to proximate_agent.id",
+       "quote": ""
+      }
+     ]
+    },
+    {
+     "id": "authorization",
+     "group": "Authentication and authorization",
+     "property": "Scoped authorization",
+     "short": "Yes, narrow scope, only attenuated",
+     "answer": "Yes. Every token carries a required scope describing the narrow purpose of the transaction, and usually a tctx object with immutable transaction details (e.g. action, ticker and quantity of a trade). Scope can only be narrowed when a token is replaced, never widened, and the extension adds a hop count that services should check against a maximum. Scope values and how each service turns them into a decision are left to the deployment.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: scoped permissions are required in every token and the service can enforce them (same as MCP Authorization).",
+     "claims": [
+      {
+       "text": "scope is a required claim.",
+       "type": "fact",
+       "source": "txn",
+       "section": "9.2. JWT Body Claims",
+       "quote": "REQUIRED The scope claim is defined in {{Section 4.2 of RFC8693}}.",
+       "check": "OK",
+       "check_fp": "36db52eb32"
+      },
+      {
+       "text": "scope is the narrow purpose of the transaction.",
+       "type": "fact",
+       "source": "txn",
+       "section": "9.2.1. Scope claim",
+       "quote": "The `scope` claim captures, as narrowly as possible, the purpose of this particular transaction.",
+       "check": "OK",
+       "check_fp": "24282de90a"
+      },
+      {
+       "text": "tctx carries immutable transaction details.",
+       "type": "fact",
+       "source": "txn",
+       "section": "9.2. JWT Body Claims",
+       "quote": "RECOMMENDED A JSON object that contains values that remain immutable throughout the Call Chain.",
+       "check": "OK",
+       "check_fp": "e268e2a148"
+      },
+      {
+       "text": "Scope can only be attenuated.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.5. AI Agent Specific Controls",
+       "quote": "Implementations MUST enforce the `scope` attenuation rules defined in Section 3.4.1, ensuring agent operations cannot exceed the scopes granted at initial token issuance.",
+       "check": "OK",
+       "check_fp": "7f00eceaef"
+      },
+      {
+       "text": "Services should check the hop count.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5.1. Normative Fields",
+       "quote": "Resource Servers SHOULD evaluate this value against deployment-defined maximum hop limits when making authorization decisions.",
+       "check": "OK",
+       "check_fp": "7ae406ed68"
+      },
+      {
+       "text": "The decision itself is left to the service.",
+       "type": "fact",
+       "source": "txn",
+       "section": "12.2. Txn-Token Validation",
+       "quote": "How the workload determines this authorization is out of scope for this specification.",
+       "check": "OK",
+       "check_fp": "985aa5d0b2"
+      }
+     ]
+    },
+    {
+     "id": "human_approval",
+     "group": "Authentication and authorization",
+     "property": "Human approval",
+     "short": "No, outside the protocol",
+     "answer": "No. The protocol has no approval step; it addresses agents that act across multi-step workflows without human oversight at each step. In the user-initiated flow the agent first gets an ordinary OAuth access token through an authorization code flow, where the user may consent, but that happens at the authorization server, before and outside the token exchange. The only approval the extension mentions is by software: the agent's infrastructure layer must check model output before using it in a token request.",
+     "rating": "red",
+     "coverage": "outside",
+     "requirement": "none",
+     "rating_reason": "Red: any user approval happens outside the protocol (same as Visa TAP).",
+     "claims": [
+      {
+       "text": "Agents act without per-step human oversight.",
+       "type": "fact",
+       "source": "spec",
+       "section": "1. Introduction",
+       "quote": "AI agents operate autonomously across multi-step workflows, making tool calls and accessing data stores without direct human oversight at each step.",
+       "check": "OK",
+       "check_fp": "98011dc2fe"
+      },
+      {
+       "text": "User sign-in is an earlier OAuth flow.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.2.1. Subject-Initiated Flow",
+       "quote": "The agent application authenticates using an OAuth 2.0 Authorization Code flow",
+       "check": "OK",
+       "check_fp": "39fdb8a819"
+      },
+      {
+       "text": "Approval of model output is by the infrastructure layer.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.7. Token Exchange Isolation",
+       "quote": "The LLM's output MUST NOT be used as direct input to Txn-Token exchange requests without validation and approval by the infrastructure layer.",
+       "check": "OK",
+       "check_fp": "05848ee669"
+      }
+     ]
+    },
+    {
+     "id": "trust",
+     "group": "Trust",
+     "property": "Trust (who vouches for the agent)",
+     "short": "The trust domain's Transaction Token Service",
+     "answer": "The trust domain's Transaction Token Service. There is exactly one logical service per trust domain; it decides which workloads may obtain tokens and with what content, and services accept only tokens signed for their domain. With the extension it also decides which callers count as agents, usually through an Agent Attribute Store whose posture and provenance attributes must come from the domain's deployment pipelines, not from the agents. Outside agents get only the context the domain's policy allows for unverified external actors.",
+     "rating": "green",
+     "coverage": "required",
+     "requirement": "MUST",
+     "rating_reason": "Green: the protocol names the party whose tokens services rely on (as MCP Authorization names the authorization server); the answer notes external agents are treated as unverified.",
+     "claims": [
+      {
+       "text": "One TTS per trust domain.",
+       "type": "fact",
+       "source": "txn",
+       "section": "3. Terminology",
+       "quote": "Each Trust Domain using Txn-Tokens MUST have exactly one logical TTS.",
+       "check": "OK",
+       "check_fp": "cb2ded24b4"
+      },
+      {
+       "text": "The TTS decides who gets tokens.",
+       "type": "fact",
+       "source": "txn",
+       "section": "13.10. TTS Issuance Policies",
+       "quote": "A TTS should be selective in which workloads can successfully request a Txn-Token.",
+       "check": "OK",
+       "check_fp": "cb8dbcc676"
+      },
+      {
+       "text": "Attribute Store contents must not come from agents.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.6.2. Agent Attribute Store Contents",
+       "quote": "These richer attributes are populated and maintained by the trust domain's deployment pipelines and MUST NOT be sourced from agent self-assertion.",
+       "check": "OK",
+       "check_fp": "078c156d4c"
+      },
+      {
+       "text": "External agents get policy-limited context.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5. Agentic Context",
+       "quote": "assigns context commensurate with the trust domain's policy for unverified external actors.",
+       "check": "OK",
+       "check_fp": "3460b64be4"
+      }
+     ]
+    },
+    {
+     "id": "revocation",
+     "group": "Response and accountability",
+     "property": "Revocation",
+     "short": "No; short lifetimes instead",
+     "answer": "No. Neither draft defines a way to revoke a Transaction Token or an agent's access; the base draft relies on short lifetimes instead. Before issuing a token, the Transaction Token Service MAY check whether the presented access token was invalidated (e.g. through RFC 7662 introspection), which stops new tokens but not ones already issued, and it must not replace an expired token. The session_id helps an agent's owning team find the session for debugging or revocation, outside the protocol.",
+     "rating": "red",
+     "coverage": "none",
+     "requirement": "none",
+     "rating_reason": "Red: revocation is not defined (same as the three calibration examples).",
+     "claims": [
+      {
+       "text": "Searched both drafts for revocation, revoke, invalidate and blocklist: No revocation mechanism.",
+       "type": "silent",
+       "source": "spec",
+       "section": "Searched both drafts for revocation, revoke, invalidate and blocklist",
+       "quote": ""
+      },
+      {
+       "text": "The TTS may check if the access token was invalidated.",
+       "type": "fact",
+       "source": "txn",
+       "section": "13.4. Access Tokens",
+       "quote": "a TTS MAY, based on the risk profile of the deployment or transaction, verify whether the presented access token was invalidated.",
+       "check": "OK",
+       "check_fp": "aecc8d5a4a"
+      },
+      {
+       "text": "Expired tokens cannot be replaced.",
+       "type": "fact",
+       "source": "txn",
+       "section": "13.15. Txn-Token as a subject_token",
+       "quote": "MUST NOT issue a new Txn-Token when the Txn-Token being replaced has expired.",
+       "check": "OK",
+       "check_fp": "3cadbdc22f"
+      },
+      {
+       "text": "session_id supports out-of-band revocation.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5.1. Normative Fields",
+       "quote": "enabling that team to locate the corresponding session in their own runtime logs for debugging or revocation.",
+       "check": "OK",
+       "check_fp": "43dda3979e"
+      }
+     ]
+    },
+    {
+     "id": "contact_escalation",
+     "group": "Response and accountability",
+     "property": "Contact and escalation",
+     "short": "No contact field; txn for correlation",
+     "answer": "No. Neither draft defines a contact or escalation field. The extension expects a workload that sees unexpected behaviour to share the transaction ID (txn) and session_id with the agent's owning team, and the Transaction Token Service operator can supply the full chain for a txn from its audit log. Who that team is and how to reach it is left to the organisation.",
+     "rating": "red",
+     "coverage": "none",
+     "requirement": "none",
+     "rating_reason": "Red: no contact field is defined (same as the three calibration examples).",
+     "claims": [
+      {
+       "text": "Sharing txn with the agent's owning team.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.5.1. Normative Fields",
+       "quote": "a workload that observes unexpected behavior may share the `txn` claim and this value with the proximate agent's owning team",
+       "check": "OK",
+       "check_fp": "b3ceee0ed3"
+      },
+      {
+       "text": "The TTS operator can supply chain history.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.8. TTS Audit Logging",
+       "quote": "A workload that shares the `txn` value with the TTS operator can obtain the full chain history",
+       "check": "OK",
+       "check_fp": "d85a84d350"
+      },
+      {
+       "text": "Searched both drafts for contact, escalation, abuse and owner fields: No contact field.",
+       "type": "silent",
+       "source": "spec",
+       "section": "Searched both drafts for contact, escalation, abuse and owner fields",
+       "quote": ""
+      }
+     ]
+    },
+    {
+     "id": "cross_party_signalling",
+     "group": "Monitoring and provenance",
+     "property": "Cross-party signalling",
+     "short": "No; audit logging only",
+     "answer": "No. Neither draft defines a way for one service to warn others about a misbehaving agent. The extension recommends logging act, sub and agentic_ctx for behavioural monitoring and a persistent audit log at the Transaction Token Service, which support investigation after the fact inside the trust domain, but these are not signals between services.",
+     "rating": "red",
+     "coverage": "none",
+     "requirement": "none",
+     "rating_reason": "Red: not addressed (same as the three calibration examples).",
+     "claims": [
+      {
+       "text": "Searched both drafts for signals, events, reputation and shared signals: No signals between services.",
+       "type": "silent",
+       "source": "spec",
+       "section": "Searched both drafts for signals, events, reputation and shared signals",
+       "quote": ""
+      },
+      {
+       "text": "Monitoring through logging.",
+       "type": "fact",
+       "source": "spec",
+       "section": "5.5. AI Agent Specific Controls",
+       "quote": "Systems SHOULD implement behavioral monitoring for AI agent activities by logging `act`, `sub`, and `agentic_ctx` claims in audit logs.",
+       "check": "OK",
+       "check_fp": "936fa9c647"
+      },
+      {
+       "text": "TTS audit log.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.8. TTS Audit Logging",
+       "quote": "The TTS SHOULD maintain a persistent audit log.",
+       "check": "OK",
+       "check_fp": "c66ae85767"
+      }
+     ]
+    },
+    {
+     "id": "model_identity",
+     "group": "Monitoring and provenance",
+     "property": "Model identity",
+     "short": "No",
+     "answer": "No. No claim names the AI model. Services needing provenance (e.g. software version identifiers) or attestation status SHOULD look them up in the Agent Attribute Store by agent identifier, but the store's interface is out of scope and model identity is not among the listed attributes.",
+     "rating": "red",
+     "coverage": "none",
+     "requirement": "none",
+     "rating_reason": "Red: nothing identifies the model (same as the three calibration examples).",
+     "claims": [
+      {
+       "text": "Provenance attributes listed for the store.",
+       "type": "fact",
+       "source": "spec",
+       "section": "3.6.2. Agent Attribute Store Contents",
+       "quote": "Provenance: Software version identifiers, manifest references, source code references.",
+       "check": "OK",
+       "check_fp": "5fa562e09d"
+      },
+      {
+       "text": "The store's interface is out of scope.",
+       "type": "out_of_scope",
+       "source": "spec",
+       "section": "3.5.2. Agent Attribute Store Queries for Richer Context",
+       "quote": "The Agent Attribute Store interface, query protocol, and response format are out of scope for this specification.",
+       "check": "OK",
+       "check_fp": "681b5937bc"
+      },
+      {
+       "text": "Searched both drafts for model, LLM version and provenance claims in the token: No model claim.",
+       "type": "silent",
+       "source": "spec",
+       "section": "Searched both drafts for model, LLM version and provenance claims in the token",
+       "quote": ""
+      }
+     ]
+    }
+   ],
+   "goals_reading": {
+    "access_control": "Internal services get a narrow, required scope that can only shrink along the chain, the user (sub), the delegated agent (act) and, when agents are recognised, the originating and current agent and a hop count, so they can treat agent-driven calls differently from direct human calls.",
+    "incident_response": "Nothing can be revoked in-band; tokens expire within minutes and new ones stop once the underlying access token is invalidated (if the service checks). Investigation is supported by the transaction ID and the Transaction Token Service's audit log.",
+    "accountability": "An action inside the trust domain can be traced to the user, the agent that started the chain and the agent at the current hop (at application level), with the full chain reconstructable from the audit log; session identifiers are only self-asserted hints."
+   },
+   "notes": [
+    "The analysed text of the extension was taken from the author's GitHub repository at commit 5a40b0a (merged 31 October 2026, the -03 publication date). Its section structure was compared with the published -03 table of contents on the IETF datatracker. The source file's own heading numbers in Section 3 are offset by one from the published numbering (e.g. the file says 3.6 for what is published as 3.5 Agentic Context). Section labels in this report follow the published numbering. Quotes that cite sections (e.g. 'Section 3.4.1') keep the file's own numbers.",
+    "The base Transaction Tokens draft was taken from the oauth-wg repository at commit 146e47d, whose document history matches -11. Later edits on main (working-group last call feedback, August 2026) were not analysed.",
+    "RFC 9396 (Rich Authorization Requests) is listed as a normative reference in -03 but no longer used in its text.",
+    "Both drafts use RFC 2119 keywords; requirement levels are quoted as written. No instructions aimed at AI tools were found in the sources.",
+    "The IETF datatracker lists the base draft's working-group state as 'WG Consensus: Waiting for Write-Up' (seen 19 November 2026); this was not used as evidence in the report."
+   ],
+   "open_questions": [
+    "Only the table of contents of the published -03 was compared with the repository text; small wording differences between the two cannot be ruled out.",
+    "How receiving workloads obtain the Transaction Token Service's signing keys is not specified (the base draft says the keys are 'often' known). This could affect validity in practice.",
+    "The agent instance identifier was rated yellow because session_id identifies the agent's runtime session; it could be argued red because the value is self-asserted and may not be used for decisions.",
+    "Whether the extension's MUST for mutually authenticated channels between all components lets a resource server link the calling workload to proximate_agent.id is not stated; authentication was rated red on that basis.",
+    "Credential lifetime was rated yellow because no verifier-enforced maximum exists; 'on the order of minutes' could be read as a specific short limit (green)."
+   ],
+   "_meta": {
+    "file": "transaction-tokens-for-agents.html",
+    "current": true,
+    "versions": 1
+   }
+  },
+  {
+   "schema_version": "2.1",
+   "rubric_version": "2.1",
+   "analysed_on": "2026-11-19",
+   "protocol": {
     "name": "TSP + TMCP/TA2A",
     "full_name": "Trust Spanning Protocol (Trust over IP), with the TSP-Enabled AI Agent Protocols draft (TMCP, TA2A)",
     "spec_version": "TSP Release 1.0 (tswg-tsp-specification commit ccda6b3); TSP-Enabled AI Agent Protocols v1.0 Draft (GitHub Pages, accessed 2026-11-19)",
@@ -12311,7 +14350,7 @@
      "api-key",
      "mtls"
     ],
-    "venue": "community",
+    "venue": "other",
     "maturity": "stable",
     "openness": "open-specification",
     "layers": [
@@ -13345,7 +15384,7 @@
    },
    "notes": [
     "The specification uses RFC 2119 keywords in capitals; requirement levels in this analysis follow them.",
-    "Venue is set to 'community': UCP is run as its own open-source project with a Governing Council (Google and Shopify hold permanent seats; Google holds proxy votes for open seats until December 2028) and Domain Tech Councils, not under a standards body or foundation.",
+    "Venue is set to 'other': UCP is run as its own open-source project by a Governing Council in which its founding companies, Google and Shopify, hold permanent seats (Google holds proxy votes for open seats until December 2028), with Domain Tech Councils. It is not a single vendor, a standards body, a foundation or an independent community project.",
     "The repository contains AGENTS.md, AGENT_CONTRIBUTOR.md, AGENT_IMPLEMENTER.md and CLAUDE.md files with instructions aimed at AI tools. They were treated as data and not followed.",
     "Name collisions: 'UCP' is also used for unrelated products and protocols (e.g. Docker Universal Control Plane). Agentic Commerce Protocol (ACP, OpenAI and Stripe) is a different protocol.",
     "The release branch release/2026-08-25 differs from tag v2026-08-25 only by a backported ask capability (2026-11-02); identity, signature and checkout text used here is the same in both.",

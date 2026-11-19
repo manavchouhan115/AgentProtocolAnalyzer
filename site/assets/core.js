@@ -155,6 +155,13 @@ export function label(field, value) {
   return hit ? hit.label : String(value || "").replace(/-/g, " ");
 }
 
+// What a profile value means, as one sentence (from the skill's vocabulary).
+export function describe(field, value) {
+  const hit = (state.data?.vocab?.[field] || []).find((v) => v.value === value);
+  const d = hit?.description || (value === "other" ? "anything that does not fit the other values" : "");
+  return d ? d.charAt(0).toUpperCase() + d.slice(1) + (d.endsWith(".") ? "" : ".") : "";
+}
+
 const MATURITY_ORDER = ["standard", "stable", "draft", "proposal", "deprecated"];
 export const maturityRank = (p) => {
   const i = MATURITY_ORDER.indexOf(p.profile?.maturity);

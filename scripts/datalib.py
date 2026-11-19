@@ -145,9 +145,30 @@ def rubric():
             for pid in skill_lint.rubric_ids()]
 
 
+def vocab_descriptions():
+    """What each profile value means, from the skill's profile.md ('- `value`: text' lines)."""
+    out, field, cur = {}, None, None
+    for line in skill_lint.PROFILE.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"^## (\w+)\s*$", line)
+        if m:
+            field, cur = m.group(1), None
+            continue
+        m = re.match(r"^- `([a-z0-9-]+)`(?::\s*(.*))?$", line)
+        if field and m:
+            cur = (field, m.group(1))
+            out[cur] = (m.group(2) or "").strip()
+        elif cur and line.startswith("  ") and line.strip():
+            out[cur] = (out[cur] + " " + line.strip()).strip()
+        else:
+            cur = None
+    return out
+
+
 def vocab():
-    """Profile vocabularies with display labels."""
-    return {field: [{"value": v, "label": skill_render.nice(v)} for v in sorted(values)]
+    """Profile vocabularies with display labels and descriptions."""
+    desc = vocab_descriptions()
+    return {field: [{"value": v, "label": skill_render.nice(v), "description": desc.get((field, v), "")}
+                    for v in sorted(values)]
             for field, values in skill_lint.profile_vocab().items()}
 
 

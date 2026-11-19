@@ -1,6 +1,6 @@
 import {
   state, esc, name, pid, rowOf, coverage, label, fingerprint, reviewBadge, profileChips, compareButton,
-  wireCompareButtons, setQuery, maturityRank, markText, parseTerms, monthYear, scoredProps,
+  wireCompareButtons, setQuery, maturityRank, markText, parseTerms, monthYear, scoredProps, describe,
 } from "../core.js";
 
 const FACETS = [
@@ -107,7 +107,8 @@ function drawFilters(box, st, update) {
       .map((v) => {
         const n = ps.filter((p) => matches(p, st, f.key) && f.get(p).includes(v)).length;
         const lab = f.labels?.[v] || label(f.key, v);
-        return `<label class="opt ${n ? "" : "zero"}"><input type="checkbox" data-f="${f.key}" value="${esc(v)}" ${st.sel[f.key].has(v) ? "checked" : ""}> ${esc(lab)}<span class="n">${n}</span></label>`;
+        const tip = f.key === "review" ? "" : describe(f.key, v);
+        return `<label class="opt ${n ? "" : "zero"}"${tip ? ` title="${esc(tip)}"` : ""}><input type="checkbox" data-f="${f.key}" value="${esc(v)}" ${st.sel[f.key].has(v) ? "checked" : ""}> ${esc(lab)}<span class="n">${n}</span></label>`;
       }).join("");
     return `<fieldset><legend>${f.title}</legend>${opts}</fieldset>`;
   }).join("");
@@ -120,6 +121,7 @@ function drawFilters(box, st, update) {
       <label class="opt" style="margin-top:6px"><input type="checkbox" id="partly" ${st.strict ? "checked" : ""} ${st.addresses ? "" : "disabled"}> Remove partly addressed</label>
     </fieldset>
     ${facetHtml}
+    <p class="filters-help"><a href="#/about?s=labels">What these labels mean</a></p>
     ${any ? `<button class="btn small" type="button" id="clear">Clear all filters</button>` : ""}`;
   box.querySelectorAll("input[data-f]").forEach((cb) => cb.addEventListener("change", () => {
     const s = st.sel[cb.dataset.f];

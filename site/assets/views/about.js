@@ -1,4 +1,16 @@
-import { state, esc, scoredProps, goals, SKILL_URL } from "../core.js";
+import { state, esc, scoredProps, goals, SKILL_URL, label, describe } from "../core.js";
+
+// Shown in a meaningful order rather than alphabetically.
+const LABEL_GROUPS = [
+  { field: "category", title: "Category", intro: "The main problem the protocol solves. A protocol can also list other categories it clearly addresses.",
+    values: ["agent-authorization", "web-bot-identity", "agentic-commerce", "agent-communication", "discovery-registry", "workload-identity", "credentials-trust", "attestation-provenance", "other"] },
+  { field: "maturity", title: "Maturity", intro: "How settled the specification is.",
+    values: ["standard", "stable", "draft", "proposal", "deprecated"] },
+  { field: "venue", title: "Developed at", intro: "Where the specification is developed and who controls changes to it.",
+    values: ["ietf-wg", "ietf-individual", "w3c", "oidf", "other-sdo", "foundation", "vendor", "community", "government", "other"] },
+  { field: "openness", title: "Openness", intro: "Who can implement the specification, and on what terms.",
+    values: ["open-standard", "open-specification", "vendor-terms", "closed"] },
+];
 
 export function renderAbout(el, _parts, params) {
   document.title = "About | Protocol Explorer";
@@ -24,6 +36,11 @@ export function renderAbout(el, _parts, params) {
     </div>
     <p>“Not addressed” is not a judgement that the protocol is flawed. Many protocols leave things out on purpose to stay simple, and the analyses say so where the specification does.</p>
     <p>Coverage is the share of rated properties a protocol addresses, with partly addressed counting as half. Status and adoption is left out of coverage, because it describes maturity rather than what the protocol does.</p>
+
+    <h2 style="margin-top:36px" id="labels">What the labels mean</h2>
+    <p>Each protocol also has a short profile. These labels are used for filtering and grouping on the Explore and Landscape pages.</p>
+    ${LABEL_GROUPS.map((g) => `<h3 style="margin-top:20px">${esc(g.title)}</h3><p class="muted" style="margin:2px 0 8px">${esc(g.intro)}</p>
+      <dl class="defs">${g.values.map((v) => `<div><dt>${esc(label(g.field, v))}</dt><dd>${esc(describe(g.field, v))}</dd></div>`).join("")}</dl>`).join("")}
 
     <h2 style="margin-top:36px">Evidence and review</h2>
     <p>Every statement in an analysis is backed by a source, a section and a short verbatim quote. Quotes are checked automatically against the source where possible. Analyses marked “Draft analysis” were produced by the analysis skill and have not yet been checked by a person.</p>

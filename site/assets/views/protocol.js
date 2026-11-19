@@ -1,6 +1,6 @@
 import {
   state, esc, name, pid, byId, versionsOf, rowOf, RATING, label, reviewBadge, pill, compareButton,
-  wireCompareButtons, toast, setQuery, monthYear,
+  wireCompareButtons, toast, setQuery, monthYear, describe,
 } from "../core.js";
 
 export const COVERAGE_TEXT = {
@@ -80,7 +80,7 @@ export function renderProtocol(el, parts, params) {
     <nav class="crumbs" aria-label="Breadcrumb"><a href="#/explore">Explore</a> / ${esc(name(p))}</nav>
     <header class="p-head">
       <h1>${esc(name(p))}${p.protocol?.full_name && p.protocol.full_name !== name(p) ? `<small>${esc(p.protocol.full_name)}</small>` : ""}</h1>
-      <div class="chips">${["category", "maturity", "venue", "openness"].filter((f) => pr[f]).map((f) => `<span class="chip">${esc(label(f, pr[f]))}</span>`).join("")}${(pr.secondary_categories || []).map((c) => `<span class="chip">Also ${esc(label("category", c).toLowerCase())}</span>`).join("")}${reviewBadge(p)}</div>
+      <div class="chips">${["category", "maturity", "venue", "openness"].filter((f) => pr[f]).map((f) => `<a class="chip" href="#/about?s=labels" title="${esc(describe(f, pr[f]))}">${esc(label(f, pr[f]))}</a>`).join("")}${(pr.secondary_categories || []).map((c) => `<span class="chip">Also ${esc(label("category", c).toLowerCase())}</span>`).join("")}${reviewBadge(p)}</div>
       <dl class="facts">${facts}</dl>
       ${p.protocol?.newer_version_note ? `<p class="muted" style="margin-top:12px;max-width:80ch">${esc(p.protocol.newer_version_note)}</p>` : ""}
       <div class="actions">
