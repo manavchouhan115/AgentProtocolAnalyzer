@@ -1,0 +1,12 @@
+# Netlify: rebuild the dataset from reports/, then publish only the site and its data.
+[build]
+  command = "python3 scripts/build_data.py && rm -rf dist && mkdir dist && cp -r site data reports dist/"
+  publish = "dist"
+
+[build.environment]
+  PYTHON_VERSION = "3.11"
+
+[[redirects]]
+  from = "/"
+  to = "/site/"
+  status = 302
