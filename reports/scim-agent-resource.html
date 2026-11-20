@@ -1,0 +1,784 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SCIM Agent Resource: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>SCIM Agent Resource<small>AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM)</small></h1><ul class="facts"><li><b>Specification:</b> draft-wzdk-scim-agent-resource-00</li><li><b>Date:</b> 2026-06-05</li><li><b>Maintainer:</b> Individual Internet-Draft discussed on the IETF SCIM WG list; authors M. Wahl and P. Dingle (Microsoft), D. Zollner (Okta), I. Kazzouzi (Nextident)</li><li><b>Analysed:</b> 2026-11-20</li><li><b>Version note:</b> -00 is the only revision as of 2026-11-20; it expires on 7 December 2026.</li></ul><div class=chips><span class="chip"><b>Category:</b> Other</span><span class="chip"><b>Also:</b> Workload identity</span><span class="chip"><b>Mechanism:</b> Other</span><span class="chip"><b>Venue:</b> IETF individual draft</span><span class="chip"><b>Maturity:</b> Proposal</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>The SCIM Agent Resource draft extends SCIM, the standard that enterprises use to push user accounts from a central directory into the cloud services they use, so that AI agents can be provisioned the same way. A directory can create, update, deactivate and delete an agent&#x27;s record in a service before that agent ever calls the service. It is an individual Internet-Draft (-00, June 2026) by authors from Microsoft, Okta and Nextident, with intended status Informational. It is discussed on the IETF SCIM working group list but not adopted by it, and it has no named deployments.</p><p>The draft defines an Agent resource type at an /Agents endpoint with a small core schema: a required unique agentUserName, a required displayName, a required active flag, an optional description, and an optional list of owners (the users, groups or agents responsible for it). Agents can also be members of SCIM groups, which services commonly map to access rights. The record is sent by the SCIM client (e.g. the enterprise identity provider) to the service over the normal SCIM API. The draft does not define how the agent later authenticates or what it presents on its own requests. It also leaves out credentials, delegation, human approval, model identity and signalling between services.</p><h2 id="how">How it works</h2><ol class="steps"><li>The enterprise&#x27;s SCIM client (typically its identity provider or directory) is already set up to provision accounts into a service, authenticating to the service&#x27;s SCIM API with an existing method such as OAuth bearer tokens or TLS client certificates.</li><li>When an agent is created, the SCIM client sends a JSON Agent resource to the service&#x27;s /Agents endpoint, with a unique agentUserName, a displayName, active=true and, optionally, owners and a description.</li><li>The client can add the agent to SCIM groups. The service decides what access each group gives.</li><li>Later, the agent calls the service using some authentication method outside this draft, and the service maps it to the provisioned Agent record by its own rules.</li><li>To stop the agent, the SCIM client sets active to false or deletes the record. The service decides what &#x27;inactive&#x27; means and how it affects the agent&#x27;s existing access.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>SCIM Agent Resource</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Provision agent records into services over SCIM</td></tr><tr><td class="prop">Use cases</td><td class="">Enterprise provisioning of agents into services</td></tr><tr><td class="prop">Parties involved</td><td class="">SCIM client, SCIM service provider, agent, owners</td></tr><tr><td class="prop">Status and adoption</td><td class="red">Individual draft -00, no deployments</td></tr><tr><td class="prop">Building blocks</td><td class="">SCIM (RFC 7643, RFC 7644), JSON</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">agentUserName, unique per provisioning domain</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="red">No; owners are responsible parties only</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="red">None for the agent</td></tr><tr><td class="prop">Credential lifetime</td><td class="red">Not applicable, no credential</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="red">Not applicable</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="red">No, deferred to other mechanisms</td></tr><tr><td class="prop">Scoped authorization</td><td class="yellow">Group membership only; meaning set by service</td></tr><tr><td class="prop">Human approval</td><td class="red">None</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="red">Not defined; provisioning client only implicitly</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="yellow">active=false or DELETE; effect set by service</td></tr><tr><td class="prop">Contact and escalation</td><td class="yellow">Optional owners reference responsible people</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">None</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The service can hold an account for each agent and give it access through enterprise-assigned groups. What the agent presents on its requests, and how that maps to the record, is outside the draft.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>The enterprise can deactivate or delete a specific agent in every service it provisions. What deactivation does to existing access is up to each service, and services cannot act on an agent they did not receive from a SCIM client.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>An agent record can name its owners (responsible users, groups or agents) and carries a unique name, so actions mapped to the record can be traced to the provisioning enterprise and its listed owners.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Status and adoption:</b> Individual draft -00, no deployments ()</li><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Acting for (authority):</b> No; owners are responsible parties only (not addressed by the specification)</li><li><b>Credential type:</b> None for the agent (not addressed by the specification)</li><li><b>Credential lifetime:</b> Not applicable, no credential (not addressed by the specification)</li><li><b>Validity (credential validation):</b> Not applicable (not addressed by the specification)</li><li><b>Authentication of the agent or user:</b> No, deferred to other mechanisms (not addressed by the specification)</li><li><b>Human approval:</b> None (not addressed by the specification)</li><li><b>Trust (who vouches for the agent):</b> Not defined; provisioning client only implicitly (handled outside the protocol)</li><li><b>Cross-party signalling:</b> None (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>SCIM Agent Resource</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An IETF individual draft that adds an Agent resource type to SCIM, so an enterprise directory can create, update, deactivate and delete agent identity records (unique name, display name, active flag, owners) in a service before the agent authenticates to it by some other means.<details><summary>Evidence (2)</summary><div class="claim">Purpose: a schema for agent identities transferred over SCIM, to set up later authentication and authorization. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“This establishes an agentic identity so that an agent can subsequently be authenticated and authorized to interact with the service.”</blockquote></div><div class="claim">The Agent resource type. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 3. Agent Resource Type. <span class="chk">(quote verified against the source)</span><blockquote>“A resource of this type represents an agent&#x27;s identity to the service.”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Enterprise identity lifecycle management: a SCIM client (e.g. an identity provider) tells a service about an agent so the service can hold an account for it, put it in groups and later deactivate it. It works at the SCIM REST API layer, with JSON records in HTTP request bodies sent from the client to the service&#x27;s SCIM endpoint. It is not carried on the agent&#x27;s own requests. The service itself stores and uses the record.<details><summary>Evidence (3)</summary><div class="claim">Motivation: some services need an identity for an agent before it can interact with resources. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“Some services will require an agent to have an identity represented within them in order to interact with resources.”</blockquote></div><div class="claim">Conveyed via the SCIM protocol in JSON. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 3. Agent Resource Type. <span class="chk">(quote verified against the source)</span><blockquote>“Resources of this type are conveyed via the SCIM protocol [RFC7644] using JSON [RFC8259].”</blockquote></div><div class="claim">Lifecycle signals and group memberships, as for users. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“agents often need the same lifecycle signals and group, role or entitlement memberships as users”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">SCIM client: sends and updates agent records (in practice an enterprise identity provider or directory). SCIM service provider: the service that receives and stores the Agent resource and later lets the agent interact with it. Agent: the AI agent whose identity the record represents. Owners: the users, groups or other agents listed as responsible parties for the agent. End-users appear only as the audience for the displayName. The draft has no roles section of its own and uses SCIM&#x27;s client and service provider terms.<details><summary>Evidence (3)</summary><div class="claim">Client and service provider. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“enabling them to be transferred using the SCIM protocol between a client and service provider”</blockquote></div><div class="claim">Owners are the responsible parties. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.2. Multi-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“A list of the responsible parties for an agentic identity.”</blockquote></div><div class="claim">Owners can be users, groups or agents. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.3. Agent Resource Schema. <span class="chk">(quote verified against the source)</span><blockquote>“&quot;referenceTypes&quot;: [&quot;User&quot;, &quot;Group&quot;, &quot;Agent&quot;],”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="red"><span class="badge">Not addressed</span><br>Early proposal. -00 is an individual Internet-Draft (5 June 2026, expiring 7 December 2026) with intended status Informational. It is discussed on the IETF SCIM working group list but has not been adopted by it. It is the first and only revision. I found no named product that implements it from a deployer&#x27;s own documentation.<div class="meta">Why this rating: An individual draft with no named deployments.</div><details><summary>Evidence (4)</summary><div class="claim">Intended status and expiry. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Front matter. <span class="chk">(quote verified against the source)</span><blockquote>“Intended status: Informational”</blockquote></div><div class="claim">Initial version. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Appendix A. Changes From Earlier Versions. <span class="chk">(quote verified against the source)</span><blockquote>“This is the initial version of this draft.”</blockquote></div><div class="claim">Discussed on the SCIM WG list. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, About This Document. <span class="chk">(quote verified against the source)</span><blockquote>“Discussion of this document takes place on the System for Cross- domain Identity Management Working Group mailing list”</blockquote></div><div class="claim">Searched the draft for an Implementations or Implementation Status section, and searched the web for deployer documentation naming draft-wzdk-scim-agent-resource. None found. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">SCIM core schema (RFC 7643) for the resource and schema conventions, the SCIM protocol (RFC 7644) for transport, and JSON (RFC 8259) for encoding. It also changes the RFC 7643 group &#x27;members&#x27; attribute so groups can contain agents. Authentication of the SCIM client comes from RFC 7644, which itself relies on TLS or standard HTTP schemes (e.g. OAuth bearer tokens).<details><summary>Evidence (3)</summary><div class="claim">Follows RFC 7643 conventions. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 3. Agent Resource Type. <span class="chk">(quote verified against the source)</span><blockquote>“following the resource type and schema conventions of [RFC7643]”</blockquote></div><div class="claim">Group members extended to agents. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.4. Updates to Existing Schema. <span class="chk">(quote verified against the source)</span><blockquote>“To allow an agentic identity to be a member of a group, this memo augments the definition of the &quot;members&quot; attribute of [RFC7643]”</blockquote></div><div class="claim">RFC 7644 does not define its own authentication scheme. <i>Source states</i> <a href="https://www.rfc-editor.org/rfc/rfc7644">RFC 7644, System for Cross-domain Identity Management: Protocol</a>, 2. Authentication and Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“The SCIM protocol is based upon HTTP and does not itself define a SCIM-specific scheme for authentication and authorization.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Each Agent record has a required agentUserName, which must be unique among Agent resources in the provisioning domain and should be human-readable, plus SCIM&#x27;s service-assigned id and an optional externalId. It names an agent identity as the provisioning enterprise defines it, e.g. &#x27;tour-guide-agent&#x27; in the example. The draft does not say whether that is one product, one deployment or one running agent. The identifier lives in the service&#x27;s directory. The agent does not present it by any mechanism this draft defines.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A unique per-record name is required, but what an &#x27;agent&#x27; is (product, deployment or running agent) is undefined, so like MCP&#x27;s client_id it may be shared by many running agents.</div><details><summary>Evidence (3)</summary><div class="claim">agentUserName must be unique in the provisioning domain. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.1. Single-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“This value SHOULD be human- readable and MUST be unique across all Agent resources in the provisioning domain.”</blockquote></div><div class="claim">Common attributes id and externalId also apply. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 3. Agent Resource Type. <span class="chk">(quote verified against the source)</span><blockquote>“Agent resources include the common attributes &quot;externalId&quot;, &quot;id&quot;, &quot;meta&quot;, and &quot;schemas&quot;”</blockquote></div><div class="claim">Example value. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.3. Agent Resource Schema. <span class="chk">(quote verified against the source)</span><blockquote>“&quot;agentUserName&quot;: &quot;tour-guide-agent&quot;,”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft has no notion of agent instances, sessions or runs. A record represents &#x27;an agent&#x27;s identity&#x27;. Nothing distinguishes running copies of the agent, and nothing appears on the agent&#x27;s requests.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the draft for instance, session, run or runtime identifiers. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div><div class="claim">The record represents an agent&#x27;s identity. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 3. Agent Resource Type. <span class="chk">(quote verified against the source)</span><blockquote>“A resource of this type represents an agent&#x27;s identity to the service.”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft does not say on whose behalf an agent acts, and it defines no delegation. The optional owners attribute lists the users, groups or agents responsible for the agent identity. That is accountability information in the service&#x27;s directory, not the principal behind a particular request.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Whom the agent acts for is not defined; the optional owners list names responsible parties, not a per-request principal (same as MCP Authorization and Web Bot Auth).</div><details><summary>Evidence (2)</summary><div class="claim">Owners are responsible parties. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.2. Multi-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“A list of the responsible parties for an agentic identity.”</blockquote></div><div class="claim">Searched the draft for delegation, on-behalf-of, act, actor or principal. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="red"><span class="badge">Not addressed</span><br>None. The draft defines a directory record, not a credential the agent presents. It says the record lets the agent &#x27;subsequently&#x27; be authenticated, without defining how. The only credential involved is the SCIM client&#x27;s own authentication to the SCIM API, which RFC 7644 leaves to TLS or standard HTTP schemes (e.g. OAuth bearer tokens). That authenticates the provisioning system, not the agent.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No credential is defined for the agent&#x27;s requests.</div><details><summary>Evidence (3)</summary><div class="claim">Authentication happens later, by means not defined here. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“This establishes an agentic identity so that an agent can subsequently be authenticated and authorized to interact with the service.”</blockquote></div><div class="claim">Searched the draft for credential, token, key, certificate, signature or authentication method attributes. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div><div class="claim">SCIM relies on TLS or standard HTTP authentication for the client. <i>Source states</i> <a href="https://www.rfc-editor.org/rfc/rfc7644">RFC 7644, System for Cross-domain Identity Management: Protocol</a>, 2. Authentication and Authorization. <span class="chk">(quote verified against the source)</span><blockquote>“SCIM depends on the use of Transport Layer Security (TLS) and/or standard HTTP authentication and authorization schemes as per [RFC7235].”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="red"><span class="badge">Not addressed</span><br>Unspecified. With no agent credential, there is no lifetime. The Agent record itself has no validity dates in the core schema. It stays until the client deactivates or deletes it.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Unspecified, because no credential is defined.</div><details><summary>Evidence (2)</summary><div class="claim">Searched the core schema for expiry, validFrom, validTo, lifetime or TTL attributes. None is defined; the core single-valued attributes are active, description, displayName and agentUserName. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.1. Single-valued Attributes.</div><div class="claim">Single-valued attributes defined. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.1. Single-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“The Agent core schema defines the following single-valued attributes.”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. There is no agent credential for the service to validate. The service can only trust the record because it came from its already-authenticated SCIM client, which requires a prior setup between the client and the service.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Nothing on the agent&#x27;s requests can be validated under this draft.</div><details><summary>Evidence (2)</summary><div class="claim">Searched the draft for verification, validation, signature or key discovery. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div><div class="claim">The draft points to RFC 7644&#x27;s security considerations for handling the data. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 5. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“It is important when handling data to implement the security considerations outlined in Section 7 of [RFC7644].”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The draft creates the identity that a later authentication can refer to, but defines no authentication itself. The service authenticates the SCIM client (the provisioning system), not the agent or any user. How the service links an incoming agent request to its Agent record is left to the service.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: The service does not authenticate the agent or the user under this draft (same colour as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Enables subsequent authentication interactions. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“simplifies deployment and enables subsequent authentication interactions and consistent controls for those agents&#x27; identities and access rights.”</blockquote></div><div class="claim">Searched the draft for any authentication procedure for agents. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The draft lets an Agent be a member of SCIM groups, and the introduction describes agents&#x27; access rights as relationships with groups, roles and entitlements in the service. Only group membership is defined. The core Agent schema has no roles or entitlements attributes, and what a group allows is decided by the service. The service gets coarse, enterprise-assigned groupings, not per-action scopes.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: Only coarse group membership, whose permissions are defined in the service (like Visa TAP&#x27;s coarse categories).</div><details><summary>Evidence (3)</summary><div class="claim">Agents can be group members. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.4. Updates to Existing Schema. <span class="chk">(quote verified against the source)</span><blockquote>“allow the referenceTypes of the members &quot;$ref&quot; sub-attribute to also refer to an Agent resource”</blockquote></div><div class="claim">Access rights as relationships with groups, roles and entitlements. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“an agent&#x27;s identity can have access rights in the service, represented through relationships of the agent&#x27;s identity with groups, roles and entitlements in a service.”</blockquote></div><div class="claim">Searched the Agent core schema for roles, entitlements, scopes or permissions attributes. Only owners is multi-valued; none of these is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.2. Multi-valued Attributes.</div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Provisioning is done by the SCIM client, and the draft defines no step where a person approves the agent&#x27;s access or actions.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No approval step is defined.</div><details><summary>Evidence (1)</summary><div class="claim">Searched the draft for consent, approval or user interaction. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No, not as a defined trust model. An Agent record exists in the service only because the service&#x27;s own SCIM client, usually the enterprise identity provider, created it, so that client implicitly stands behind the agent. That rests on the prior relationship between the service and its SCIM client, which is outside this draft. The draft states no trust model, and nothing ties the agent&#x27;s later requests to the record.<div class="meta">Handled outside the protocol</div><div class="meta">Why this rating: Vouching exists only implicitly through the service&#x27;s pre-existing SCIM client relationship, outside the draft; yellow was also arguable, so the lower colour was chosen (tie rule).</div><details><summary>Evidence (2)</summary><div class="claim">The SCIM client informs the service of identities, as for users. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“This enables a SCIM client to inform a SCIM service provider of a new user, so that user can be identified in and subsequently authenticated to the service.”</blockquote></div><div class="claim">Searched the draft for trust model, issuer, attestation or vetting. None is stated. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The required active flag lets the SCIM client mark an individual agent as inactive in the service, and the SCIM protocol lets it delete the record. The service must then return 404 for operations on it. Both reach the service directly as API calls, at per-agent granularity. But the draft says the meaning of &#x27;inactive&#x27; is decided by the service, and it does not say what happens to tokens or sessions the agent already holds.<div class="meta">Part of the normal flow · requirement level: MUST</div><div class="meta">Why this rating: Per-agent deactivation reaches the service directly, but its effect on the agent&#x27;s access is left to each service (the calibration examples are red because they define no revocation at all).</div><details><summary>Evidence (4)</summary><div class="claim">The client can mark an agent inactive; the service decides what that means. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.1. Single-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“A SCIM client can indicate that an agentic identity is to be treated as inactive by the service by setting it to false.”</blockquote></div><div class="claim">Meaning determined by the service. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.1. Single-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“The definitive meaning of this attribute is determined by the SCIM service.”</blockquote></div><div class="claim">Service providers must implement all core attributes. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.1. Single-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“A SCIM service provider that implements this specification MUST implement all attributes defined in the core Agent schema unless otherwise specified.”</blockquote></div><div class="claim">SCIM DELETE removes the resource. <i>Source states</i> <a href="https://www.rfc-editor.org/rfc/rfc7644">RFC 7644, System for Cross-domain Identity Management: Protocol</a>, 3.6. Deleting Resources. <span class="chk">(quote verified against the source)</span><blockquote>“Clients request resource removal via DELETE.”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The optional owners attribute lists the responsible parties as references to User, Group or Agent records the service already holds. A service can therefore look up the responsible people (e.g. their email in their User record). Each owner entry must contain the owner&#x27;s id, but the owners list itself is not required. There is no dedicated contact or escalation field.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: An optional field naming responsible parties the service can reach through existing records (the calibration examples are red because they have none).</div><details><summary>Evidence (3)</summary><div class="claim">Owners reference existing users, groups or other resources. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.2. Multi-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“Each value is a complex type that allows referencing the &quot;id&quot; attribute of a user, a group, or other resource already known to the SCIM service provider.”</blockquote></div><div class="claim">The owners attribute is not required. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.3. Agent Resource Schema. <span class="chk">(quote verified against the source)</span><blockquote>“&quot;description&quot;: &quot;A list of the responsible parties for this agent.&quot;, &quot;required&quot;: false,”</blockquote></div><div class="claim">Each owner value must include its id. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.2. Multi-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“This sub-attribute MUST be included for each &quot;owners&quot; value”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. SCIM pushes lifecycle changes from one client to the services it provisions, not between services. The draft defines no way for a service to report or warn about an agent.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No signalling between services.</div><details><summary>Evidence (1)</summary><div class="claim">Searched the draft for events, signals, reporting or reputation. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, Whole document.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The core schema has no attribute for the AI model or its version. The free-text description could mention it, but nothing defines or checks that.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No model field.</div><details><summary>Evidence (2)</summary><div class="claim">Searched the core schema for model, version, provider or attestation attributes. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4. Core Schema.</div><div class="claim">Description is a free-text string. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a>, 4.1. Single-valued Attributes. <span class="chk">(quote verified against the source)</span><blockquote>“The value of this attribute is a string with the agentic identity&#x27;s human-readable description.”</blockquote></div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/">AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00</a> (-00, 2026-06-05)</li><li><a href="https://www.rfc-editor.org/rfc/rfc7644">RFC 7644, System for Cross-domain Identity Management: Protocol</a> (RFC 7644, 2015-09)</li></ul><h2>Notes</h2><ul class="plain"><li>Evaluation perspective: the receiving service here is the SCIM service provider, which receives agent records from the SCIM client rather than credentials on the agent&#x27;s own requests. Most request-level properties are therefore not addressed by design.</li><li>The specification uses RFC 2119 keywords. Lowercase &#x27;should&#x27; and &#x27;must&#x27; in 5.1 Privacy come from RFC 7643&#x27;s text and were not used for ratings.</li><li>Neither the Datatracker nor ietf.org could be reached from the analysis workspace. The text was captured from the ietf.org archive .txt through a browser and saved as a snapshot (JSON examples abridged, prose kept). RFC 7644 sections 2 and 3.6 were captured the same way.</li><li>Related drafts with similar names, not analysed: draft-wahl-scim-agent-schema (AgenticIdentity resource, 2025) and draft-abbey-scim-agent-extension (Agents and AgenticApplications, 2025, expired). Datatracker shows no formal replaces relationship.</li><li>draft-kushwaha-scim-agent-governance-00 (Oracle, July 2026) is a separate individual draft that extends this Agent resource with lifecycle states (including suspended and quarantined), an autonomy level, validFrom and validTo, and a credential discovery URI. This draft does not reference it, so it is not counted here.</li></ul><h2>Open questions</h2><ul class="plain"><li>How is an agent&#x27;s runtime authentication (e.g. an OAuth client, a workload identity or a certificate) meant to be linked to its Agent record? The draft says only &#x27;subsequently&#x27;.</li><li>Should &#x27;active=false&#x27; require the service to revoke the agent&#x27;s existing tokens and sessions, as the governance draft&#x27;s states might imply?</li><li>Is one Agent record meant per agent product, per deployment, or per running agent?</li><li>Will the SCIM working group adopt this draft, and will roles and entitlements be added to the Agent schema?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (35 of 35 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-20. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-20",
+ "protocol": {
+  "name": "SCIM Agent Resource",
+  "full_name": "AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM)",
+  "spec_version": "draft-wzdk-scim-agent-resource-00",
+  "spec_date": "2026-06-05",
+  "maintainer": "Individual Internet-Draft discussed on the IETF SCIM WG list; authors M. Wahl and P. Dingle (Microsoft), D. Zollner (Okta), I. Kazzouzi (Nextident)",
+  "newer_version_note": "-00 is the only revision as of 2026-11-20; it expires on 7 December 2026."
+ },
+ "profile": {
+  "id": "scim-agent-resource",
+  "category": "other",
+  "secondary_categories": [
+   "workload-identity"
+  ],
+  "mechanisms": [
+   "other"
+  ],
+  "venue": "ietf-individual",
+  "maturity": "proposal",
+  "openness": "open-standard",
+  "layers": [
+   "http-body"
+  ],
+  "building_blocks": [
+   "RFC 7643",
+   "RFC 7644",
+   "RFC 8259"
+  ],
+  "website": "https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/",
+  "first_published": "2026-06"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "The SCIM Agent Resource draft extends SCIM, the standard that enterprises use to push user accounts from a central directory into the cloud services they use, so that AI agents can be provisioned the same way. A directory can create, update, deactivate and delete an agent's record in a service before that agent ever calls the service. It is an individual Internet-Draft (-00, June 2026) by authors from Microsoft, Okta and Nextident, with intended status Informational. It is discussed on the IETF SCIM working group list but not adopted by it, and it has no named deployments.",
+  "The draft defines an Agent resource type at an /Agents endpoint with a small core schema: a required unique agentUserName, a required displayName, a required active flag, an optional description, and an optional list of owners (the users, groups or agents responsible for it). Agents can also be members of SCIM groups, which services commonly map to access rights. The record is sent by the SCIM client (e.g. the enterprise identity provider) to the service over the normal SCIM API. The draft does not define how the agent later authenticates or what it presents on its own requests. It also leaves out credentials, delegation, human approval, model identity and signalling between services."
+ ],
+ "how_it_works": [
+  "The enterprise's SCIM client (typically its identity provider or directory) is already set up to provision accounts into a service, authenticating to the service's SCIM API with an existing method such as OAuth bearer tokens or TLS client certificates.",
+  "When an agent is created, the SCIM client sends a JSON Agent resource to the service's /Agents endpoint, with a unique agentUserName, a displayName, active=true and, optionally, owners and a description.",
+  "The client can add the agent to SCIM groups. The service decides what access each group gives.",
+  "Later, the agent calls the service using some authentication method outside this draft, and the service maps it to the provisioned Agent record by its own rules.",
+  "To stop the agent, the SCIM client sets active to false or deletes the record. The service decides what 'inactive' means and how it affects the agent's existing access."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "AI Agent Resource Extension for the System for Cross-domain Identity Management (SCIM), draft-wzdk-scim-agent-resource-00",
+   "url": "https://datatracker.ietf.org/doc/draft-wzdk-scim-agent-resource/00/",
+   "fetch_url": "https://www.ietf.org/archive/id/draft-wzdk-scim-agent-resource-00.txt",
+   "version": "-00",
+   "date": "2026-06-05",
+   "kind": "primary"
+  },
+  {
+   "id": "rfc7644",
+   "title": "RFC 7644, System for Cross-domain Identity Management: Protocol",
+   "url": "https://www.rfc-editor.org/rfc/rfc7644",
+   "fetch_url": "https://www.rfc-editor.org/rfc/rfc7644.txt",
+   "version": "RFC 7644",
+   "date": "2015-09",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Provision agent records into services over SCIM",
+   "answer": "An IETF individual draft that adds an Agent resource type to SCIM, so an enterprise directory can create, update, deactivate and delete agent identity records (unique name, display name, active flag, owners) in a service before the agent authenticates to it by some other means.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Purpose: a schema for agent identities transferred over SCIM, to set up later authentication and authorization.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "This establishes an agentic identity so that an agent can subsequently be authenticated and authorized to interact with the service.",
+     "check": "OK",
+     "check_fp": "55c25670f0"
+    },
+    {
+     "text": "The Agent resource type.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Agent Resource Type",
+     "quote": "A resource of this type represents an agent's identity to the service.",
+     "check": "OK",
+     "check_fp": "5d44816285"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Enterprise provisioning of agents into services",
+   "answer": "Enterprise identity lifecycle management: a SCIM client (e.g. an identity provider) tells a service about an agent so the service can hold an account for it, put it in groups and later deactivate it. It works at the SCIM REST API layer, with JSON records in HTTP request bodies sent from the client to the service's SCIM endpoint. It is not carried on the agent's own requests. The service itself stores and uses the record.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Motivation: some services need an identity for an agent before it can interact with resources.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "Some services will require an agent to have an identity represented within them in order to interact with resources.",
+     "check": "OK",
+     "check_fp": "2f0a9bd814"
+    },
+    {
+     "text": "Conveyed via the SCIM protocol in JSON.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Agent Resource Type",
+     "quote": "Resources of this type are conveyed via the SCIM protocol [RFC7644] using JSON [RFC8259].",
+     "check": "OK",
+     "check_fp": "91b787d6a6"
+    },
+    {
+     "text": "Lifecycle signals and group memberships, as for users.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "agents often need the same lifecycle signals and group, role or entitlement memberships as users",
+     "check": "OK",
+     "check_fp": "5f2436701a"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "SCIM client, SCIM service provider, agent, owners",
+   "answer": "SCIM client: sends and updates agent records (in practice an enterprise identity provider or directory). SCIM service provider: the service that receives and stores the Agent resource and later lets the agent interact with it. Agent: the AI agent whose identity the record represents. Owners: the users, groups or other agents listed as responsible parties for the agent. End-users appear only as the audience for the displayName. The draft has no roles section of its own and uses SCIM's client and service provider terms.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Client and service provider.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "enabling them to be transferred using the SCIM protocol between a client and service provider",
+     "check": "OK",
+     "check_fp": "a5c5253ece"
+    },
+    {
+     "text": "Owners are the responsible parties.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.2. Multi-valued Attributes",
+     "quote": "A list of the responsible parties for an agentic identity.",
+     "check": "OK",
+     "check_fp": "e1f5dabd29"
+    },
+    {
+     "text": "Owners can be users, groups or agents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.3. Agent Resource Schema",
+     "quote": "\"referenceTypes\": [\"User\", \"Group\", \"Agent\"],",
+     "check": "OK",
+     "check_fp": "388b8268f4"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Individual draft -00, no deployments",
+   "answer": "Early proposal. -00 is an individual Internet-Draft (5 June 2026, expiring 7 December 2026) with intended status Informational. It is discussed on the IETF SCIM working group list but has not been adopted by it. It is the first and only revision. I found no named product that implements it from a deployer's own documentation.",
+   "rating": "red",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Red: an individual draft with no named deployments.",
+   "claims": [
+    {
+     "text": "Intended status and expiry.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Front matter",
+     "quote": "Intended status: Informational",
+     "check": "OK",
+     "check_fp": "944a117e22"
+    },
+    {
+     "text": "Initial version.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Appendix A. Changes From Earlier Versions",
+     "quote": "This is the initial version of this draft.",
+     "check": "OK",
+     "check_fp": "45444f48c7"
+    },
+    {
+     "text": "Discussed on the SCIM WG list.",
+     "type": "fact",
+     "source": "spec",
+     "section": "About This Document",
+     "quote": "Discussion of this document takes place on the System for Cross- domain Identity Management Working Group mailing list",
+     "check": "OK",
+     "check_fp": "dbc3860b51"
+    },
+    {
+     "text": "Searched the draft for an Implementations or Implementation Status section, and searched the web for deployer documentation naming draft-wzdk-scim-agent-resource. None found.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "SCIM (RFC 7643, RFC 7644), JSON",
+   "answer": "SCIM core schema (RFC 7643) for the resource and schema conventions, the SCIM protocol (RFC 7644) for transport, and JSON (RFC 8259) for encoding. It also changes the RFC 7643 group 'members' attribute so groups can contain agents. Authentication of the SCIM client comes from RFC 7644, which itself relies on TLS or standard HTTP schemes (e.g. OAuth bearer tokens).",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Follows RFC 7643 conventions.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Agent Resource Type",
+     "quote": "following the resource type and schema conventions of [RFC7643]",
+     "check": "OK",
+     "check_fp": "36d5346364"
+    },
+    {
+     "text": "Group members extended to agents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.4. Updates to Existing Schema",
+     "quote": "To allow an agentic identity to be a member of a group, this memo augments the definition of the \"members\" attribute of [RFC7643]",
+     "check": "OK",
+     "check_fp": "57859b8ab8"
+    },
+    {
+     "text": "RFC 7644 does not define its own authentication scheme.",
+     "type": "fact",
+     "source": "rfc7644",
+     "section": "2. Authentication and Authorization",
+     "quote": "The SCIM protocol is based upon HTTP and does not itself define a SCIM-specific scheme for authentication and authorization.",
+     "check": "OK",
+     "check_fp": "f6fa74dfa1"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "agentUserName, unique per provisioning domain",
+   "answer": "Partly. Each Agent record has a required agentUserName, which must be unique among Agent resources in the provisioning domain and should be human-readable, plus SCIM's service-assigned id and an optional externalId. It names an agent identity as the provisioning enterprise defines it, e.g. 'tour-guide-agent' in the example. The draft does not say whether that is one product, one deployment or one running agent. The identifier lives in the service's directory. The agent does not present it by any mechanism this draft defines.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: a unique per-record name is required, but what an 'agent' is (product, deployment or running agent) is undefined, so like MCP's client_id it may be shared by many running agents.",
+   "claims": [
+    {
+     "text": "agentUserName must be unique in the provisioning domain.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1. Single-valued Attributes",
+     "quote": "This value SHOULD be human- readable and MUST be unique across all Agent resources in the provisioning domain.",
+     "check": "OK",
+     "check_fp": "0e34577c8f"
+    },
+    {
+     "text": "Common attributes id and externalId also apply.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Agent Resource Type",
+     "quote": "Agent resources include the common attributes \"externalId\", \"id\", \"meta\", and \"schemas\"",
+     "check": "OK",
+     "check_fp": "e05f90fe55"
+    },
+    {
+     "text": "Example value.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.3. Agent Resource Schema",
+     "quote": "\"agentUserName\": \"tour-guide-agent\",",
+     "check": "OK",
+     "check_fp": "c5470b0386"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. The draft has no notion of agent instances, sessions or runs. A record represents 'an agent's identity'. Nothing distinguishes running copies of the agent, and nothing appears on the agent's requests.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the draft for instance, session, run or runtime identifiers. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "The record represents an agent's identity.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3. Agent Resource Type",
+     "quote": "A resource of this type represents an agent's identity to the service.",
+     "check": "OK",
+     "check_fp": "5d44816285"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "No; owners are responsible parties only",
+   "answer": "No. The draft does not say on whose behalf an agent acts, and it defines no delegation. The optional owners attribute lists the users, groups or agents responsible for the agent identity. That is accountability information in the service's directory, not the principal behind a particular request.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: whom the agent acts for is not defined; the optional owners list names responsible parties, not a per-request principal (same as MCP Authorization and Web Bot Auth).",
+   "claims": [
+    {
+     "text": "Owners are responsible parties.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.2. Multi-valued Attributes",
+     "quote": "A list of the responsible parties for an agentic identity.",
+     "check": "OK",
+     "check_fp": "e1f5dabd29"
+    },
+    {
+     "text": "Searched the draft for delegation, on-behalf-of, act, actor or principal. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "None for the agent",
+   "answer": "None. The draft defines a directory record, not a credential the agent presents. It says the record lets the agent 'subsequently' be authenticated, without defining how. The only credential involved is the SCIM client's own authentication to the SCIM API, which RFC 7644 leaves to TLS or standard HTTP schemes (e.g. OAuth bearer tokens). That authenticates the provisioning system, not the agent.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no credential is defined for the agent's requests.",
+   "claims": [
+    {
+     "text": "Authentication happens later, by means not defined here.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "This establishes an agentic identity so that an agent can subsequently be authenticated and authorized to interact with the service.",
+     "check": "OK",
+     "check_fp": "55c25670f0"
+    },
+    {
+     "text": "Searched the draft for credential, token, key, certificate, signature or authentication method attributes. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "SCIM relies on TLS or standard HTTP authentication for the client.",
+     "type": "fact",
+     "source": "rfc7644",
+     "section": "2. Authentication and Authorization",
+     "quote": "SCIM depends on the use of Transport Layer Security (TLS) and/or standard HTTP authentication and authorization schemes as per [RFC7235].",
+     "check": "OK",
+     "check_fp": "166b0199da"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Not applicable, no credential",
+   "answer": "Unspecified. With no agent credential, there is no lifetime. The Agent record itself has no validity dates in the core schema. It stays until the client deactivates or deletes it.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: unspecified, because no credential is defined.",
+   "claims": [
+    {
+     "text": "Searched the core schema for expiry, validFrom, validTo, lifetime or TTL attributes. None is defined; the core single-valued attributes are active, description, displayName and agentUserName.",
+     "type": "silent",
+     "source": "spec",
+     "section": "4.1. Single-valued Attributes",
+     "quote": ""
+    },
+    {
+     "text": "Single-valued attributes defined.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1. Single-valued Attributes",
+     "quote": "The Agent core schema defines the following single-valued attributes.",
+     "check": "OK",
+     "check_fp": "df58ca152d"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Not applicable",
+   "answer": "No. There is no agent credential for the service to validate. The service can only trust the record because it came from its already-authenticated SCIM client, which requires a prior setup between the client and the service.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: nothing on the agent's requests can be validated under this draft.",
+   "claims": [
+    {
+     "text": "Searched the draft for verification, validation, signature or key discovery. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "The draft points to RFC 7644's security considerations for handling the data.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5. Security Considerations",
+     "quote": "It is important when handling data to implement the security considerations outlined in Section 7 of [RFC7644].",
+     "check": "OK",
+     "check_fp": "d80851f5de"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "No, deferred to other mechanisms",
+   "answer": "No. The draft creates the identity that a later authentication can refer to, but defines no authentication itself. The service authenticates the SCIM client (the provisioning system), not the agent or any user. How the service links an incoming agent request to its Agent record is left to the service.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: the service does not authenticate the agent or the user under this draft (same colour as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Enables subsequent authentication interactions.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "simplifies deployment and enables subsequent authentication interactions and consistent controls for those agents' identities and access rights.",
+     "check": "OK",
+     "check_fp": "ccf00951a2"
+    },
+    {
+     "text": "Searched the draft for any authentication procedure for agents. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Group membership only; meaning set by service",
+   "answer": "Partly. The draft lets an Agent be a member of SCIM groups, and the introduction describes agents' access rights as relationships with groups, roles and entitlements in the service. Only group membership is defined. The core Agent schema has no roles or entitlements attributes, and what a group allows is decided by the service. The service gets coarse, enterprise-assigned groupings, not per-action scopes.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Yellow: only coarse group membership, whose permissions are defined in the service (like Visa TAP's coarse categories).",
+   "claims": [
+    {
+     "text": "Agents can be group members.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.4. Updates to Existing Schema",
+     "quote": "allow the referenceTypes of the members \"$ref\" sub-attribute to also refer to an Agent resource",
+     "check": "OK",
+     "check_fp": "9f00ee8421"
+    },
+    {
+     "text": "Access rights as relationships with groups, roles and entitlements.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "an agent's identity can have access rights in the service, represented through relationships of the agent's identity with groups, roles and entitlements in a service.",
+     "check": "OK",
+     "check_fp": "c95972c641"
+    },
+    {
+     "text": "Searched the Agent core schema for roles, entitlements, scopes or permissions attributes. Only owners is multi-valued; none of these is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "4.2. Multi-valued Attributes",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "None",
+   "answer": "No. Provisioning is done by the SCIM client, and the draft defines no step where a person approves the agent's access or actions.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no approval step is defined.",
+   "claims": [
+    {
+     "text": "Searched the draft for consent, approval or user interaction. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Not defined; provisioning client only implicitly",
+   "answer": "No, not as a defined trust model. An Agent record exists in the service only because the service's own SCIM client, usually the enterprise identity provider, created it, so that client implicitly stands behind the agent. That rests on the prior relationship between the service and its SCIM client, which is outside this draft. The draft states no trust model, and nothing ties the agent's later requests to the record.",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "none",
+   "rating_reason": "Red: vouching exists only implicitly through the service's pre-existing SCIM client relationship, outside the draft; yellow was also arguable, so the lower colour was chosen (tie rule).",
+   "claims": [
+    {
+     "text": "The SCIM client informs the service of identities, as for users.",
+     "type": "fact",
+     "source": "spec",
+     "section": "1. Introduction",
+     "quote": "This enables a SCIM client to inform a SCIM service provider of a new user, so that user can be identified in and subsequently authenticated to the service.",
+     "check": "OK",
+     "check_fp": "6e03236cfb"
+    },
+    {
+     "text": "Searched the draft for trust model, issuer, attestation or vetting. None is stated.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "active=false or DELETE; effect set by service",
+   "answer": "Partly. The required active flag lets the SCIM client mark an individual agent as inactive in the service, and the SCIM protocol lets it delete the record. The service must then return 404 for operations on it. Both reach the service directly as API calls, at per-agent granularity. But the draft says the meaning of 'inactive' is decided by the service, and it does not say what happens to tokens or sessions the agent already holds.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: per-agent deactivation reaches the service directly, but its effect on the agent's access is left to each service (the calibration examples are red because they define no revocation at all).",
+   "claims": [
+    {
+     "text": "The client can mark an agent inactive; the service decides what that means.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1. Single-valued Attributes",
+     "quote": "A SCIM client can indicate that an agentic identity is to be treated as inactive by the service by setting it to false.",
+     "check": "OK",
+     "check_fp": "0eb13b2f3c"
+    },
+    {
+     "text": "Meaning determined by the service.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1. Single-valued Attributes",
+     "quote": "The definitive meaning of this attribute is determined by the SCIM service.",
+     "check": "OK",
+     "check_fp": "6db998325a"
+    },
+    {
+     "text": "Service providers must implement all core attributes.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1. Single-valued Attributes",
+     "quote": "A SCIM service provider that implements this specification MUST implement all attributes defined in the core Agent schema unless otherwise specified.",
+     "check": "OK",
+     "check_fp": "44243c2886"
+    },
+    {
+     "text": "SCIM DELETE removes the resource.",
+     "type": "fact",
+     "source": "rfc7644",
+     "section": "3.6. Deleting Resources",
+     "quote": "Clients request resource removal via DELETE.",
+     "check": "OK",
+     "check_fp": "58d012c6f5"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "Optional owners reference responsible people",
+   "answer": "Partly. The optional owners attribute lists the responsible parties as references to User, Group or Agent records the service already holds. A service can therefore look up the responsible people (e.g. their email in their User record). Each owner entry must contain the owner's id, but the owners list itself is not required. There is no dedicated contact or escalation field.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: an optional field naming responsible parties the service can reach through existing records (the calibration examples are red because they have none).",
+   "claims": [
+    {
+     "text": "Owners reference existing users, groups or other resources.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.2. Multi-valued Attributes",
+     "quote": "Each value is a complex type that allows referencing the \"id\" attribute of a user, a group, or other resource already known to the SCIM service provider.",
+     "check": "OK",
+     "check_fp": "07ff9bebd7"
+    },
+    {
+     "text": "The owners attribute is not required.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.3. Agent Resource Schema",
+     "quote": "\"description\": \"A list of the responsible parties for this agent.\", \"required\": false,",
+     "check": "OK",
+     "check_fp": "ad612ce109"
+    },
+    {
+     "text": "Each owner value must include its id.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.2. Multi-valued Attributes",
+     "quote": "This sub-attribute MUST be included for each \"owners\" value",
+     "check": "OK",
+     "check_fp": "5bcafcbf23"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "None",
+   "answer": "No. SCIM pushes lifecycle changes from one client to the services it provisions, not between services. The draft defines no way for a service to report or warn about an agent.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no signalling between services.",
+   "claims": [
+    {
+     "text": "Searched the draft for events, signals, reporting or reputation. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. The core schema has no attribute for the AI model or its version. The free-text description could mention it, but nothing defines or checks that.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no model field.",
+   "claims": [
+    {
+     "text": "Searched the core schema for model, version, provider or attestation attributes. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "4. Core Schema",
+     "quote": ""
+    },
+    {
+     "text": "Description is a free-text string.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1. Single-valued Attributes",
+     "quote": "The value of this attribute is a string with the agentic identity's human-readable description.",
+     "check": "OK",
+     "check_fp": "9ad8becb0c"
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The service can hold an account for each agent and give it access through enterprise-assigned groups. What the agent presents on its requests, and how that maps to the record, is outside the draft.",
+  "incident_response": "The enterprise can deactivate or delete a specific agent in every service it provisions. What deactivation does to existing access is up to each service, and services cannot act on an agent they did not receive from a SCIM client.",
+  "accountability": "An agent record can name its owners (responsible users, groups or agents) and carries a unique name, so actions mapped to the record can be traced to the provisioning enterprise and its listed owners."
+ },
+ "notes": [
+  "Evaluation perspective: the receiving service here is the SCIM service provider, which receives agent records from the SCIM client rather than credentials on the agent's own requests. Most request-level properties are therefore not addressed by design.",
+  "The specification uses RFC 2119 keywords. Lowercase 'should' and 'must' in 5.1 Privacy come from RFC 7643's text and were not used for ratings.",
+  "Neither the Datatracker nor ietf.org could be reached from the analysis workspace. The text was captured from the ietf.org archive .txt through a browser and saved as a snapshot (JSON examples abridged, prose kept). RFC 7644 sections 2 and 3.6 were captured the same way.",
+  "Related drafts with similar names, not analysed: draft-wahl-scim-agent-schema (AgenticIdentity resource, 2025) and draft-abbey-scim-agent-extension (Agents and AgenticApplications, 2025, expired). Datatracker shows no formal replaces relationship.",
+  "draft-kushwaha-scim-agent-governance-00 (Oracle, July 2026) is a separate individual draft that extends this Agent resource with lifecycle states (including suspended and quarantined), an autonomy level, validFrom and validTo, and a credential discovery URI. This draft does not reference it, so it is not counted here."
+ ],
+ "open_questions": [
+  "How is an agent's runtime authentication (e.g. an OAuth client, a workload identity or a certificate) meant to be linked to its Agent record? The draft says only 'subsequently'.",
+  "Should 'active=false' require the service to revoke the agent's existing tokens and sessions, as the governance draft's states might imply?",
+  "Is one Agent record meant per agent product, per deployment, or per running agent?",
+  "Will the SCIM working group adopt this draft, and will roles and entitlements be added to the Agent schema?"
+ ]
+}</script></body></html>

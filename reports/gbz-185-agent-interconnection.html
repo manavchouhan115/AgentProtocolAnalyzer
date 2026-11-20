@@ -1,0 +1,1133 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GB/Z 185 Agent Interconnection (identity code and identity management): protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>GB/Z 185 Agent Interconnection (identity code and identity management)<small>GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (Artificial intelligence, Agent interconnection, Part 2: Identity code) and GB/Z 185.3-2026 第3部分：身份管理 (Part 3: Identity management), read with GB/Z 185.1-2026 第1部分：总体架构 (Part 1: Architecture)</small></h1><ul class="facts"><li><b>Specification:</b> GB/Z 185.2-2026 and GB/Z 185.3-2026 (with GB/Z 185.1-2026), status 现行 (current)</li><li><b>Date:</b> 2026-05-22</li><li><b>Maintainer:</b> Standardization Administration of China (SAC) and SAMR (publishers); proposed by and under SAC/TC 28 (National Information Technology Standardization Technical Committee), executed by its AI subcommittee TC28/SC42; drafted by CESI, BUPT and about 30 to 40 other organisations per part</li><li><b>Analysed:</b> 2026-11-20</li><li><b>Version note:</b> No later revision found. An English translation was reported as released at WAIC 2026; it was not used here. Parts 4 to 7 of the series were not analysed.</li></ul><div class=chips><span class="chip"><b>Category:</b> Credentials trust</span><span class="chip"><b>Also:</b> Agent communication</span><span class="chip"><b>Also:</b> Discovery registry</span><span class="chip"><b>Mechanism:</b> X.509 certificate, Other</span><span class="chip"><b>Venue:</b> Other standards body</span><span class="chip"><b>Maturity:</b> Stable</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>GB/Z 185 is a Chinese national guidance document series, &#x27;Artificial intelligence, Agent interconnection&#x27;, meant to give agents from different vendors a common way to identify each other, describe themselves, find each other, interact and call tools. This analysis covers Part 2 (identity code) and Part 3 (identity management), using Part 1 (architecture) as context. All three were published by SAMR and SAC on 22 May 2026 under the national IT standards committee (SAC/TC 28), drafted by CESI, BUPT and dozens of companies. They are guidance technical documents (GB/Z), not mandatory or recommended national standards. News reports say the first identity-code nodes were issued in July 2026.</p><p>A registration service provider checks an agent&#x27;s evidence and assigns it an identity code. The code is a hierarchical OID under 1.2.156.3088 that names the registration service provider, the registering organisation or person, the agent program and, optionally, one running instance. A credential issuer then gives the agent a signed credential, typically a public-key certificate for a key the agent holds. When the agent contacts another agent or a tool, the relying party asks it for a signed proof, ideally over a fresh challenge. Either the relying party or a separate identity verifier checks that proof against the certificate chain, whose roots must come from nationally recognised certification bodies. Credentials can be locked or cancelled, and verifiers can query their status. Scopes, delegation details, lifetimes, transport bindings and data formats are left open or only recommended.</p><h2 id="how">How it works</h2><ol class="steps"><li>An agent delegator (a person or an organisation) authorises an agent and asks a registration service provider to register it. The request includes registration information such as the agent&#x27;s functions, supported tasks and version.</li><li>The registration service provider assesses risk and checks evidence (e.g. code or model hashes, delegation records, behaviour boundaries). It then creates an identity account and assigns an identity code, which may follow Part 2&#x27;s OID structure, e.g. 1.2.156.3088.1.1.34C2.478BDF.3GF546.</li><li>In the example flow, the agent generates its own key pair in an HSM or TEE. A credential issuer (the registration service provider or a third party) issues a public-key certificate that binds the key to the identity code and other attributes.</li><li>When the agent asks another agent or a tool provider (the relying party) for a service, the relying party picks an authentication policy. It can get a fresh random challenge from an identity verifier.</li><li>The agent signs a &#x27;process credential package&#x27; with its private key, including the challenge, and submits it. The relying party verifies it itself or forwards it to the identity verifier.</li><li>The verifier checks the signature and certificate chain up to a nationally recognised root. It may also check validity period, lock or cancellation status, audience, scope and delegation chain, then returns a signed assertion with the result.</li><li>The relying party combines the assertion with its own authorization policy, decides, and if it allows the request sets up an authenticated, secure session with the agent.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>GB/Z 185 Agent Interconnection (identity code and identity management)</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Registry-assigned OID identity codes plus issuer-signed agent credentials</td></tr><tr><td class="prop">Use cases</td><td class="">Agent-to-agent and agent-to-tool calls</td></tr><tr><td class="prop">Parties involved</td><td class="">Delegator, agent, registry, issuer, verifier, relying party</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">Published guidance document; adoption only in news</td></tr><tr><td class="prop">Building blocks</td><td class="">OID (GB/T 26231), PKI certificates (GB/T 20518)</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="green">Per-agent OID code naming registry and registrant</td></tr><tr><td class="prop">Agent instance identifier</td><td class="yellow">Recommended instance serial in the code</td></tr><tr><td class="prop">Acting for (authority)</td><td class="yellow">Registrant in code; delegator details optional</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="yellow">Issuer-signed credential plus signed proof, per session</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Explicit validity recommended, no number</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="yellow">Signature chain required; expiry and status optional</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="yellow">Per-agent key proof at session setup</td></tr><tr><td class="prop">Scoped authorization</td><td class="yellow">Scope in credential optional; service decides</td></tr><tr><td class="prop">Human approval</td><td class="yellow">Delegator authorises at registration only</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="green">Registry vetting plus nationally recognised CA roots</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="yellow">Lock and cancel with status query</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">No channel for the relying party</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">None</td></tr><tr><td class="prop">Model identity</td><td class="yellow">Optional, via registration evidence only</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>The relying party learns which registered agent it is talking to and can check a proof tied to that agent&#x27;s own key, then applies its own policy. Scopes are only optional, undefined fields, so permission control is mostly left to each service.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>A specific agent&#x27;s account or credential can be locked or cancelled, and verifiers can query that status, which is finer than provider-level key removal. Whether a revoked credential is refused depends on the verifier checking status, which is only recommended. There is no route for a service to report an agent.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Each code names the registration service provider and the registering organisation or person, the delegator bears final responsibility by definition, and registries must keep audit-protected logs and archive records after cancellation. A service still needs the registry&#x27;s cooperation to turn a code into a named party.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Contact and escalation:</b> No channel for the relying party (not addressed by the specification)</li><li><b>Cross-party signalling:</b> None (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>GB/Z 185 Agent Interconnection (identity code and identity management)</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">A Chinese national guidance framework where a registration service assigns each agent (and optionally each running instance) a hierarchical OID identity code and a signed credential, which relying agents and tools verify, directly or through an identity verifier, before deciding whether to interact.<details><summary>Evidence (3)</summary><div class="claim">Part 2 scope: coding rules, allocation and management of agent identity codes. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 1 范围. <span class="chk">(quote verified against the source)</span><blockquote>“本文件规定了智能体身份码的编码规则、分配与管理要求。”</blockquote></div><div class="claim">Part 3 scope: identity management framework covering registration and verification, accounts, credentials and authentication. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 1 范围. <span class="chk">(quote verified against the source)</span><blockquote>“本文件规定了智能体在互联环境中的身份管理框架及要求”</blockquote></div><div class="claim">The identity code is assigned by the registration service provider and used to identify, verify and manage agents within and across systems. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 3.5 智能体身份码. <span class="chk">(quote verified against the source)</span><blockquote>“由智能体身份注册服务方分配给智能体的”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Two scenarios: an agent asks another agent for a service, or an agent calls a tool provider through a protocol (Part 7 covers tool calls). In both, the receiving party is the &#x27;relying party&#x27;. The documents do not bind the credential to a transport such as HTTP headers or TLS; the agent presents a signed proof as part of the exchange. The relying party can verify it itself or pass it to a separate identity verifier.<details><summary>Evidence (5)</summary><div class="claim">Agent-to-agent scenario. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“智能体A向另一个智能体B发起互联请求”</blockquote></div><div class="claim">Agent-to-tool scenario. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“工具提供方对智能体身份进行鉴别”</blockquote></div><div class="claim">The relying party may hand verification to the identity verifier. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份依赖方如无法独立验证，可提交给智能体身份验证方进行验证。”</blockquote></div><div class="claim">Searched Parts 1 to 3 for HTTP, header, TLS, transport or message format bindings for the credential. None is defined; the process credential package format is not specified. <i>Not found in</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, Whole document.</div><div class="claim">Tool calling is detailed in Part 7. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 5 智能体身份管理框架. <span class="chk">(quote verified against the source)</span><blockquote>“完整的智能体工具调用服务可参照”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Part 3&#x27;s framework names: agent delegator (authorises the agent and bears final responsibility, usually a person or an organisation); agent; tool provider; agent identity registration service provider (registers, verifies, assigns the code, runs accounts); agent credential issuer (issues and manages credentials, same body or a third party); agent identity verifier (checks credentials). It also defines the agent identity relying party. Part 2 adds the registration requester, agent ontology (the registered program) and agent instance, with a competent authority allocating registry codes. Part 1 groups these into user, agent, management service, interconnection service and resource access domains.<details><summary>Evidence (6)</summary><div class="claim">Agent delegator: authorises the agent and bears final responsibility, usually a person or an organisation. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 5 智能体身份管理框架. <span class="chk">(quote verified against the source)</span><blockquote>“对智能体的行为承担最终责任，通常是人类用户或者组织机构。”</blockquote></div><div class="claim">The credential issuer may be the same organisation as the registration service provider or an independent third party. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 5 智能体身份管理框架. <span class="chk">(quote verified against the source)</span><blockquote>“该方可与智能体身份注册服务方同属一个机构，也可为独立的第三方机构。”</blockquote></div><div class="claim">Relying party definition. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 3.3 智能体身份依赖方. <span class="chk">(quote verified against the source)</span><blockquote>“依赖对智能体进行身份鉴别的结果决定是否建立信任关系的实体。”</blockquote></div><div class="claim">Agent instance definition (Part 2). <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 3.2 智能体实例. <span class="chk">(quote verified against the source)</span><blockquote>“智能体本体创建的、具有独立状态和生命周期的实体。”</blockquote></div><div class="claim">Five conceptual domains (Part 1). <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=CFF03D872963466AC7F03ED0E28B6702">GB/Z 185.1-2026 人工智能 智能体互联 第1部分：总体架构 (official full text, SAMR openstd online viewer)</a>, 5.1 概念模型. <span class="chk">(quote verified against the source)</span><blockquote>“智能体互联概念模型由用户域、智能体域、管理服务域、互联服务域及资源访问域共5个概念域组成”</blockquote></div><div class="claim">Registry codes are allocated by the competent authority. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.4 智能体身份注册服务方. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份注册服务方应为组织，其身份码由主管部门分配。”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Published and current, but no deployment confirmed by a deployer&#x27;s own documentation. Parts 1 to 3 were published on 22 May 2026 as national standardization guidance technical documents (GB/Z), which are guidance, not mandatory or recommended standards. The documents state no implementation date. News reports say the first identity-code nodes were issued at a July 2026 event, e.g. to China Unicom&#x27;s 联通数智 (code CUAI). I found no primary source from a deployer.<div class="meta">Why this rating: Released, but named deployments are supported only by secondary news sources, not by a deployer&#x27;s own documentation (the rubric needs a primary source for green).</div><details><summary>Evidence (4)</summary><div class="claim">Document type: a normative-type guidance technical document. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 前言. <span class="chk">(quote verified against the source)</span><blockquote>“本文件为规范类指导性技术文件。”</blockquote></div><div class="claim">Proposed by and under SAC/TC 28. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 前言. <span class="chk">(quote verified against the source)</span><blockquote>“本文件由全国信息技术标准化技术委员会（SAC/TC 28）提出并归口。”</blockquote></div><div class="claim">News report (secondary) of the first identity-code node issuance. <i>Source states</i> <a href="https://www.stdaily.com/web/gdxw/2026-07/29/content_555604.html">联通数智获颁智能体身份码 (Science and Technology Daily)</a>, Article body. <span class="chk">(quote verified against the source)</span><blockquote>“会上举办了智能体身份码节点首批发放仪式，联通数智成为智能体身份码节点首批发放单位，获得智能体身份码CUAI。”</blockquote></div><div class="claim">Searched the covers, forewords and SAMR records of Parts 1 to 3 for an implementation date (实施日期). Only the publication date 2026-05-22 is shown. <i>Not found in</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, Cover and 前言.</div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">The identity code follows China&#x27;s national OID numbering scheme (GB/T 26231), under the arc 1.2.156.3088. In the example implementation, the credential is a public-key certificate in the GB/T 20518 PKI certificate format. The bibliography also lists ISO/IEC 24760 (identity management framework), ISO/IEC TS 29003 (identity proofing) and GB/T 25056 (certificate system cryptography). No web or IETF standards (e.g. OAuth, JWT, HTTP Message Signatures, DIDs) are referenced.<details><summary>Evidence (6)</summary><div class="claim">OID scheme per GB/T 26231. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.1 标识结构. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份码编码规则遵循GB/T 26231的有关规定，采用分层结构的OID标识体系。”</blockquote></div><div class="claim">Fixed OID prefix. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.2 智能体身份码OID. <span class="chk">(quote verified against the source)</span><blockquote>“固定为：1.2.156.3088”</blockquote></div><div class="claim">Example credential: GB/T 20518 public-key certificate. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录A（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“本附录方案中的智能体凭证是基于公钥证书实现。”</blockquote></div><div class="claim">ISO/IEC TS 29003 in the bibliography. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 参考文献. <span class="chk">(quote verified against the source)</span><blockquote>“Identity proofing”</blockquote></div><div class="claim">GB/T 25056 in the bibliography. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 参考文献. <span class="chk">(quote verified against the source)</span><blockquote>“证书认证系统密码及其相关安全技术规范”</blockquote></div><div class="claim">Searched the normative references and bibliographies of Parts 1 to 3 for IETF, W3C or OpenID standards (OAuth, JWT, HTTP signatures, DID, VC). None is referenced. <i>Not found in</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 2 规范性引用文件; 参考文献.</div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, per agent. The identity code is an OID string with five parts: the 1.2.156.3088 prefix, a version, the registration service provider, the registration requester (the organisation or person that registered the agent), and a custom serial that names the agent program and optionally an instance. Part 2 says one code maps to only one agent, so it is not shared across a provider&#x27;s agents the way a provider key is. Part 3 makes the Part 2 format optional (&#x27;may&#x27; follow it), and the serial numbers are only recommended.<div class="meta">Part of the normal flow · requirement level: MUST*</div><div class="meta">Why this rating: Each registered agent gets its own code that also names its registrant, unlike the provider-level keys or client IDs in the three calibration examples (all yellow); the instance level is rated separately.</div><details><summary>Evidence (5)</summary><div class="claim">Five components of the code. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.1 标识结构. <span class="chk">(quote verified against the source)</span><blockquote>“标识的组成部分从左至右依次为：智能体身份码OID、智能体身份码版本、智能体身份注册服务方、智能体身份注册请求方、自定义序列号”</blockquote></div><div class="claim">One code corresponds to one agent only. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 6 智能体身份码分配与管理要求. <span class="chk">(quote verified against the source)</span><blockquote>“一个智能体身份码只能对应一个智能体”</blockquote></div><div class="claim">A serial distinguishing the agent program (ontology) is recommended. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.6 自定义序列号. <span class="chk">(quote verified against the source)</span><blockquote>“宜给智能体分配一个用于区分智能体本体的序列号”</blockquote></div><div class="claim">Requester identifiers are allocated by the registration service provider. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.5 智能体身份注册请求方. <span class="chk">(quote verified against the source)</span><blockquote>“每个智能体身份注册请求方的标识由智能体身份注册服务方分配”</blockquote></div><div class="claim">Part 3 says codes may be allocated according to Part 2, so the format is optional there. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 6.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“可按照GB/Z 185.2—2026分配身份码”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Part 2 distinguishes the agent ontology (the registered program) from an agent instance (a runtime entity with its own state and life cycle). It recommends that the registry also assign an instance serial, which becomes the last level of the code; the character 0 marks the program itself. The informative Annex A example shows each instance getting its own code. This is a SHOULD, not a requirement, so many codes may name only the program.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: A per-instance identifier is defined and visible in the code, but only recommended (all three calibration examples are red because they define none).</div><details><summary>Evidence (3)</summary><div class="claim">Instance serial is recommended. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.6 自定义序列号. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份注册服务方宜给智能体分配一个智能体实例序列号，以标识由智能体本体创建的实例。”</blockquote></div><div class="claim">0 marks the program itself. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.6 自定义序列号. <span class="chk">(quote verified against the source)</span><blockquote>“当注册对象为本体本身时，其实例序列号以特定字符0标识。”</blockquote></div><div class="claim">One program can create many instances (informative annex). <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 附录A（资料性） 表A.1. <span class="chk">(quote verified against the source)</span><blockquote>“一个智能体本体可以创建多个智能体实例”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The code always contains a segment for the registration requester, the organisation or person that registered the agent, but only as a registry-assigned value, not a name. Part 3 defines an agent delegator (the party the agent acts for). The verifier&#x27;s assertion &#x27;may&#x27; carry delegator information, and verifiers &#x27;should&#x27; check delegation information held in the credential. The example certificate may include delegator details, but no format for them is defined.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: Whom the agent acts for is defined, but passing it to the relying party is optional (&#x27;may&#x27; in the assertion, &#x27;should&#x27; for checking), the same pattern as Visa TAP.</div><details><summary>Evidence (6)</summary><div class="claim">Delegator definition. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 3.2 智能体委托方. <span class="chk">(quote verified against the source)</span><blockquote>“授权智能体代表其执行任务的实体。”</blockquote></div><div class="claim">The assertion may include delegator information and functional scope. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“断言中也可包含其他经过验证的可信信息，如智能体委托方信息、功能范围等。”</blockquote></div><div class="claim">Verifiers should check the delegation information in the credential. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“验证方宜验证智能体凭证中包含的从智能体委托方到智能体的授权委托信息”</blockquote></div><div class="claim">Requester can be an organisation or an individual (Part 2). <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.5 智能体身份注册请求方. <span class="chk">(quote verified against the source)</span><blockquote>“也可以是个人”</blockquote></div><div class="claim">The example certificate may include delegator information. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录A（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“可包括但不限于：智能体身份码、系统构成、功能清单、智能体委托方信息、权限等级等。”</blockquote></div><div class="claim">Searched Part 3 for a format or field definition for delegator or delegation information. None is defined. <i>Not found in</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1, 9.2, 附录A.</div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The agent credential is a tamper-proof data set issued by the credential issuer; in the informative example it is a public-key certificate for a key only the agent holds. At authentication the agent builds a &#x27;process credential package&#x27;, which in the example is signed with its private key over a verifier-supplied random value, so it is proof of possession. The credential is presented when the relying party triggers authentication, after which a session is set up; it is not required on every request. The package format and what it must cover are not specified, and the dynamic challenge is only recommended.<div class="meta">Part of the normal flow · requirement level: SHOULD</div><div class="meta">Why this rating: A verifiable credential is defined, but it is presented at session setup rather than on every request and its format and freshness binding are only recommended or informative (the calibration examples are green because they carry a credential on each request).</div><details><summary>Evidence (7)</summary><div class="claim">Agent credential definition. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 3.7 智能体凭证. <span class="chk">(quote verified against the source)</span><blockquote>“由智能体凭证发行方签发的、用于身份鉴别的、经过防篡改处理的数据集合。”</blockquote></div><div class="claim">Process credential package definition. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 3.9 过程凭证包. <span class="chk">(quote verified against the source)</span><blockquote>“在身份鉴别过程中，由智能体动态生成的、用于证明其身份的数据集合。”</blockquote></div><div class="claim">Dynamic proof is only recommended. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“智能体宜具备生成动态过程凭证的能力”</blockquote></div><div class="claim">In the example, only the agent holds the private key. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录A（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“私钥仅由智能体持有”</blockquote></div><div class="claim">In the example, the verifier generates a random challenge. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录C（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份验证方会为本次身份鉴别流程生成一个动态随机数。”</blockquote></div><div class="claim">Authentication is triggered by the relying party&#x27;s access-control policy, and then a session is established. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份依赖方与智能体之间建立一个经过鉴别的、安全的会话”</blockquote></div><div class="claim">Searched Part 3 for a defined format or required contents of the process credential package or credential. None is given beyond the informative annex examples. <i>Not found in</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 3.9, 9.1, 9.2, 附录A, 附录C.</div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Recommended, no limit given. Part 3 recommends that a credential carry an explicit validity period no longer than the life of its identity account, and that short-lived credentials get automatic periodic renewal. It gives no maximum duration. Checking the validity period is listed only as one of the steps verification &#x27;can include&#x27;.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: A validity period is recommended for the issuer with no number and no firm verifier rule (same as MCP Authorization).</div><details><summary>Evidence (3)</summary><div class="claim">Validity period recommended, bounded by the account life. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 8.2 凭证发行. <span class="chk">(quote verified against the source)</span><blockquote>“智能体凭证宜包含明确的有效期，且其生命周期不长于其所关联的身份账户的生命周期。”</blockquote></div><div class="claim">Verification may include one or more of the listed checks. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“该过程可包含以下一个或多个步骤”</blockquote></div><div class="claim">Time validity check is one listed step. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“检查智能体凭证是否在有效期内”</blockquote></div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The identity verifier must be able to check that a credential is intact and genuine by tracing its signature to trusted issuer root certificates, with no prior relationship with the agent. Checks on validity period, lock or cancellation status, audience and scope are listed as steps the process &#x27;can include&#x27;, and status checking is only recommended. If status cannot be checked in real time, the verifier may accept or reject by its own policy. The relying party can verify itself or rely on the verifier&#x27;s assertion.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Genuineness and integrity checks are required, but checking that the credential is current (expiry, status) is optional or recommended, so only part of &#x27;genuine, current and unaltered&#x27; is required (the calibration examples are green because expiry checks are part of validation).</div><details><summary>Evidence (4)</summary><div class="claim">Verifier must be able to verify integrity and authenticity via a chain to trusted issuer roots. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份验证方应能验证所出示智能体凭证的完整性和真实性”</blockquote></div><div class="claim">Status checking is recommended. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份验证方宜具备检查智能体凭证状态的能力”</blockquote></div><div class="claim">If status cannot be checked in real time, a preset policy decides. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“如无法实时核验智能体凭证状态，宜能根据预设的安全策略决定接受或拒绝”</blockquote></div><div class="claim">Verification may include one or more steps. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“该过程可包含以下一个或多个步骤”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Authentication is the core of Part 3. The relying party, or an identity verifier on its behalf, checks a proof the agent generates with its own credential. In the informative example this proof is a signature with a private key that only that agent holds, over a fresh challenge, so the agent itself is authenticated, not just its provider. This happens at session setup, not on every request. The key-based method and the challenge are only an informative example and a SHOULD. Users and delegators are not authenticated by the relying party.<div class="meta">Part of the normal flow · requirement level: SHOULD</div><div class="meta">Why this rating: Proof that belongs to the individual agent is the normal flow, but only at session setup and with the key-based, challenge-bound method left to a SHOULD and an informative annex (the calibration examples are red because they verify only a provider key or a token).</div><details><summary>Evidence (4)</summary><div class="claim">The agent must be able to select a credential and generate a process credential package to prove its identity. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“智能体应能根据智能体身份依赖方或智能体身份验证方的具体要求，选择智能体凭证并生成过程凭证包，以证明其身份”</blockquote></div><div class="claim">The relying party authenticates the agent according to its access-control policy. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份依赖方根据其访问控制策略，对智能体进行身份鉴别”</blockquote></div><div class="claim">Example: the verifier checks the signature with the agent&#x27;s public key, including the random value. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录C（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“基于智能体公钥进一步验证签名数据是否未被篡改，包括动态随机数是否一致”</blockquote></div><div class="claim">Example: the private key is held only by the agent. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录A（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“私钥仅由智能体持有”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Verifiers should check that the authorization scope declared in the credential matches the operation requested, and the assertion may carry the agent&#x27;s functional scope. The example certificate may include a function list and a permission level. No scope vocabulary or format is defined, and the relying party makes the final decision with its own authorization policy. The detailed tool-access rules are in Part 7, which was not analysed.<div class="meta">Optional in the specification · requirement level: SHOULD</div><div class="meta">Why this rating: Scope checks are recommended but the scopes themselves are undefined and optional, so the service gets at most coarse, optional permissions (between MCP&#x27;s green scopes and Web Bot Auth&#x27;s red).</div><details><summary>Evidence (4)</summary><div class="claim">Verifiers should check declared scope against the requested operation. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“并宜验证智能体凭证中声明的授权范围与当前请求的操作意图是否一致”</blockquote></div><div class="claim">The relying party decides with its own authorization policy. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份依赖方基于该断言中的身份鉴别结果，并结合自身的授权策略，做出最终决策。”</blockquote></div><div class="claim">Example certificate contents. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录A（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“可包括但不限于：智能体身份码、系统构成、功能清单、智能体委托方信息、权限等级等。”</blockquote></div><div class="claim">Tool calling is detailed in Part 7. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 5 智能体身份管理框架. <span class="chk">(quote verified against the source)</span><blockquote>“完整的智能体工具调用服务可参照”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Registration starts after the agent delegator, usually a person or an organisation, has authorised the agent, and updates, locks and cancellations started by the agent should include the delegator&#x27;s confirmation. This approval happens once, at registration, and the delegator may be an organisation rather than a person. The documents do not define how it is done, and the relying party has no step to ask a person to approve a specific action.<div class="meta">Part of the normal flow · requirement level: SHOULD</div><div class="meta">Why this rating: A delegator authorisation step is part of registration and confirmations are recommended, but it is not per-access, not necessarily by a person, and not something the service can request (MCP&#x27;s per-token user consent is green).</div><details><summary>Evidence (3)</summary><div class="claim">Registration begins after the delegator authorises the agent. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 6.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“智能体委托方在对智能体进行委托授权后，向智能体身份注册服务方发起注册请求”</blockquote></div><div class="claim">Agent-initiated updates should include delegator confirmation. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 7.2 身份更新. <span class="chk">(quote verified against the source)</span><blockquote>“流程中宜包含智能体委托方的确认信息”</blockquote></div><div class="claim">The delegator is usually a person or an organisation. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 5 智能体身份管理框架. <span class="chk">(quote verified against the source)</span><blockquote>“通常是人类用户或者组织机构”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Several parties vouch. The registration service provider assesses risk and verifies the agent&#x27;s evidence before creating an account and code. Registration service providers must be organisations, and their codes are allocated by the competent authority. The OID prefix is managed by the OID management department. Credential chains must lead to root certificates issued by nationally recognised electronic certification service providers, under the competent department&#x27;s rules on agent certificates.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The documents name who vouches (vetted registration service providers and nationally recognised certification bodies), similar to Visa&#x27;s onboarding in TAP.</div><details><summary>Evidence (6)</summary><div class="claim">Roots must be issued by nationally recognised certification service providers. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“其中根证书应由国家认可的电子认证服务机构签发”</blockquote></div><div class="claim">Registration service providers are organisations whose codes come from the competent authority. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.4 智能体身份注册服务方. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份注册服务方应为组织，其身份码由主管部门分配。”</blockquote></div><div class="claim">Registration includes risk assessment and evidence requirements. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 6.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份注册服务方分析收到的注册信息，评估其潜在风险”</blockquote></div><div class="claim">International agents register through registries recognised by the competent authority (informative annex). <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 附录B（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“国际智能体可向经主管部门认可的智能体身份注册服务方申请注册，获得智能体身份码。”</blockquote></div><div class="claim">Also subject to the competent department&#x27;s rules on agent public-key certificates. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“应符合国家主管部门智能体公钥证书管理的有关规定”</blockquote></div><div class="claim">The OID prefix is allocated and managed by the OID management department. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.2 智能体身份码OID. <span class="chk">(quote verified against the source)</span><blockquote>“由OID标识管理部门统一分配和管理”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Yes, but checking is not required. Accounts and credentials can be locked, unlocked and cancelled, per agent, and cancelling an account must trigger cancellation of its credentials. The credential issuer must let verifiers query lock and cancellation status, and a verifier must treat a locked credential as invalid. However, status checking by the verifier is only recommended. If status cannot be checked in real time, the verifier may accept by preset policy, so a revoked credential could still be accepted.<div class="meta">Required by the specification · requirement level: SHOULD</div><div class="meta">Why this rating: Revocation is defined at per-agent granularity with a required status service, but verifiers are only recommended to check it and may fall back to accepting, so it does not reliably reach every verifier (all three calibration examples are red because they define none).</div><details><summary>Evidence (5)</summary><div class="claim">Issuer must support status queries for lock status. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 8.4 凭证锁定与解锁. <span class="chk">(quote verified against the source)</span><blockquote>“智能体凭证发行方应支持智能体身份验证方查询智能体凭证的锁定状态”</blockquote></div><div class="claim">Locked credentials must be treated as invalid. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 8.4 凭证锁定与解锁. <span class="chk">(quote verified against the source)</span><blockquote>“处于锁定状态的智能体凭证，在验证时，智能体身份验证方应将其视为无效”</blockquote></div><div class="claim">Issuer must support status queries for cancellation status. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 8.5 凭证注销. <span class="chk">(quote verified against the source)</span><blockquote>“智能体凭证发行方应支持智能体身份验证方查询智能体凭证的注销状态”</blockquote></div><div class="claim">Cancelling the account must trigger credential cancellation. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 8.5 凭证注销. <span class="chk">(quote verified against the source)</span><blockquote>“当关联的身份账户被注销时，智能体身份注册服务方应向智能体凭证发行方发起凭证注销流程”</blockquote></div><div class="claim">Status checking by the verifier is only recommended. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“智能体身份验证方宜具备检查智能体凭证状态的能力”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Nothing gives the relying party a contact or escalation channel. The informative Annex B lists delegator contact details as possible evidence at registration, but that is held by the registration service provider, not sent to services. The code does identify the registration service provider and the registrant, so a service could in principle ask the registry, but no procedure for that is defined.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field or escalation route is defined for the service (same as all three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Searched Parts 2 and 3 for contact, complaint, abuse, report or escalation procedures available to relying parties. None is defined. <i>Not found in</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, Whole document.</div><div class="claim">Delegator contact details appear only as possible registration evidence (informative). <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录B（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“可用于识别智能体委托方的信息，如智能体委托方联系方式等。”</blockquote></div><div class="claim">The code names the registry and the registrant. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a>, 5.1 标识结构. <span class="chk">(quote verified against the source)</span><blockquote>“标识的组成部分从左至右依次为：智能体身份码OID、智能体身份码版本、智能体身份注册服务方、智能体身份注册请求方、自定义序列号”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Lock and cancel requests come from the registration service provider, the issuer, the agent or the delegator. No route is defined for a relying party to report an agent or warn others. The verifier&#x27;s assertion may include a security-policy suggestion, but it goes only to that relying party.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No mechanism for services to share signals about an agent (same as the calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched Parts 1 to 3 for reputation, reporting, shared signals or abuse notification. None is defined. <i>Not found in</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, Whole document.</div><div class="claim">Assertions may include a security-policy suggestion for the relying party only. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 9.2 技术要求. <span class="chk">(quote verified against the source)</span><blockquote>“断言中可包含基于本次鉴别结果给出的安全策略建议，供智能体身份依赖方决策参考。”</blockquote></div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. In the informative Annex B, possible registration evidence includes unique hashes or fingerprints of the agent&#x27;s core code, model and algorithms, which the registration service provider checks. The example certificate &#x27;may&#x27; include the agent&#x27;s system composition. Nothing requires a model field in the credential, so the relying party usually does not learn which model is behind the agent.<div class="meta">Optional in the specification · requirement level: MAY</div><div class="meta">Why this rating: Model hashes appear only as optional, informative registration evidence and an optional certificate field, so the service may learn it but usually will not (the calibration examples are red because they define nothing).</div><details><summary>Evidence (3)</summary><div class="claim">Example evidence: unique hash or fingerprint of core code, model and algorithms. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录B（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“智能体核心代码、模型和算法的唯一哈希或指纹”</blockquote></div><div class="claim">Example certificate may include system composition. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 附录A（资料性）. <span class="chk">(quote verified against the source)</span><blockquote>“可包括但不限于：智能体身份码、系统构成、功能清单、智能体委托方信息、权限等级等。”</blockquote></div><div class="claim">The registry collects and verifies the evidence. <i>Source states</i> <a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a>, 6.1 通用流程. <span class="chk">(quote verified against the source)</span><blockquote>“并对证明材料进行核实与验证”</blockquote></div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12">GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)</a> (GB/Z 185.2-2026 (现行), 2026-05-22)</li><li><a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23">GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)</a> (GB/Z 185.3-2026 (现行), 2026-05-22)</li><li><a href="http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=CFF03D872963466AC7F03ED0E28B6702">GB/Z 185.1-2026 人工智能 智能体互联 第1部分：总体架构 (official full text, SAMR openstd online viewer)</a> (GB/Z 185.1-2026 (现行), 2026-05-22)</li><li><a href="https://www.stdaily.com/web/gdxw/2026-07/29/content_555604.html">联通数智获颁智能体身份码 (Science and Technology Daily)</a> (accessed 2026-11-20, 2026-07-29) <i>(secondary source)</i></li></ul><h2>Notes</h2><ul class="plain"><li>The official text is only available as page images in SAMR&#x27;s openstd online viewer (no text layer, anti-copy measures). Pages were reconstructed from the viewer&#x27;s image tiles in a browser, captured as screenshots, and OCR&#x27;d (RapidOCR) into text snapshots. Every quoted passage was compared by eye with the page image, and OCR errors in quoted passages were corrected in the snapshot before running the quote checker. Treat quotes as transcriptions of the official images.</li><li>Requirement levels: the documents follow GB/T 1.1-2020 verb forms, where 应 = shall (mapped to MUST), 宜 = should (SHOULD), 可 = may (MAY). They do not use RFC 2119 keywords, but GB/T 1.1 gives these words the same formal role, so no asterisk is used for them. MUST* in the identifier row marks the phrase 只能 (&#x27;can only&#x27;), which is not one of the formal provision verbs (lowercase-style requirement).</li><li>GB/Z documents are national standardization guidance technical documents; even 应 (shall) provisions are guidance for those who choose to follow the document, not legal obligations.</li><li>Part 3 says identity codes &#x27;may&#x27; be allocated according to Part 2, so the OID code structure is optional when following Part 3 alone.</li><li>Several rows depend on informative annexes (Part 2 Annexes A to C, Part 3 Annexes A to C), which are examples, not requirements. The answers say where this is the case.</li><li>Parts 4 to 7 (description, discovery, interaction, tool calling) may add relevant mechanisms (e.g. mutual authentication in interaction and authorization in tool calling) and were not analysed.</li><li>News coverage gives conflicting dates (Xinhua says the series was released in June 2026). The SAMR records and covers show 2026-05-22.</li></ul><h2>Open questions</h2><ul class="plain"><li>Part 3 says a verifier must treat a locked credential as invalid (8.4 c), but checking status is only recommended (9.2 b 2) and a preset policy may accept when status is unavailable. Which takes precedence in practice?</li><li>No wire format is given for the agent credential, the process credential package or the identity assessment assertion. Do Parts 6 and 7, or the national rules on agent public-key certificates referred to in 9.2, define them?</li><li>Which body is the &#x27;competent authority&#x27; (主管部门) that allocates registration service provider codes and recognises foreign registries? The documents do not name it.</li><li>How should a relying party resolve an identity code (registry, requester) into a named, contactable organisation? No resolution service is described in Parts 1 to 3.</li><li>Is there a primary, deployer-published list of registration service providers or identity-code nodes issued in July 2026?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (75 of 75 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-20. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-20",
+ "protocol": {
+  "name": "GB/Z 185 Agent Interconnection (identity code and identity management)",
+  "full_name": "GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (Artificial intelligence, Agent interconnection, Part 2: Identity code) and GB/Z 185.3-2026 第3部分：身份管理 (Part 3: Identity management), read with GB/Z 185.1-2026 第1部分：总体架构 (Part 1: Architecture)",
+  "spec_version": "GB/Z 185.2-2026 and GB/Z 185.3-2026 (with GB/Z 185.1-2026), status 现行 (current)",
+  "spec_date": "2026-05-22",
+  "maintainer": "Standardization Administration of China (SAC) and SAMR (publishers); proposed by and under SAC/TC 28 (National Information Technology Standardization Technical Committee), executed by its AI subcommittee TC28/SC42; drafted by CESI, BUPT and about 30 to 40 other organisations per part",
+  "newer_version_note": "No later revision found. An English translation was reported as released at WAIC 2026; it was not used here. Parts 4 to 7 of the series were not analysed."
+ },
+ "profile": {
+  "id": "gbz-185-agent-interconnection",
+  "category": "credentials-trust",
+  "secondary_categories": [
+   "agent-communication",
+   "discovery-registry"
+  ],
+  "mechanisms": [
+   "x509-certificate",
+   "other"
+  ],
+  "venue": "other-sdo",
+  "maturity": "stable",
+  "openness": "open-specification",
+  "layers": [
+   "application-message",
+   "other"
+  ],
+  "building_blocks": [
+   "GB/T 26231-2017 (OID national numbering)",
+   "OID (ISO/IEC 9834)",
+   "GB/T 20518 (PKI digital certificate format)",
+   "ISO/IEC 24760",
+   "ISO/IEC TS 29003"
+  ],
+  "website": "http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23",
+  "first_published": "2026-05"
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "GB/Z 185 is a Chinese national guidance document series, 'Artificial intelligence, Agent interconnection', meant to give agents from different vendors a common way to identify each other, describe themselves, find each other, interact and call tools. This analysis covers Part 2 (identity code) and Part 3 (identity management), using Part 1 (architecture) as context. All three were published by SAMR and SAC on 22 May 2026 under the national IT standards committee (SAC/TC 28), drafted by CESI, BUPT and dozens of companies. They are guidance technical documents (GB/Z), not mandatory or recommended national standards. News reports say the first identity-code nodes were issued in July 2026.",
+  "A registration service provider checks an agent's evidence and assigns it an identity code. The code is a hierarchical OID under 1.2.156.3088 that names the registration service provider, the registering organisation or person, the agent program and, optionally, one running instance. A credential issuer then gives the agent a signed credential, typically a public-key certificate for a key the agent holds. When the agent contacts another agent or a tool, the relying party asks it for a signed proof, ideally over a fresh challenge. Either the relying party or a separate identity verifier checks that proof against the certificate chain, whose roots must come from nationally recognised certification bodies. Credentials can be locked or cancelled, and verifiers can query their status. Scopes, delegation details, lifetimes, transport bindings and data formats are left open or only recommended."
+ ],
+ "how_it_works": [
+  "An agent delegator (a person or an organisation) authorises an agent and asks a registration service provider to register it. The request includes registration information such as the agent's functions, supported tasks and version.",
+  "The registration service provider assesses risk and checks evidence (e.g. code or model hashes, delegation records, behaviour boundaries). It then creates an identity account and assigns an identity code, which may follow Part 2's OID structure, e.g. 1.2.156.3088.1.1.34C2.478BDF.3GF546.",
+  "In the example flow, the agent generates its own key pair in an HSM or TEE. A credential issuer (the registration service provider or a third party) issues a public-key certificate that binds the key to the identity code and other attributes.",
+  "When the agent asks another agent or a tool provider (the relying party) for a service, the relying party picks an authentication policy. It can get a fresh random challenge from an identity verifier.",
+  "The agent signs a 'process credential package' with its private key, including the challenge, and submits it. The relying party verifies it itself or forwards it to the identity verifier.",
+  "The verifier checks the signature and certificate chain up to a nationally recognised root. It may also check validity period, lock or cancellation status, audience, scope and delegation chain, then returns a signed assertion with the result.",
+  "The relying party combines the assertion with its own authorization policy, decides, and if it allows the request sets up an authenticated, secure session with the agent."
+ ],
+ "sources": [
+  {
+   "id": "part2",
+   "title": "GB/Z 185.2-2026 人工智能 智能体互联 第2部分：身份码 (official full text, SAMR openstd online viewer)",
+   "url": "http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=11B33B7532093ED660305B2BF4940A12",
+   "version": "GB/Z 185.2-2026 (现行)",
+   "date": "2026-05-22",
+   "kind": "primary"
+  },
+  {
+   "id": "part3",
+   "title": "GB/Z 185.3-2026 人工智能 智能体互联 第3部分：身份管理 (official full text, SAMR openstd online viewer)",
+   "url": "http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=BFCCE65447B30927953D90059AB89E23",
+   "version": "GB/Z 185.3-2026 (现行)",
+   "date": "2026-05-22",
+   "kind": "primary"
+  },
+  {
+   "id": "part1",
+   "title": "GB/Z 185.1-2026 人工智能 智能体互联 第1部分：总体架构 (official full text, SAMR openstd online viewer)",
+   "url": "http://openstd.samr.gov.cn/bzgk/gb/newGbInfo?hcno=CFF03D872963466AC7F03ED0E28B6702",
+   "version": "GB/Z 185.1-2026 (现行)",
+   "date": "2026-05-22",
+   "kind": "primary"
+  },
+  {
+   "id": "news_stdaily",
+   "title": "联通数智获颁智能体身份码 (Science and Technology Daily)",
+   "url": "https://www.stdaily.com/web/gdxw/2026-07/29/content_555604.html",
+   "version": "accessed 2026-11-20",
+   "date": "2026-07-29",
+   "kind": "secondary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Registry-assigned OID identity codes plus issuer-signed agent credentials",
+   "answer": "A Chinese national guidance framework where a registration service assigns each agent (and optionally each running instance) a hierarchical OID identity code and a signed credential, which relying agents and tools verify, directly or through an identity verifier, before deciding whether to interact.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Part 2 scope: coding rules, allocation and management of agent identity codes.",
+     "type": "fact",
+     "source": "part2",
+     "section": "1 范围",
+     "quote": "本文件规定了智能体身份码的编码规则、分配与管理要求。",
+     "check": "OK",
+     "check_fp": "17bd2228fa"
+    },
+    {
+     "text": "Part 3 scope: identity management framework covering registration and verification, accounts, credentials and authentication.",
+     "type": "fact",
+     "source": "part3",
+     "section": "1 范围",
+     "quote": "本文件规定了智能体在互联环境中的身份管理框架及要求",
+     "check": "OK",
+     "check_fp": "08abfd7e63"
+    },
+    {
+     "text": "The identity code is assigned by the registration service provider and used to identify, verify and manage agents within and across systems.",
+     "type": "fact",
+     "source": "part2",
+     "section": "3.5 智能体身份码",
+     "quote": "由智能体身份注册服务方分配给智能体的",
+     "check": "OK",
+     "check_fp": "a409552546"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Agent-to-agent and agent-to-tool calls",
+   "answer": "Two scenarios: an agent asks another agent for a service, or an agent calls a tool provider through a protocol (Part 7 covers tool calls). In both, the receiving party is the 'relying party'. The documents do not bind the credential to a transport such as HTTP headers or TLS; the agent presents a signed proof as part of the exchange. The relying party can verify it itself or pass it to a separate identity verifier.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Agent-to-agent scenario.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "智能体A向另一个智能体B发起互联请求",
+     "check": "OK",
+     "check_fp": "2b9cc724d0"
+    },
+    {
+     "text": "Agent-to-tool scenario.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "工具提供方对智能体身份进行鉴别",
+     "check": "OK",
+     "check_fp": "21702360af"
+    },
+    {
+     "text": "The relying party may hand verification to the identity verifier.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "智能体身份依赖方如无法独立验证，可提交给智能体身份验证方进行验证。",
+     "check": "OK",
+     "check_fp": "d596731c90"
+    },
+    {
+     "text": "Searched Parts 1 to 3 for HTTP, header, TLS, transport or message format bindings for the credential. None is defined; the process credential package format is not specified.",
+     "type": "silent",
+     "source": "part3",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "Tool calling is detailed in Part 7.",
+     "type": "fact",
+     "source": "part3",
+     "section": "5 智能体身份管理框架",
+     "quote": "完整的智能体工具调用服务可参照",
+     "check": "OK",
+     "check_fp": "b00e02eceb"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Delegator, agent, registry, issuer, verifier, relying party",
+   "answer": "Part 3's framework names: agent delegator (authorises the agent and bears final responsibility, usually a person or an organisation); agent; tool provider; agent identity registration service provider (registers, verifies, assigns the code, runs accounts); agent credential issuer (issues and manages credentials, same body or a third party); agent identity verifier (checks credentials). It also defines the agent identity relying party. Part 2 adds the registration requester, agent ontology (the registered program) and agent instance, with a competent authority allocating registry codes. Part 1 groups these into user, agent, management service, interconnection service and resource access domains.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Agent delegator: authorises the agent and bears final responsibility, usually a person or an organisation.",
+     "type": "fact",
+     "source": "part3",
+     "section": "5 智能体身份管理框架",
+     "quote": "对智能体的行为承担最终责任，通常是人类用户或者组织机构。",
+     "check": "OK",
+     "check_fp": "145cb44b64"
+    },
+    {
+     "text": "The credential issuer may be the same organisation as the registration service provider or an independent third party.",
+     "type": "fact",
+     "source": "part3",
+     "section": "5 智能体身份管理框架",
+     "quote": "该方可与智能体身份注册服务方同属一个机构，也可为独立的第三方机构。",
+     "check": "OK",
+     "check_fp": "a83dde2d32"
+    },
+    {
+     "text": "Relying party definition.",
+     "type": "fact",
+     "source": "part3",
+     "section": "3.3 智能体身份依赖方",
+     "quote": "依赖对智能体进行身份鉴别的结果决定是否建立信任关系的实体。",
+     "check": "OK",
+     "check_fp": "d8716fade8"
+    },
+    {
+     "text": "Agent instance definition (Part 2).",
+     "type": "fact",
+     "source": "part2",
+     "section": "3.2 智能体实例",
+     "quote": "智能体本体创建的、具有独立状态和生命周期的实体。",
+     "check": "OK",
+     "check_fp": "af5383fc7b"
+    },
+    {
+     "text": "Five conceptual domains (Part 1).",
+     "type": "fact",
+     "source": "part1",
+     "section": "5.1 概念模型",
+     "quote": "智能体互联概念模型由用户域、智能体域、管理服务域、互联服务域及资源访问域共5个概念域组成",
+     "check": "OK",
+     "check_fp": "3970af727c"
+    },
+    {
+     "text": "Registry codes are allocated by the competent authority.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.4 智能体身份注册服务方",
+     "quote": "智能体身份注册服务方应为组织，其身份码由主管部门分配。",
+     "check": "OK",
+     "check_fp": "67ddd0fe19"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Published guidance document; adoption only in news",
+   "answer": "Published and current, but no deployment confirmed by a deployer's own documentation. Parts 1 to 3 were published on 22 May 2026 as national standardization guidance technical documents (GB/Z), which are guidance, not mandatory or recommended standards. The documents state no implementation date. News reports say the first identity-code nodes were issued at a July 2026 event, e.g. to China Unicom's 联通数智 (code CUAI). I found no primary source from a deployer.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: released, but named deployments are supported only by secondary news sources, not by a deployer's own documentation (the rubric needs a primary source for green).",
+   "claims": [
+    {
+     "text": "Document type: a normative-type guidance technical document.",
+     "type": "fact",
+     "source": "part2",
+     "section": "前言",
+     "quote": "本文件为规范类指导性技术文件。",
+     "check": "OK",
+     "check_fp": "1fda2c259a"
+    },
+    {
+     "text": "Proposed by and under SAC/TC 28.",
+     "type": "fact",
+     "source": "part3",
+     "section": "前言",
+     "quote": "本文件由全国信息技术标准化技术委员会（SAC/TC 28）提出并归口。",
+     "check": "OK",
+     "check_fp": "def925c255"
+    },
+    {
+     "text": "News report (secondary) of the first identity-code node issuance.",
+     "type": "fact",
+     "source": "news_stdaily",
+     "section": "Article body",
+     "quote": "会上举办了智能体身份码节点首批发放仪式，联通数智成为智能体身份码节点首批发放单位，获得智能体身份码CUAI。",
+     "check": "WEB-OK",
+     "check_fp": "9e6d4c4147"
+    },
+    {
+     "text": "Searched the covers, forewords and SAMR records of Parts 1 to 3 for an implementation date (实施日期). Only the publication date 2026-05-22 is shown.",
+     "type": "silent",
+     "source": "part2",
+     "section": "Cover and 前言",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "OID (GB/T 26231), PKI certificates (GB/T 20518)",
+   "answer": "The identity code follows China's national OID numbering scheme (GB/T 26231), under the arc 1.2.156.3088. In the example implementation, the credential is a public-key certificate in the GB/T 20518 PKI certificate format. The bibliography also lists ISO/IEC 24760 (identity management framework), ISO/IEC TS 29003 (identity proofing) and GB/T 25056 (certificate system cryptography). No web or IETF standards (e.g. OAuth, JWT, HTTP Message Signatures, DIDs) are referenced.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "OID scheme per GB/T 26231.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.1 标识结构",
+     "quote": "智能体身份码编码规则遵循GB/T 26231的有关规定，采用分层结构的OID标识体系。",
+     "check": "OK",
+     "check_fp": "81125d9649"
+    },
+    {
+     "text": "Fixed OID prefix.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.2 智能体身份码OID",
+     "quote": "固定为：1.2.156.3088",
+     "check": "OK",
+     "check_fp": "c3215401aa"
+    },
+    {
+     "text": "Example credential: GB/T 20518 public-key certificate.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录A（资料性）",
+     "quote": "本附录方案中的智能体凭证是基于公钥证书实现。",
+     "check": "OK",
+     "check_fp": "14533c78f9"
+    },
+    {
+     "text": "ISO/IEC TS 29003 in the bibliography.",
+     "type": "fact",
+     "source": "part3",
+     "section": "参考文献",
+     "quote": "Identity proofing",
+     "check": "OK",
+     "check_fp": "9615da3c92"
+    },
+    {
+     "text": "GB/T 25056 in the bibliography.",
+     "type": "fact",
+     "source": "part3",
+     "section": "参考文献",
+     "quote": "证书认证系统密码及其相关安全技术规范",
+     "check": "OK",
+     "check_fp": "fdda2ad5f2"
+    },
+    {
+     "text": "Searched the normative references and bibliographies of Parts 1 to 3 for IETF, W3C or OpenID standards (OAuth, JWT, HTTP signatures, DID, VC). None is referenced.",
+     "type": "silent",
+     "source": "part3",
+     "section": "2 规范性引用文件; 参考文献",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Per-agent OID code naming registry and registrant",
+   "answer": "Yes, per agent. The identity code is an OID string with five parts: the 1.2.156.3088 prefix, a version, the registration service provider, the registration requester (the organisation or person that registered the agent), and a custom serial that names the agent program and optionally an instance. Part 2 says one code maps to only one agent, so it is not shared across a provider's agents the way a provider key is. Part 3 makes the Part 2 format optional ('may' follow it), and the serial numbers are only recommended.",
+   "rating": "green",
+   "coverage": "default",
+   "requirement": "MUST*",
+   "rating_reason": "Green: each registered agent gets its own code that also names its registrant, unlike the provider-level keys or client IDs in the three calibration examples (all yellow); the instance level is rated separately.",
+   "claims": [
+    {
+     "text": "Five components of the code.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.1 标识结构",
+     "quote": "标识的组成部分从左至右依次为：智能体身份码OID、智能体身份码版本、智能体身份注册服务方、智能体身份注册请求方、自定义序列号",
+     "check": "OK",
+     "check_fp": "8b965b8667"
+    },
+    {
+     "text": "One code corresponds to one agent only.",
+     "type": "fact",
+     "source": "part2",
+     "section": "6 智能体身份码分配与管理要求",
+     "quote": "一个智能体身份码只能对应一个智能体",
+     "check": "OK",
+     "check_fp": "81c0e20d24"
+    },
+    {
+     "text": "A serial distinguishing the agent program (ontology) is recommended.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.6 自定义序列号",
+     "quote": "宜给智能体分配一个用于区分智能体本体的序列号",
+     "check": "OK",
+     "check_fp": "186a1090e6"
+    },
+    {
+     "text": "Requester identifiers are allocated by the registration service provider.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.5 智能体身份注册请求方",
+     "quote": "每个智能体身份注册请求方的标识由智能体身份注册服务方分配",
+     "check": "OK",
+     "check_fp": "ff653db029"
+    },
+    {
+     "text": "Part 3 says codes may be allocated according to Part 2, so the format is optional there.",
+     "type": "fact",
+     "source": "part3",
+     "section": "6.1 通用流程",
+     "quote": "可按照GB/Z 185.2—2026分配身份码",
+     "check": "OK",
+     "check_fp": "0feeebf11a"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "Recommended instance serial in the code",
+   "answer": "Partly. Part 2 distinguishes the agent ontology (the registered program) from an agent instance (a runtime entity with its own state and life cycle). It recommends that the registry also assign an instance serial, which becomes the last level of the code; the character 0 marks the program itself. The informative Annex A example shows each instance getting its own code. This is a SHOULD, not a requirement, so many codes may name only the program.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: a per-instance identifier is defined and visible in the code, but only recommended (all three calibration examples are red because they define none).",
+   "claims": [
+    {
+     "text": "Instance serial is recommended.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.6 自定义序列号",
+     "quote": "智能体身份注册服务方宜给智能体分配一个智能体实例序列号，以标识由智能体本体创建的实例。",
+     "check": "OK",
+     "check_fp": "356c0190bb"
+    },
+    {
+     "text": "0 marks the program itself.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.6 自定义序列号",
+     "quote": "当注册对象为本体本身时，其实例序列号以特定字符0标识。",
+     "check": "OK",
+     "check_fp": "ffaed564ed"
+    },
+    {
+     "text": "One program can create many instances (informative annex).",
+     "type": "fact",
+     "source": "part2",
+     "section": "附录A（资料性） 表A.1",
+     "quote": "一个智能体本体可以创建多个智能体实例",
+     "check": "OK",
+     "check_fp": "814b31be8a"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Registrant in code; delegator details optional",
+   "answer": "Partly. The code always contains a segment for the registration requester, the organisation or person that registered the agent, but only as a registry-assigned value, not a name. Part 3 defines an agent delegator (the party the agent acts for). The verifier's assertion 'may' carry delegator information, and verifiers 'should' check delegation information held in the credential. The example certificate may include delegator details, but no format for them is defined.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: whom the agent acts for is defined, but passing it to the relying party is optional ('may' in the assertion, 'should' for checking), the same pattern as Visa TAP.",
+   "claims": [
+    {
+     "text": "Delegator definition.",
+     "type": "fact",
+     "source": "part3",
+     "section": "3.2 智能体委托方",
+     "quote": "授权智能体代表其执行任务的实体。",
+     "check": "OK",
+     "check_fp": "3774530514"
+    },
+    {
+     "text": "The assertion may include delegator information and functional scope.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "断言中也可包含其他经过验证的可信信息，如智能体委托方信息、功能范围等。",
+     "check": "OK",
+     "check_fp": "75d6e21da9"
+    },
+    {
+     "text": "Verifiers should check the delegation information in the credential.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "验证方宜验证智能体凭证中包含的从智能体委托方到智能体的授权委托信息",
+     "check": "OK",
+     "check_fp": "b897638e8d"
+    },
+    {
+     "text": "Requester can be an organisation or an individual (Part 2).",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.5 智能体身份注册请求方",
+     "quote": "也可以是个人",
+     "check": "OK",
+     "check_fp": "fdd4aab4ab"
+    },
+    {
+     "text": "The example certificate may include delegator information.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录A（资料性）",
+     "quote": "可包括但不限于：智能体身份码、系统构成、功能清单、智能体委托方信息、权限等级等。",
+     "check": "OK",
+     "check_fp": "be058c40e5"
+    },
+    {
+     "text": "Searched Part 3 for a format or field definition for delegator or delegation information. None is defined.",
+     "type": "silent",
+     "source": "part3",
+     "section": "9.1, 9.2, 附录A",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Issuer-signed credential plus signed proof, per session",
+   "answer": "Partly. The agent credential is a tamper-proof data set issued by the credential issuer; in the informative example it is a public-key certificate for a key only the agent holds. At authentication the agent builds a 'process credential package', which in the example is signed with its private key over a verifier-supplied random value, so it is proof of possession. The credential is presented when the relying party triggers authentication, after which a session is set up; it is not required on every request. The package format and what it must cover are not specified, and the dynamic challenge is only recommended.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: a verifiable credential is defined, but it is presented at session setup rather than on every request and its format and freshness binding are only recommended or informative (the calibration examples are green because they carry a credential on each request).",
+   "claims": [
+    {
+     "text": "Agent credential definition.",
+     "type": "fact",
+     "source": "part3",
+     "section": "3.7 智能体凭证",
+     "quote": "由智能体凭证发行方签发的、用于身份鉴别的、经过防篡改处理的数据集合。",
+     "check": "OK",
+     "check_fp": "a86dd11e57"
+    },
+    {
+     "text": "Process credential package definition.",
+     "type": "fact",
+     "source": "part3",
+     "section": "3.9 过程凭证包",
+     "quote": "在身份鉴别过程中，由智能体动态生成的、用于证明其身份的数据集合。",
+     "check": "OK",
+     "check_fp": "3ab27a6bc1"
+    },
+    {
+     "text": "Dynamic proof is only recommended.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "智能体宜具备生成动态过程凭证的能力",
+     "check": "OK",
+     "check_fp": "0835ecfd0e"
+    },
+    {
+     "text": "In the example, only the agent holds the private key.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录A（资料性）",
+     "quote": "私钥仅由智能体持有",
+     "check": "OK",
+     "check_fp": "42497ef80e"
+    },
+    {
+     "text": "In the example, the verifier generates a random challenge.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录C（资料性）",
+     "quote": "智能体身份验证方会为本次身份鉴别流程生成一个动态随机数。",
+     "check": "OK",
+     "check_fp": "8f1038390a"
+    },
+    {
+     "text": "Authentication is triggered by the relying party's access-control policy, and then a session is established.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "智能体身份依赖方与智能体之间建立一个经过鉴别的、安全的会话",
+     "check": "OK",
+     "check_fp": "15abd7300a"
+    },
+    {
+     "text": "Searched Part 3 for a defined format or required contents of the process credential package or credential. None is given beyond the informative annex examples.",
+     "type": "silent",
+     "source": "part3",
+     "section": "3.9, 9.1, 9.2, 附录A, 附录C",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Explicit validity recommended, no number",
+   "answer": "Recommended, no limit given. Part 3 recommends that a credential carry an explicit validity period no longer than the life of its identity account, and that short-lived credentials get automatic periodic renewal. It gives no maximum duration. Checking the validity period is listed only as one of the steps verification 'can include'.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: a validity period is recommended for the issuer with no number and no firm verifier rule (same as MCP Authorization).",
+   "claims": [
+    {
+     "text": "Validity period recommended, bounded by the account life.",
+     "type": "fact",
+     "source": "part3",
+     "section": "8.2 凭证发行",
+     "quote": "智能体凭证宜包含明确的有效期，且其生命周期不长于其所关联的身份账户的生命周期。",
+     "check": "OK",
+     "check_fp": "a158124f4e"
+    },
+    {
+     "text": "Verification may include one or more of the listed checks.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "该过程可包含以下一个或多个步骤",
+     "check": "OK",
+     "check_fp": "687d7fe362"
+    },
+    {
+     "text": "Time validity check is one listed step.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "检查智能体凭证是否在有效期内",
+     "check": "OK",
+     "check_fp": "a4dcb28fa6"
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Signature chain required; expiry and status optional",
+   "answer": "Partly. The identity verifier must be able to check that a credential is intact and genuine by tracing its signature to trusted issuer root certificates, with no prior relationship with the agent. Checks on validity period, lock or cancellation status, audience and scope are listed as steps the process 'can include', and status checking is only recommended. If status cannot be checked in real time, the verifier may accept or reject by its own policy. The relying party can verify itself or rely on the verifier's assertion.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: genuineness and integrity checks are required, but checking that the credential is current (expiry, status) is optional or recommended, so only part of 'genuine, current and unaltered' is required (the calibration examples are green because expiry checks are part of validation).",
+   "claims": [
+    {
+     "text": "Verifier must be able to verify integrity and authenticity via a chain to trusted issuer roots.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "智能体身份验证方应能验证所出示智能体凭证的完整性和真实性",
+     "check": "OK",
+     "check_fp": "645ffc6663"
+    },
+    {
+     "text": "Status checking is recommended.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "智能体身份验证方宜具备检查智能体凭证状态的能力",
+     "check": "OK",
+     "check_fp": "9e50c57cea"
+    },
+    {
+     "text": "If status cannot be checked in real time, a preset policy decides.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "如无法实时核验智能体凭证状态，宜能根据预设的安全策略决定接受或拒绝",
+     "check": "OK",
+     "check_fp": "9dd704c943"
+    },
+    {
+     "text": "Verification may include one or more steps.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "该过程可包含以下一个或多个步骤",
+     "check": "OK",
+     "check_fp": "687d7fe362"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Per-agent key proof at session setup",
+   "answer": "Partly. Authentication is the core of Part 3. The relying party, or an identity verifier on its behalf, checks a proof the agent generates with its own credential. In the informative example this proof is a signature with a private key that only that agent holds, over a fresh challenge, so the agent itself is authenticated, not just its provider. This happens at session setup, not on every request. The key-based method and the challenge are only an informative example and a SHOULD. Users and delegators are not authenticated by the relying party.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: proof that belongs to the individual agent is the normal flow, but only at session setup and with the key-based, challenge-bound method left to a SHOULD and an informative annex (the calibration examples are red because they verify only a provider key or a token).",
+   "claims": [
+    {
+     "text": "The agent must be able to select a credential and generate a process credential package to prove its identity.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "智能体应能根据智能体身份依赖方或智能体身份验证方的具体要求，选择智能体凭证并生成过程凭证包，以证明其身份",
+     "check": "OK",
+     "check_fp": "61fd0c93b4"
+    },
+    {
+     "text": "The relying party authenticates the agent according to its access-control policy.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "智能体身份依赖方根据其访问控制策略，对智能体进行身份鉴别",
+     "check": "OK",
+     "check_fp": "ee06e325d9"
+    },
+    {
+     "text": "Example: the verifier checks the signature with the agent's public key, including the random value.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录C（资料性）",
+     "quote": "基于智能体公钥进一步验证签名数据是否未被篡改，包括动态随机数是否一致",
+     "check": "OK",
+     "check_fp": "5674545c53"
+    },
+    {
+     "text": "Example: the private key is held only by the agent.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录A（资料性）",
+     "quote": "私钥仅由智能体持有",
+     "check": "OK",
+     "check_fp": "42497ef80e"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Scope in credential optional; service decides",
+   "answer": "Partly. Verifiers should check that the authorization scope declared in the credential matches the operation requested, and the assertion may carry the agent's functional scope. The example certificate may include a function list and a permission level. No scope vocabulary or format is defined, and the relying party makes the final decision with its own authorization policy. The detailed tool-access rules are in Part 7, which was not analysed.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: scope checks are recommended but the scopes themselves are undefined and optional, so the service gets at most coarse, optional permissions (between MCP's green scopes and Web Bot Auth's red).",
+   "claims": [
+    {
+     "text": "Verifiers should check declared scope against the requested operation.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "并宜验证智能体凭证中声明的授权范围与当前请求的操作意图是否一致",
+     "check": "OK",
+     "check_fp": "1442db195d"
+    },
+    {
+     "text": "The relying party decides with its own authorization policy.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.1 通用流程",
+     "quote": "智能体身份依赖方基于该断言中的身份鉴别结果，并结合自身的授权策略，做出最终决策。",
+     "check": "OK",
+     "check_fp": "6d266dc8c5"
+    },
+    {
+     "text": "Example certificate contents.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录A（资料性）",
+     "quote": "可包括但不限于：智能体身份码、系统构成、功能清单、智能体委托方信息、权限等级等。",
+     "check": "OK",
+     "check_fp": "be058c40e5"
+    },
+    {
+     "text": "Tool calling is detailed in Part 7.",
+     "type": "fact",
+     "source": "part3",
+     "section": "5 智能体身份管理框架",
+     "quote": "完整的智能体工具调用服务可参照",
+     "check": "OK",
+     "check_fp": "b00e02eceb"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Delegator authorises at registration only",
+   "answer": "Partly. Registration starts after the agent delegator, usually a person or an organisation, has authorised the agent, and updates, locks and cancellations started by the agent should include the delegator's confirmation. This approval happens once, at registration, and the delegator may be an organisation rather than a person. The documents do not define how it is done, and the relying party has no step to ask a person to approve a specific action.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: a delegator authorisation step is part of registration and confirmations are recommended, but it is not per-access, not necessarily by a person, and not something the service can request (MCP's per-token user consent is green).",
+   "claims": [
+    {
+     "text": "Registration begins after the delegator authorises the agent.",
+     "type": "fact",
+     "source": "part3",
+     "section": "6.1 通用流程",
+     "quote": "智能体委托方在对智能体进行委托授权后，向智能体身份注册服务方发起注册请求",
+     "check": "OK",
+     "check_fp": "162b4d0a33"
+    },
+    {
+     "text": "Agent-initiated updates should include delegator confirmation.",
+     "type": "fact",
+     "source": "part3",
+     "section": "7.2 身份更新",
+     "quote": "流程中宜包含智能体委托方的确认信息",
+     "check": "OK",
+     "check_fp": "b92acb2129"
+    },
+    {
+     "text": "The delegator is usually a person or an organisation.",
+     "type": "fact",
+     "source": "part3",
+     "section": "5 智能体身份管理框架",
+     "quote": "通常是人类用户或者组织机构",
+     "check": "OK",
+     "check_fp": "b15121f28b"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Registry vetting plus nationally recognised CA roots",
+   "answer": "Yes. Several parties vouch. The registration service provider assesses risk and verifies the agent's evidence before creating an account and code. Registration service providers must be organisations, and their codes are allocated by the competent authority. The OID prefix is managed by the OID management department. Credential chains must lead to root certificates issued by nationally recognised electronic certification service providers, under the competent department's rules on agent certificates.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the documents name who vouches (vetted registration service providers and nationally recognised certification bodies), similar to Visa's onboarding in TAP.",
+   "claims": [
+    {
+     "text": "Roots must be issued by nationally recognised certification service providers.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "其中根证书应由国家认可的电子认证服务机构签发",
+     "check": "OK",
+     "check_fp": "d6e081eb80"
+    },
+    {
+     "text": "Registration service providers are organisations whose codes come from the competent authority.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.4 智能体身份注册服务方",
+     "quote": "智能体身份注册服务方应为组织，其身份码由主管部门分配。",
+     "check": "OK",
+     "check_fp": "67ddd0fe19"
+    },
+    {
+     "text": "Registration includes risk assessment and evidence requirements.",
+     "type": "fact",
+     "source": "part3",
+     "section": "6.1 通用流程",
+     "quote": "智能体身份注册服务方分析收到的注册信息，评估其潜在风险",
+     "check": "OK",
+     "check_fp": "8f329e1b69"
+    },
+    {
+     "text": "International agents register through registries recognised by the competent authority (informative annex).",
+     "type": "fact",
+     "source": "part2",
+     "section": "附录B（资料性）",
+     "quote": "国际智能体可向经主管部门认可的智能体身份注册服务方申请注册，获得智能体身份码。",
+     "check": "OK",
+     "check_fp": "c6c4cd3e25"
+    },
+    {
+     "text": "Also subject to the competent department's rules on agent public-key certificates.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "应符合国家主管部门智能体公钥证书管理的有关规定",
+     "check": "OK",
+     "check_fp": "2c28ebe76c"
+    },
+    {
+     "text": "The OID prefix is allocated and managed by the OID management department.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.2 智能体身份码OID",
+     "quote": "由OID标识管理部门统一分配和管理",
+     "check": "OK",
+     "check_fp": "76a7c7b19e"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Lock and cancel with status query",
+   "answer": "Yes, but checking is not required. Accounts and credentials can be locked, unlocked and cancelled, per agent, and cancelling an account must trigger cancellation of its credentials. The credential issuer must let verifiers query lock and cancellation status, and a verifier must treat a locked credential as invalid. However, status checking by the verifier is only recommended. If status cannot be checked in real time, the verifier may accept by preset policy, so a revoked credential could still be accepted.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "SHOULD",
+   "rating_reason": "Yellow: revocation is defined at per-agent granularity with a required status service, but verifiers are only recommended to check it and may fall back to accepting, so it does not reliably reach every verifier (all three calibration examples are red because they define none).",
+   "claims": [
+    {
+     "text": "Issuer must support status queries for lock status.",
+     "type": "fact",
+     "source": "part3",
+     "section": "8.4 凭证锁定与解锁",
+     "quote": "智能体凭证发行方应支持智能体身份验证方查询智能体凭证的锁定状态",
+     "check": "OK",
+     "check_fp": "63e140e016"
+    },
+    {
+     "text": "Locked credentials must be treated as invalid.",
+     "type": "fact",
+     "source": "part3",
+     "section": "8.4 凭证锁定与解锁",
+     "quote": "处于锁定状态的智能体凭证，在验证时，智能体身份验证方应将其视为无效",
+     "check": "OK",
+     "check_fp": "45190ac06b"
+    },
+    {
+     "text": "Issuer must support status queries for cancellation status.",
+     "type": "fact",
+     "source": "part3",
+     "section": "8.5 凭证注销",
+     "quote": "智能体凭证发行方应支持智能体身份验证方查询智能体凭证的注销状态",
+     "check": "OK",
+     "check_fp": "bed450ee95"
+    },
+    {
+     "text": "Cancelling the account must trigger credential cancellation.",
+     "type": "fact",
+     "source": "part3",
+     "section": "8.5 凭证注销",
+     "quote": "当关联的身份账户被注销时，智能体身份注册服务方应向智能体凭证发行方发起凭证注销流程",
+     "check": "OK",
+     "check_fp": "22578b4446"
+    },
+    {
+     "text": "Status checking by the verifier is only recommended.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "智能体身份验证方宜具备检查智能体凭证状态的能力",
+     "check": "OK",
+     "check_fp": "9e50c57cea"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "No channel for the relying party",
+   "answer": "No. Nothing gives the relying party a contact or escalation channel. The informative Annex B lists delegator contact details as possible evidence at registration, but that is held by the registration service provider, not sent to services. The code does identify the registration service provider and the registrant, so a service could in principle ask the registry, but no procedure for that is defined.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field or escalation route is defined for the service (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched Parts 2 and 3 for contact, complaint, abuse, report or escalation procedures available to relying parties. None is defined.",
+     "type": "silent",
+     "source": "part3",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "Delegator contact details appear only as possible registration evidence (informative).",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录B（资料性）",
+     "quote": "可用于识别智能体委托方的信息，如智能体委托方联系方式等。",
+     "check": "OK",
+     "check_fp": "3eaca9d002"
+    },
+    {
+     "text": "The code names the registry and the registrant.",
+     "type": "fact",
+     "source": "part2",
+     "section": "5.1 标识结构",
+     "quote": "标识的组成部分从左至右依次为：智能体身份码OID、智能体身份码版本、智能体身份注册服务方、智能体身份注册请求方、自定义序列号",
+     "check": "OK",
+     "check_fp": "8b965b8667"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "None",
+   "answer": "No. Lock and cancel requests come from the registration service provider, the issuer, the agent or the delegator. No route is defined for a relying party to report an agent or warn others. The verifier's assertion may include a security-policy suggestion, but it goes only to that relying party.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no mechanism for services to share signals about an agent (same as the calibration examples).",
+   "claims": [
+    {
+     "text": "Searched Parts 1 to 3 for reputation, reporting, shared signals or abuse notification. None is defined.",
+     "type": "silent",
+     "source": "part3",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "Assertions may include a security-policy suggestion for the relying party only.",
+     "type": "fact",
+     "source": "part3",
+     "section": "9.2 技术要求",
+     "quote": "断言中可包含基于本次鉴别结果给出的安全策略建议，供智能体身份依赖方决策参考。",
+     "check": "OK",
+     "check_fp": "822a316913"
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "Optional, via registration evidence only",
+   "answer": "Partly. In the informative Annex B, possible registration evidence includes unique hashes or fingerprints of the agent's core code, model and algorithms, which the registration service provider checks. The example certificate 'may' include the agent's system composition. Nothing requires a model field in the credential, so the relying party usually does not learn which model is behind the agent.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "MAY",
+   "rating_reason": "Yellow: model hashes appear only as optional, informative registration evidence and an optional certificate field, so the service may learn it but usually will not (the calibration examples are red because they define nothing).",
+   "claims": [
+    {
+     "text": "Example evidence: unique hash or fingerprint of core code, model and algorithms.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录B（资料性）",
+     "quote": "智能体核心代码、模型和算法的唯一哈希或指纹",
+     "check": "OK",
+     "check_fp": "c746d7a4db"
+    },
+    {
+     "text": "Example certificate may include system composition.",
+     "type": "fact",
+     "source": "part3",
+     "section": "附录A（资料性）",
+     "quote": "可包括但不限于：智能体身份码、系统构成、功能清单、智能体委托方信息、权限等级等。",
+     "check": "OK",
+     "check_fp": "be058c40e5"
+    },
+    {
+     "text": "The registry collects and verifies the evidence.",
+     "type": "fact",
+     "source": "part3",
+     "section": "6.1 通用流程",
+     "quote": "并对证明材料进行核实与验证",
+     "check": "OK",
+     "check_fp": "73e5b8b7ed"
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "The relying party learns which registered agent it is talking to and can check a proof tied to that agent's own key, then applies its own policy. Scopes are only optional, undefined fields, so permission control is mostly left to each service.",
+  "incident_response": "A specific agent's account or credential can be locked or cancelled, and verifiers can query that status, which is finer than provider-level key removal. Whether a revoked credential is refused depends on the verifier checking status, which is only recommended. There is no route for a service to report an agent.",
+  "accountability": "Each code names the registration service provider and the registering organisation or person, the delegator bears final responsibility by definition, and registries must keep audit-protected logs and archive records after cancellation. A service still needs the registry's cooperation to turn a code into a named party."
+ },
+ "notes": [
+  "The official text is only available as page images in SAMR's openstd online viewer (no text layer, anti-copy measures). Pages were reconstructed from the viewer's image tiles in a browser, captured as screenshots, and OCR'd (RapidOCR) into text snapshots. Every quoted passage was compared by eye with the page image, and OCR errors in quoted passages were corrected in the snapshot before running the quote checker. Treat quotes as transcriptions of the official images.",
+  "Requirement levels: the documents follow GB/T 1.1-2020 verb forms, where 应 = shall (mapped to MUST), 宜 = should (SHOULD), 可 = may (MAY). They do not use RFC 2119 keywords, but GB/T 1.1 gives these words the same formal role, so no asterisk is used for them. MUST* in the identifier row marks the phrase 只能 ('can only'), which is not one of the formal provision verbs (lowercase-style requirement).",
+  "GB/Z documents are national standardization guidance technical documents; even 应 (shall) provisions are guidance for those who choose to follow the document, not legal obligations.",
+  "Part 3 says identity codes 'may' be allocated according to Part 2, so the OID code structure is optional when following Part 3 alone.",
+  "Several rows depend on informative annexes (Part 2 Annexes A to C, Part 3 Annexes A to C), which are examples, not requirements. The answers say where this is the case.",
+  "Parts 4 to 7 (description, discovery, interaction, tool calling) may add relevant mechanisms (e.g. mutual authentication in interaction and authorization in tool calling) and were not analysed.",
+  "News coverage gives conflicting dates (Xinhua says the series was released in June 2026). The SAMR records and covers show 2026-05-22."
+ ],
+ "open_questions": [
+  "Part 3 says a verifier must treat a locked credential as invalid (8.4 c), but checking status is only recommended (9.2 b 2) and a preset policy may accept when status is unavailable. Which takes precedence in practice?",
+  "No wire format is given for the agent credential, the process credential package or the identity assessment assertion. Do Parts 6 and 7, or the national rules on agent public-key certificates referred to in 9.2, define them?",
+  "Which body is the 'competent authority' (主管部门) that allocates registration service provider codes and recognises foreign registries? The documents do not name it.",
+  "How should a relying party resolve an identity code (registry, requester) into a named, contactable organisation? No resolution service is described in Parts 1 to 3.",
+  "Is there a primary, deployer-published list of registration service providers or identity-code nodes issued in July 2026?"
+ ]
+}</script></body></html>

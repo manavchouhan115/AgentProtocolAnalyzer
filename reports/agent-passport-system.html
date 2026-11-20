@@ -1,0 +1,916 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent Passport System (APS): protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>Agent Passport System (APS)<small>Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents</small></h1><ul class="facts"><li><b>Specification:</b> draft-pidlisnyi-aps-04</li><li><b>Date:</b> 2026-09-28</li><li><b>Maintainer:</b> T. Pidlisnyi (individual Internet-Draft; affiliation given as Agent Passport System); implementations at github.com/aeoess</li><li><b>Analysed:</b> 2026-11-20</li><li><b>Version note:</b> -04 is the latest revision as of 2026-11-20; it expires on 1 April 2027.</li></ul><div class=chips><span class="chip"><b>Category:</b> Agent authorization</span><span class="chip"><b>Also:</b> Credentials trust</span><span class="chip"><b>Mechanism:</b> DID, Signed metadata, Other</span><span class="chip"><b>Venue:</b> IETF individual draft</span><span class="chip"><b>Maturity:</b> Proposal</span><span class="chip"><b>Openness:</b> Open standard</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>The Agent Passport System (APS) describes how to represent and check the authority behind an AI agent&#x27;s actions. It covers who the agent is, whom it acts for, what it was delegated, whether a gateway admitted a specific action, and what was observed afterwards. It is aimed at deployments where agents call tools and APIs through an enforcement gateway, such as MCP servers or enterprise APIs. It is a single-author individual Internet-Draft, at revision -04 of September 2026, with intended status Informational. Its own implementation appendix lists only the author&#x27;s open-source packages and says they do not establish independent implementation or adoption.</p><p>Each agent has a self-signed Ed25519 &#x27;passport&#x27; with a DID identifier. A principal can sign a separate binding saying the agent acts for it, and authority comes from signed delegation records with seven facets that can only narrow down a chain (scope, spend, depth, time, reputation, values, reversibility). For each action the agent signs an &#x27;action intent&#x27; that commits to the target, payload, scopes, time and a nonce. An enforcement gateway verifies the chain, rechecks revocation, issues a single-use approval and records signed receipts. Revocation cascades to descendants, and an unknown revocation state is treated as not active. Trust in a chain&#x27;s root is left to the verifier&#x27;s policy. No contact channel, signalling between services or model identity is defined, the target system itself has no obligations, and the guarantees rely on all privileged calls going through the gateway.</p><h2 id="how">How it works</h2><ol class="steps"><li>The agent creates an Ed25519 key and a self-signed Agent Passport with a DID (e.g. did:key) and an expiry. A principal (a person, office or organisation) can sign a Principal Binding saying the agent acts for it, scoped to named audiences.</li><li>An authority issuer (e.g. the principal) signs an AuthorityDelegation to the agent with seven required facets, e.g. scope commerce:checkout, a spend limit, depth, a time window, a reputation ceiling, required values and a reversibility ceiling. The agent can delegate onward, but each child can only narrow its parent.</li><li>To act, the agent computes an action_ref over its ID, the action type, the exact target, a payload hash, the scopes needed, the time and a nonce, and signs an action-intent record naming the delegation it relies on.</li><li>The enforcement gateway in front of the target verifies the signatures, resolves keys at signing time, and checks the whole delegation chain (root accepted by its trust policy, attenuation, time, revocation). It applies its policy and signs a policy-decision record: permit, deny or narrow, with a bounded lifetime.</li><li>At dispatch, the gateway consumes that single-use approval, rechecks revocation and time, and reserves spend against every bounded ancestor. It then calls the target itself, using credentials only it holds.</li><li>The gateway signs an action-result record of what it observed. Verifiers can later check the receipt chain, and any party can revoke delegations it issued, which invalidates all chains that contain them.</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Agent Passport System (APS)</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Signed delegation chains and per-action receipts at a gateway</td></tr><tr><td class="prop">Use cases</td><td class="">Governed tool and API calls via a gateway</td></tr><tr><td class="prop">Parties involved</td><td class="">Nine roles from principal to verifier</td></tr><tr><td class="prop">Status and adoption</td><td class="red">Individual draft -04; author&#x27;s implementations only</td></tr><tr><td class="prop">Building blocks</td><td class="">Ed25519, JCS, DIDs, MCP, OAuth ID-JAG</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="green">Per-agent DID bound to the agent&#x27;s own key</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="yellow">Delegation chain always; principal binding separate</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="green">Agent-signed action intent plus delegation chain</td></tr><tr><td class="prop">Credential lifetime</td><td class="yellow">Expiry enforced; no maximum set</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="green">Yes, signatures, chain and revocation checked</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="green">Yes, per-agent key signs each action</td></tr><tr><td class="prop">Scoped authorization</td><td class="green">Seven-facet delegation, narrowed at each hop</td></tr><tr><td class="prop">Human approval</td><td class="yellow">Delegation signing only; human approver not specified</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="yellow">Signed principal and root; acceptance is verifier policy</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="green">Per-delegation, cascading, rechecked at dispatch</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">None</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">None; reliance and notice left open</td></tr><tr><td class="prop">Model identity</td><td class="red">No</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>A gateway that implements APS can check, for each action, the agent&#x27;s own signature, the full narrowing delegation chain and seven kinds of limits, including cumulative spend, before it calls the target itself. Protection holds only for calls that go through that gateway.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>An issuer can irreversibly revoke a single delegation or a whole subtree, and gateways must recheck before every dispatch and treat unknown status as not active. How revocation status is distributed, and how outside counterparties are told, is left to profiles and open questions.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>Signed intent, decision and result receipts tie each action to an agent key, a delegation chain and the gateway&#x27;s decision. The principal behind the authority can be named and signed, but linking it to the chain used is not yet defined.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Status and adoption:</b> Individual draft -04; author&#x27;s implementations only ()</li><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Contact and escalation:</b> None (not addressed by the specification)</li><li><b>Cross-party signalling:</b> None; reliance and notice left open (not addressed by the specification)</li><li><b>Model identity:</b> No (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>Agent Passport System (APS)</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">An individual IETF draft in which agents hold self-signed DID passports, act under signed, narrowing delegation chains, and sign each intended action, so an enforcement gateway can recheck authority and revocation before admitting it and record signed evidence of the decision and result.<details><summary>Evidence (2)</summary><div class="claim">Purpose. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“This document specifies the Agent Passport System (APS), a protocol for representing and evaluating authority exercised by AI agents.”</blockquote></div><div class="claim">Gateway rechecks authority before dispatch. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Abstract. <span class="chk">(quote verified against the source)</span><blockquote>“APS defines how an enforcement boundary rechecks current authority before admitting an action to dispatch”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Governing privileged actions that agents take against tools and APIs, e.g. purchasing or payments, with a binding for MCP and one for OAuth identity-assertion grants. It works at the application-message layer: signed JSON records (passport, delegations, receipts) go to an enforcement gateway that sits in front of the target and holds its credentials. Verification is done by that gateway or by any later verifier of the records. The target system itself has no interface or obligation in APS.<details><summary>Evidence (3)</summary><div class="claim">MCP binding with a mediating gateway. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 11.1. MCP Binding. <span class="chk">(quote verified against the source)</span><blockquote>“In an APS-mediated MCP deployment, privileged actions covered by APS policy MUST pass through the gateway”</blockquote></div><div class="claim">No obligation on the target system. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 2.1. Actors. <span class="chk">(quote verified against the source)</span><blockquote>“This document specifies no interface to it and no obligation on it.”</blockquote></div><div class="claim">Gateway calls the target itself. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 12.1. Judge and Executor. <span class="chk">(quote verified against the source)</span><blockquote>“The boundary evaluates the request, calls the target itself, and writes the record of what happened.”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">Section 2.1 names nine roles. Principal: the person, office or organisation on whose behalf authority exists. Authority issuer: signs a delegation. Acting agent: declares and, once admitted, executes an action, identified by its passport. Delegate: an agent holding authority received from another agent. Policy decision point: returns permit, deny or narrow. Enforcement boundary: issues decision and result records and alone admits actions to dispatch. Target system: what the action operates on. Evidence issuer: a party outside the chain that signs evidence. Verifier: anyone who reads the records.<details><summary>Evidence (3)</summary><div class="claim">Nine roles. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 2.1. Actors. <span class="chk">(quote verified against the source)</span><blockquote>“Nine roles appear in this document.”</blockquote></div><div class="claim">Principal definition. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 2.1. Actors. <span class="chk">(quote verified against the source)</span><blockquote>“The person, office, or organization on whose behalf authority exists.”</blockquote></div><div class="claim">Only the enforcement boundary admits dispatch. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 2.1. Actors. <span class="chk">(quote verified against the source)</span><blockquote>“Only the enforcement boundary admits an action to dispatch.”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="red"><span class="badge">Not addressed</span><br>Early proposal. -04 (28 September 2026) is an individual Internet-Draft with intended status Informational, not adopted by any working group. Its Implementation Status appendix lists only packages maintained by the author (npm, PyPI, Go and an MCP package) and states that they do not establish independent implementation or adoption. The enforcement gateway it describes is a separate component that is not in the published packages.<div class="meta">Why this rating: An individual draft with no named deployments beyond the author&#x27;s own packages.</div><details><summary>Evidence (3)</summary><div class="claim">Individual submission, Informational. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Front matter. <span class="chk">(quote verified against the source)</span><blockquote>“Intended status: Informational”</blockquote></div><div class="claim">Implementations are the author&#x27;s and do not establish adoption. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Appendix A. Implementation Status. <span class="chk">(quote verified against the source)</span><blockquote>“The results below record consistency among artifacts maintained by this document&#x27;s author and do not establish independent implementation or adoption.”</blockquote></div><div class="claim">The gateway is not part of the published packages. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Appendix A. Implementation Status. <span class="chk">(quote verified against the source)</span><blockquote>“The enforcement boundary described in Section 12 is a separate deployment component and is not part of the published packages.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">Ed25519 signatures (RFC 8032) over JSON canonicalized with JCS (RFC 8785), domain-separated with fixed ASCII tags; DID identifiers, with self-certifying did:key recommended for new passports; multibase-encoded public keys; RFC 3339 timestamps; SHA-256 digests. It specifies a binding to MCP and one to the OAuth Identity Assertion Authorization Grant, which is itself still a draft. It does not use JWT, HTTP Message Signatures or W3C Verifiable Credentials.<details><summary>Evidence (3)</summary><div class="claim">Ed25519 key in multibase form. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.1. Agent Passport. <span class="chk">(quote verified against the source)</span><blockquote>“The public key is a multibase base58btc encoding of the multicodec Ed25519 [RFC8032] public key prefix 0xed01 followed by the 32-byte public key.”</blockquote></div><div class="claim">DID-method-agnostic, did:key recommended. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.2. Agent Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“New self-certifying passports SHOULD use an existing generative DID method whose identifier commits to the signing key, such as did:key [DID-KEY].”</blockquote></div><div class="claim">OAuth identity-assertion grant binding pinned to a draft version. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 11.3. OAuth Identity-Assertion Grant Binding. <span class="chk">(quote verified against the source)</span><blockquote>“This section specifies the binding for an OAuth identity-assertion authorization grant [OAUTH-ID-JAG], pinned to an identified draft version of that specification.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Each agent has its own DID (agent_id), carried in a self-signed Agent Passport and bound to the agent&#x27;s own Ed25519 key. With did:key the identifier is the key. Agents that receive delegated authority (delegates and sub-agents) have their own passports, so the identifier names an individual agent rather than its provider. The passport proves possession of the key. Whether that key is authorised for the DID is resolved separately under the DID method.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The identifier names the individual agent through its own key, not a provider-level key or client ID (the calibration examples are yellow because their identifiers are provider-level).</div><details><summary>Evidence (4)</summary><div class="claim">Passport is a self-signed identity record. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.1. Agent Passport. <span class="chk">(quote verified against the source)</span><blockquote>“An APS Agent Passport is a self-signed cryptographic identity record.”</blockquote></div><div class="claim">Acting agent identified by its passport. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 2.1. Actors. <span class="chk">(quote verified against the source)</span><blockquote>“It is identified by an Agent Passport (Section 3.1) and named as subject_agent on the records of a governed action (Section 7.1).”</blockquote></div><div class="claim">Proof of possession versus key authority. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.1. Agent Passport. <span class="chk">(quote verified against the source)</span><blockquote>“A verifier MUST report proof of possession separately from key authority.”</blockquote></div><div class="claim">Delegates are agents with their own authority. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 2.1. Actors. <span class="chk">(quote verified against the source)</span><blockquote>“An agent holding authority received from another agent rather than from the principal directly.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. APS identifies agents by DID and key, and sub-agents get their own identities through delegation, but it defines no identifier for a running instance or session of an agent. Copies of an agent sharing one passport key cannot be told apart. Each action carries its own nonce and action_ref, but those identify the action, not an instance.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier is defined (same as all three calibration examples); per-action nonces are not instance identifiers.</div><details><summary>Evidence (2)</summary><div class="claim">Searched -04 for instance, session and runtime identifiers. Sessions appear only as tokens used to exercise authority, not as agent instance identifiers. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Whole document.</div><div class="claim">Action reference includes a nonce. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 5.1. Action Reference Computation. <span class="chk">(quote verified against the source)</span><blockquote>“The reference commits to who is acting, what operation is requested, where it will occur, the exact payload, the authority scopes needed, when the intent was issued, and a replay- resistant nonce.”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Every governed action names a delegation, and the chain shows who issued authority down to the agent. The principal the agent acts for is expressed in a separate Principal Binding signed by that principal and scoped to named audiences, which verifiers rate as self-asserted, principal-attested or externally verified. The authority issuer and the principal can be different parties. The draft states that no artifact yet links a principal binding to the accepted delegation root, so that association is left to profiles and may remain &#x27;not established&#x27;.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: The principal is defined and signed, but linking it to the authority actually used is left to profiles and is an open question, so the service may not learn reliably whom the agent acts for (Visa TAP is yellow for an optional consumer object).</div><details><summary>Evidence (4)</summary><div class="claim">The passport does not identify the principal. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.3. Principal Binding. <span class="chk">(quote verified against the source)</span><blockquote>“A passport does not identify the person or organization on whose behalf an agent acts.”</blockquote></div><div class="claim">Principal binding is scoped. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.3. Principal Binding. <span class="chk">(quote verified against the source)</span><blockquote>“The record is therefore scoped rather than a global assertion that the agent represents the principal for every purpose.”</blockquote></div><div class="claim">Issuer and principal can differ. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 2.1. Actors. <span class="chk">(quote verified against the source)</span><blockquote>“The issuer and the principal can be different parties.”</blockquote></div><div class="claim">No artifact links the principal to the accepted root. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 19.2.10. Associating a Principal with an Accepted Authority. <span class="chk">(quote verified against the source)</span><blockquote>“This revision defines no artifact for the step from a principal to a first authority.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. For every governed action the agent signs an action-intent record with its own Ed25519 key. The record binds an action_ref, which commits to the agent ID, the action type, the exact target, a payload hash, the scopes needed, the issue time and a random nonce, plus the delegation it relies on. This is proof of possession tied to one specific action. The gateway answers with a signed, single-use approval that it consumes at dispatch. The transport carrying these records is not specified, except for the MCP and OAuth bindings.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: A signed, action-bound credential accompanies every governed action and the gateway verifies it (same colour as the calibration examples, with stronger binding than a bearer token).</div><details><summary>Evidence (4)</summary><div class="claim">The agent signs the action intent, binding action_ref and delegation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 7.3.1. Action Intent. <span class="chk">(quote verified against the source)</span><blockquote>“The agent signature binds the action_ref and selected delegation_ref before policy evaluation.”</blockquote></div><div class="claim">Issuer and subject of the intent must be the acting agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 7.3.1. Action Intent. <span class="chk">(quote verified against the source)</span><blockquote>“issuer and subject_agent MUST be the acting agent”</blockquote></div><div class="claim">What action_ref commits to. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 5.1. Action Reference Computation. <span class="chk">(quote verified against the source)</span><blockquote>“The reference commits to who is acting, what operation is requested, where it will occur, the exact payload, the authority scopes needed, when the intent was issued, and a replay- resistant nonce.”</blockquote></div><div class="claim">Approval is single-use and bound to the action. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 7.3.2. Policy Decision. <span class="chk">(quote verified against the source)</span><blockquote>“A permit or narrow policy-decision record is a bounded, single-use approval for its action_ref.”</blockquote></div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Passports, principal bindings and delegations carry explicit validity windows, and gateway approvals carry a valid_until that must be checked again when the approval is consumed. Verifiers MUST enforce any expiry on consumable artifacts. But the draft sets no maximum duration for any of them, so lifetimes are whatever the issuer signs. Replay of an action is limited by the nonce and by single-use consumption, not by a short lifetime.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Verifiers must enforce expiry, but no specific maximum is given (green needs a short maximum, as in Visa TAP).</div><details><summary>Evidence (4)</summary><div class="claim">Passport validity interval. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.1. Agent Passport. <span class="chk">(quote verified against the source)</span><blockquote>“the validity interval is issued_at &lt;= now &lt; expires_at”</blockquote></div><div class="claim">Verifiers must enforce expiry of consumable artifacts. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 15. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“verifiers MUST enforce the expiry, and issuance against an expired or unparseable challenge MUST fail closed.”</blockquote></div><div class="claim">Approval re-validated at consumption. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 5.3. Two-Phase Execution. <span class="chk">(quote verified against the source)</span><blockquote>“An approval that has expired, has already been consumed, or fails re-validation MUST NOT admit execution.”</blockquote></div><div class="claim">Searched -04 for a maximum lifetime or duration limit for passports, bindings, delegations or approvals. None is stated. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Whole document.</div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. A verifier checks each record in a fixed order: closed schema, recomputed identifiers, signer key resolved at the record&#x27;s signing time (not at verification time), signatures, the action binding, and the whole delegation chain from root to leaf, including attenuation, current validity and revocation for every member. No prior relationship with the agent is needed, and unknown or stale revocation status makes the result indeterminate rather than valid. Whether a root is accepted is the verifier&#x27;s trust policy.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Genuine, current and unaltered are all checked against resolvable keys without prior setup (same as the calibration examples).</div><details><summary>Evidence (4)</summary><div class="claim">Receipt verification steps. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 7.6. Receipt Verification. <span class="chk">(quote verified against the source)</span><blockquote>“verify delegation_ref against the selected authority chain, and verify that chain”</blockquote></div><div class="claim">Chain verification includes current validity and revocation. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.3. Chain Verification. <span class="chk">(quote verified against the source)</span><blockquote>“the seven facet comparisons in Section 4.2; current validity; and revocation state for every member.”</blockquote></div><div class="claim">Historical key selection. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.4. Key Rotation and Historical Verification. <span class="chk">(quote verified against the source)</span><blockquote>“A resolver MUST select the key version authorized at the artifact&#x27;s issued_at; selecting the key that is current at verification time is insufficient.”</blockquote></div><div class="claim">Indeterminate must not be collapsed into valid. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.3. Chain Verification. <span class="chk">(quote verified against the source)</span><blockquote>“A caller MUST NOT collapse indeterminate or unsupported into valid.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes, the agent. Each action intent is signed with the acting agent&#x27;s own key, and the verifier checks that the action input&#x27;s agent_id equals the record&#x27;s subject_agent and that the signer&#x27;s key was authorised for that DID at signing time. This authenticates the individual agent per action, not just its provider. Users and principals are not authenticated at the gateway. Their binding signatures are verified, but who they are is left to the verifier&#x27;s trust policy. The draft notes that a compromised agent can still produce valid signatures.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: The gateway verifies, on each governed action, a signature from the individual agent&#x27;s own key (the calibration examples are red because they verify only a provider key or a token).</div><details><summary>Evidence (3)</summary><div class="claim">Agent identifier must match subject_agent. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 7.6. Receipt Verification. <span class="chk">(quote verified against the source)</span><blockquote>“Where it holds one, the object&#x27;s agent_id of Section 5.1 and the record&#x27;s subject_agent of Section 7.1 MUST be equal”</blockquote></div><div class="claim">Signer authority resolved at issued_at. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 7.6. Receipt Verification. <span class="chk">(quote verified against the source)</span><blockquote>“resolve signer authority at issued_at”</blockquote></div><div class="claim">Compromised-but-signing agents are not addressed. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 15. Security Considerations. <span class="chk">(quote verified against the source)</span><blockquote>“Signature verification can succeed because the signing key remains available to the attacker.”</blockquote></div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Every delegation carries seven required facets: scope grants (colon-separated, with terminal wildcards), spend (per-action and cumulative limits in a declared unit), depth, time window, reputation ceiling, required values and a reversibility ceiling. Each child must be no wider than its parent. The gateway&#x27;s deterministic gate checks scope, signature, revocation, authority path and spend for each action, can narrow it, and atomically reserves spend against every bounded ancestor. Scope names are deployment-defined.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Fine-grained, enforceable permissions are carried in the protocol (same colour as MCP Authorization&#x27;s scopes).</div><details><summary>Evidence (4)</summary><div class="claim">Seven required facets. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.1. Faceted Authority Attenuation. <span class="chk">(quote verified against the source)</span><blockquote>“authority contains exactly seven required facets: scope, spend, depth, time, reputation, values, and reversibility.”</blockquote></div><div class="claim">Children covered by parents. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.2. Component Orders. <span class="chk">(quote verified against the source)</span><blockquote>“Every child grant MUST be covered by a parent grant.”</blockquote></div><div class="claim">Deterministic gate checks. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 5. Policy Chain. <span class="chk">(quote verified against the source)</span><blockquote>“The policy engine splits into a deterministic gate (scope, signature, revocation, authority path, spend)”</blockquote></div><div class="claim">Spend reserved against every bounded ancestor. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 5. Policy Chain. <span class="chk">(quote verified against the source)</span><blockquote>“Before dispatch, the boundary MUST atomically reserve the proposed amount against every bounded ancestor in the selected root-to-leaf chain.”</blockquote></div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Authority starts when an issuer, often the principal, signs a delegation to the agent, which is an approval step before the agent can act. But the issuer may be an organisation or system key. The per-action &#x27;approval&#x27; is a gateway-issued policy decision, and the draft explicitly does not require the approver to be a human distinct from the agent. A worked example shows a deployment adding a human certification step through its own profile.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: A signed grant by the issuer precedes access, but it need not be a person and per-action human approval is left to profiles (MCP&#x27;s per-token user consent is green).</div><details><summary>Evidence (2)</summary><div class="claim">Human approver not specified. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 9.11.4. A Cross-Org Action Needing Separate Human Approval and One-Time Admission. <span class="chk">(quote verified against the source)</span><blockquote>“It does not specify that the approver be a human distinct from the executing agent”</blockquote></div><div class="claim">The issuer signs a delegation that creates authority. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 2.1. Actors. <span class="chk">(quote verified against the source)</span><blockquote>“The party that signs a delegation, creating or narrowing authority for the party below it.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The principal and the root issuer vouch by signing the binding and the root delegation, and verifiers grade principal claims (self-asserted, principal-attested, externally verified). But a self-issued root is not trusted automatically, and which roots to accept is entirely the verifier&#x27;s trust policy. No authority, registry or onboarding process is defined. The draft also defines tiers for attested signals (observed, infrastructure-, provider-attested, self-declared) as terminology only.<div class="meta">Optional in the specification</div><div class="meta">Why this rating: Signed vouching records exist, but no party is designated to vouch and root acceptance is left to each verifier (between TAP&#x27;s green and Web Bot Auth&#x27;s red).</div><details><summary>Evidence (3)</summary><div class="claim">Root acceptance is verifier policy. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.1. Faceted Authority Attenuation. <span class="chk">(quote verified against the source)</span><blockquote>“A valid self-issued root is not trusted automatically; acceptance of a root is verifier policy.”</blockquote></div><div class="claim">Principal claim levels. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.3. Principal Binding. <span class="chk">(quote verified against the source)</span><blockquote>“A verifier reports externally_verified_principal only when its own trust policy has also verified the principal identity.”</blockquote></div><div class="claim">Attested-signal weighting is deployment policy. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.6. Attestation Provenance and Composition. <span class="chk">(quote verified against the source)</span><blockquote>“How a deployment weighs, combines, or scores composed attestations is deployment policy and is not specified by this document.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="green"><span class="badge">Addressed</span><br>Yes. Any delegation can be revoked, irreversibly, by its issuer. The gateway must recheck revocation at the moment it consumes an approval to dispatch, not only when it decided. Once a verifier has established a revocation, it must reject every chain containing the revoked delegation, so descendants fall with it. An unknown, stale or unrecognised revocation state is not treated as active. Granularity ranges from one delegation (one agent&#x27;s grant) to a whole subtree, and principal bindings can be revoked separately. Where revocation status comes from, and how fresh it must be, is left to profiles.<div class="meta">Required by the specification · requirement level: MUST</div><div class="meta">Why this rating: Revocation is defined, an unknown status is treated as not active, and the gateway must recheck it at each dispatch (all three calibration examples are red because they define none); how status is distributed is left to profiles.</div><details><summary>Evidence (4)</summary><div class="claim">Issuer may revoke; irreversible; recheck at consumption. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.5. Revocation and Cascade. <span class="chk">(quote verified against the source)</span><blockquote>“The enforcement gateway MUST recheck revocation status at the moment the approval is consumed to admit dispatch, not only at the moment the policy decision is issued.”</blockquote></div><div class="claim">Chains containing a revoked delegation are invalid. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.5. Revocation and Cascade. <span class="chk">(quote verified against the source)</span><blockquote>“From that point the verifier MUST NOT accept as valid any chain that contains the revoked delegation.”</blockquote></div><div class="claim">Unrecognised revocation outcome is not active. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.3. Chain Verification. <span class="chk">(quote verified against the source)</span><blockquote>“A revocation-resolution outcome that a verifier does not recognize MUST NOT be treated as active.”</blockquote></div><div class="claim">Revocation does not reach all verifiers at once. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.5. Revocation and Cascade. <span class="chk">(quote verified against the source)</span><blockquote>“This document does not state that a revocation takes effect for every verifier at the same instant.”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Passports, bindings and delegations carry DIDs and keys but no contact or escalation field. A principal binding has a status_uri for checking the binding&#x27;s status, not for reaching anyone. Whatever a DID document publishes is outside APS.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched -04 for contact, abuse, security or escalation fields. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Whole document.</div><div class="claim">Principal binding members include status_uri. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.3. Principal Binding. <span class="chk">(quote verified against the source)</span><blockquote>“The record contains binding_id, agent_id, principal_id, verification_method, audiences, authority_profiles, status_uri, issued_at, expires_at, nonce, and signature.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. A delegation&#x27;s reputation facet caps authority by a &#x27;resolved subject score&#x27;, but where that score comes from is not defined. Nor is there any way for services to report or share signals about an agent. How a revocation reaches outside counterparties, and what notice they are owed, is listed as an open question.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No mechanism for services to share signals about an agent.</div><details><summary>Evidence (3)</summary><div class="claim">Reputation score source is not defined; runtime uses it. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 4.2. Component Orders. <span class="chk">(quote verified against the source)</span><blockquote>“Runtime authorization uses the lesser of the resolved subject score and the signed ceiling.”</blockquote></div><div class="claim">Notice to relying parties is unresolved. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 19.2.9. Notice and Relying Parties. <span class="chk">(quote verified against the source)</span><blockquote>“What a relying party that acted on stale but authentic evidence is entitled to, and what evidence of notice a principal needs to show, is not defined here.”</blockquote></div><div class="claim">Searched -04 for reputation sources, reports, shared signals or feeds between verifiers. None is defined. <i>Not found in</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, Whole document.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The passport carries self-asserted capabilities and a display name, but no model field. Attribution of contributing sources such as models is explicitly not specified, and infrastructure attestations about the execution environment are terminology plus reference-implementation shapes, with no defined wire format.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No model identity is defined.</div><details><summary>Evidence (3)</summary><div class="claim">Passport self_asserted content: capabilities and display name. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.1. Agent Passport. <span class="chk">(quote verified against the source)</span><blockquote>“The self_asserted object contains a required, UTF-8-byte-sorted unique capabilities array and an optional display_name.”</blockquote></div><div class="claim">Contribution attribution (data, models, tools) not specified. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 18. Attribution Axes and Scope. <span class="chk">(quote verified against the source)</span><blockquote>“This document does not specify a contribution-attribution model.”</blockquote></div><div class="claim">No general attested-signal wire format. <i>Source states</i> <a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a>, 3.6. Attestation Provenance and Composition. <span class="chk">(quote verified against the source)</span><blockquote>“it does not define a general attested-signal wire format”</blockquote></div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/">Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04</a> (-04, 2026-09-28)</li></ul><h2>Notes</h2><ul class="plain"><li>The specification uses RFC 2119 keywords.</li><li>Requirements are split into APS Core and opt-in Candidate features, and most lifecycle and decision-to-effect material is Candidate. Ratings rest on Core sections (passport, principal binding, delegation, chain verification, revocation rechecks, policy chain, receipts) unless an answer says otherwise.</li><li>The analysis takes the enforcement gateway (APS&#x27;s &#x27;enforcement boundary&#x27;) as the receiving service. The draft gives the target system itself no interface and no obligation, and its protections hold only when all privileged calls go through the gateway (the &#x27;mediation assumption&#x27;).</li><li>The -04 text is 271 pages. It was read in the browser from the ietf.org archive .txt because neither ietf.org nor datatracker could be reached from the analysis workspace, and the author&#x27;s repository holds only -00 to -02. Every quote was checked by exact matching against the full -04 text in the browser.</li><li>Name collision: the earlier AGNTCY Identity draft used &#x27;Agent Passport&#x27; for its credential, and other products use the phrase. This analysis covers only draft-pidlisnyi-aps-04.</li></ul><h2>Open questions</h2><ul class="plain"><li>How does a gateway obtain revocation status (sources and freshness bounds are profile-defined), and is there a default profile?</li><li>How should a verifier associate a principal binding with the accepted root of a delegation chain (Section 19.2.10)?</li><li>Who is expected to operate the enforcement gateway: the agent&#x27;s organisation, the target service, or a third party? The draft does not say.</li><li>Where does the &#x27;resolved subject score&#x27; for the reputation facet come from?</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (56 of 56 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-20. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-20",
+ "protocol": {
+  "name": "Agent Passport System (APS)",
+  "full_name": "Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents",
+  "spec_version": "draft-pidlisnyi-aps-04",
+  "spec_date": "2026-09-28",
+  "maintainer": "T. Pidlisnyi (individual Internet-Draft; affiliation given as Agent Passport System); implementations at github.com/aeoess",
+  "newer_version_note": "-04 is the latest revision as of 2026-11-20; it expires on 1 April 2027."
+ },
+ "profile": {
+  "id": "agent-passport-system",
+  "category": "agent-authorization",
+  "secondary_categories": [
+   "credentials-trust"
+  ],
+  "mechanisms": [
+   "did",
+   "signed-metadata",
+   "other"
+  ],
+  "venue": "ietf-individual",
+  "maturity": "proposal",
+  "openness": "open-standard",
+  "layers": [
+   "application-message",
+   "metadata-document"
+  ],
+  "building_blocks": [
+   "RFC 8032 (Ed25519)",
+   "RFC 8785 (JCS)",
+   "DID",
+   "did:key",
+   "RFC 3339",
+   "MCP",
+   "OAuth Identity Assertion Authorization Grant (draft)"
+  ],
+  "website": "https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/",
+  "first_published": ""
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "The Agent Passport System (APS) describes how to represent and check the authority behind an AI agent's actions. It covers who the agent is, whom it acts for, what it was delegated, whether a gateway admitted a specific action, and what was observed afterwards. It is aimed at deployments where agents call tools and APIs through an enforcement gateway, such as MCP servers or enterprise APIs. It is a single-author individual Internet-Draft, at revision -04 of September 2026, with intended status Informational. Its own implementation appendix lists only the author's open-source packages and says they do not establish independent implementation or adoption.",
+  "Each agent has a self-signed Ed25519 'passport' with a DID identifier. A principal can sign a separate binding saying the agent acts for it, and authority comes from signed delegation records with seven facets that can only narrow down a chain (scope, spend, depth, time, reputation, values, reversibility). For each action the agent signs an 'action intent' that commits to the target, payload, scopes, time and a nonce. An enforcement gateway verifies the chain, rechecks revocation, issues a single-use approval and records signed receipts. Revocation cascades to descendants, and an unknown revocation state is treated as not active. Trust in a chain's root is left to the verifier's policy. No contact channel, signalling between services or model identity is defined, the target system itself has no obligations, and the guarantees rely on all privileged calls going through the gateway."
+ ],
+ "how_it_works": [
+  "The agent creates an Ed25519 key and a self-signed Agent Passport with a DID (e.g. did:key) and an expiry. A principal (a person, office or organisation) can sign a Principal Binding saying the agent acts for it, scoped to named audiences.",
+  "An authority issuer (e.g. the principal) signs an AuthorityDelegation to the agent with seven required facets, e.g. scope commerce:checkout, a spend limit, depth, a time window, a reputation ceiling, required values and a reversibility ceiling. The agent can delegate onward, but each child can only narrow its parent.",
+  "To act, the agent computes an action_ref over its ID, the action type, the exact target, a payload hash, the scopes needed, the time and a nonce, and signs an action-intent record naming the delegation it relies on.",
+  "The enforcement gateway in front of the target verifies the signatures, resolves keys at signing time, and checks the whole delegation chain (root accepted by its trust policy, attenuation, time, revocation). It applies its policy and signs a policy-decision record: permit, deny or narrow, with a bounded lifetime.",
+  "At dispatch, the gateway consumes that single-use approval, rechecks revocation and time, and reserves spend against every bounded ancestor. It then calls the target itself, using credentials only it holds.",
+  "The gateway signs an action-result record of what it observed. Verifiers can later check the receipt chain, and any party can revoke delegations it issued, which invalidates all chains that contain them."
+ ],
+ "sources": [
+  {
+   "id": "spec",
+   "title": "Agent Passport System (APS): Verifiable Authority, Lifecycle, Enforcement, and Evidence for AI Agents, draft-pidlisnyi-aps-04",
+   "url": "https://datatracker.ietf.org/doc/draft-pidlisnyi-aps/04/",
+   "fetch_url": "https://www.ietf.org/archive/id/draft-pidlisnyi-aps-04.txt",
+   "version": "-04",
+   "date": "2026-09-28",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Signed delegation chains and per-action receipts at a gateway",
+   "answer": "An individual IETF draft in which agents hold self-signed DID passports, act under signed, narrowing delegation chains, and sign each intended action, so an enforcement gateway can recheck authority and revocation before admitting it and record signed evidence of the decision and result.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Purpose.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "This document specifies the Agent Passport System (APS), a protocol for representing and evaluating authority exercised by AI agents.",
+     "check": "WEB-OK",
+     "check_fp": "5fed33eddb"
+    },
+    {
+     "text": "Gateway rechecks authority before dispatch.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Abstract",
+     "quote": "APS defines how an enforcement boundary rechecks current authority before admitting an action to dispatch",
+     "check": "WEB-OK",
+     "check_fp": "7d24b45814"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Governed tool and API calls via a gateway",
+   "answer": "Governing privileged actions that agents take against tools and APIs, e.g. purchasing or payments, with a binding for MCP and one for OAuth identity-assertion grants. It works at the application-message layer: signed JSON records (passport, delegations, receipts) go to an enforcement gateway that sits in front of the target and holds its credentials. Verification is done by that gateway or by any later verifier of the records. The target system itself has no interface or obligation in APS.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "MCP binding with a mediating gateway.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11.1. MCP Binding",
+     "quote": "In an APS-mediated MCP deployment, privileged actions covered by APS policy MUST pass through the gateway",
+     "check": "WEB-OK",
+     "check_fp": "1ba1df3d88"
+    },
+    {
+     "text": "No obligation on the target system.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.1. Actors",
+     "quote": "This document specifies no interface to it and no obligation on it.",
+     "check": "WEB-OK",
+     "check_fp": "fdbb61ad13"
+    },
+    {
+     "text": "Gateway calls the target itself.",
+     "type": "fact",
+     "source": "spec",
+     "section": "12.1. Judge and Executor",
+     "quote": "The boundary evaluates the request, calls the target itself, and writes the record of what happened.",
+     "check": "WEB-OK",
+     "check_fp": "cdef8ae762"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Nine roles from principal to verifier",
+   "answer": "Section 2.1 names nine roles. Principal: the person, office or organisation on whose behalf authority exists. Authority issuer: signs a delegation. Acting agent: declares and, once admitted, executes an action, identified by its passport. Delegate: an agent holding authority received from another agent. Policy decision point: returns permit, deny or narrow. Enforcement boundary: issues decision and result records and alone admits actions to dispatch. Target system: what the action operates on. Evidence issuer: a party outside the chain that signs evidence. Verifier: anyone who reads the records.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Nine roles.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.1. Actors",
+     "quote": "Nine roles appear in this document.",
+     "check": "WEB-OK",
+     "check_fp": "5def562a37"
+    },
+    {
+     "text": "Principal definition.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.1. Actors",
+     "quote": "The person, office, or organization on whose behalf authority exists.",
+     "check": "WEB-OK",
+     "check_fp": "0ff4c2b951"
+    },
+    {
+     "text": "Only the enforcement boundary admits dispatch.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.1. Actors",
+     "quote": "Only the enforcement boundary admits an action to dispatch.",
+     "check": "WEB-OK",
+     "check_fp": "72a09b8ba6"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Individual draft -04; author's implementations only",
+   "answer": "Early proposal. -04 (28 September 2026) is an individual Internet-Draft with intended status Informational, not adopted by any working group. Its Implementation Status appendix lists only packages maintained by the author (npm, PyPI, Go and an MCP package) and states that they do not establish independent implementation or adoption. The enforcement gateway it describes is a separate component that is not in the published packages.",
+   "rating": "red",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Red: an individual draft with no named deployments beyond the author's own packages.",
+   "claims": [
+    {
+     "text": "Individual submission, Informational.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Front matter",
+     "quote": "Intended status: Informational",
+     "check": "WEB-OK",
+     "check_fp": "944a117e22"
+    },
+    {
+     "text": "Implementations are the author's and do not establish adoption.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Appendix A. Implementation Status",
+     "quote": "The results below record consistency among artifacts maintained by this document's author and do not establish independent implementation or adoption.",
+     "check": "WEB-OK",
+     "check_fp": "39df363e23"
+    },
+    {
+     "text": "The gateway is not part of the published packages.",
+     "type": "fact",
+     "source": "spec",
+     "section": "Appendix A. Implementation Status",
+     "quote": "The enforcement boundary described in Section 12 is a separate deployment component and is not part of the published packages.",
+     "check": "WEB-OK",
+     "check_fp": "8e077f9c11"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "Ed25519, JCS, DIDs, MCP, OAuth ID-JAG",
+   "answer": "Ed25519 signatures (RFC 8032) over JSON canonicalized with JCS (RFC 8785), domain-separated with fixed ASCII tags; DID identifiers, with self-certifying did:key recommended for new passports; multibase-encoded public keys; RFC 3339 timestamps; SHA-256 digests. It specifies a binding to MCP and one to the OAuth Identity Assertion Authorization Grant, which is itself still a draft. It does not use JWT, HTTP Message Signatures or W3C Verifiable Credentials.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Ed25519 key in multibase form.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.1. Agent Passport",
+     "quote": "The public key is a multibase base58btc encoding of the multicodec Ed25519 [RFC8032] public key prefix 0xed01 followed by the 32-byte public key.",
+     "check": "WEB-OK",
+     "check_fp": "b6693bfcf1"
+    },
+    {
+     "text": "DID-method-agnostic, did:key recommended.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.2. Agent Identifiers",
+     "quote": "New self-certifying passports SHOULD use an existing generative DID method whose identifier commits to the signing key, such as did:key [DID-KEY].",
+     "check": "WEB-OK",
+     "check_fp": "b2559e4f25"
+    },
+    {
+     "text": "OAuth identity-assertion grant binding pinned to a draft version.",
+     "type": "fact",
+     "source": "spec",
+     "section": "11.3. OAuth Identity-Assertion Grant Binding",
+     "quote": "This section specifies the binding for an OAuth identity-assertion authorization grant [OAUTH-ID-JAG], pinned to an identified draft version of that specification.",
+     "check": "WEB-OK",
+     "check_fp": "3c43deb290"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Per-agent DID bound to the agent's own key",
+   "answer": "Yes. Each agent has its own DID (agent_id), carried in a self-signed Agent Passport and bound to the agent's own Ed25519 key. With did:key the identifier is the key. Agents that receive delegated authority (delegates and sub-agents) have their own passports, so the identifier names an individual agent rather than its provider. The passport proves possession of the key. Whether that key is authorised for the DID is resolved separately under the DID method.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the identifier names the individual agent through its own key, not a provider-level key or client ID (the calibration examples are yellow because their identifiers are provider-level).",
+   "claims": [
+    {
+     "text": "Passport is a self-signed identity record.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.1. Agent Passport",
+     "quote": "An APS Agent Passport is a self-signed cryptographic identity record.",
+     "check": "WEB-OK",
+     "check_fp": "bf053e8807"
+    },
+    {
+     "text": "Acting agent identified by its passport.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.1. Actors",
+     "quote": "It is identified by an Agent Passport (Section 3.1) and named as subject_agent on the records of a governed action (Section 7.1).",
+     "check": "WEB-OK",
+     "check_fp": "22edb7fba9"
+    },
+    {
+     "text": "Proof of possession versus key authority.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.1. Agent Passport",
+     "quote": "A verifier MUST report proof of possession separately from key authority.",
+     "check": "WEB-OK",
+     "check_fp": "94f991a28a"
+    },
+    {
+     "text": "Delegates are agents with their own authority.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.1. Actors",
+     "quote": "An agent holding authority received from another agent rather than from the principal directly.",
+     "check": "WEB-OK",
+     "check_fp": "629f97515c"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. APS identifies agents by DID and key, and sub-agents get their own identities through delegation, but it defines no identifier for a running instance or session of an agent. Copies of an agent sharing one passport key cannot be told apart. Each action carries its own nonce and action_ref, but those identify the action, not an instance.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier is defined (same as all three calibration examples); per-action nonces are not instance identifiers.",
+   "claims": [
+    {
+     "text": "Searched -04 for instance, session and runtime identifiers. Sessions appear only as tokens used to exercise authority, not as agent instance identifiers.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "Action reference includes a nonce.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1. Action Reference Computation",
+     "quote": "The reference commits to who is acting, what operation is requested, where it will occur, the exact payload, the authority scopes needed, when the intent was issued, and a replay- resistant nonce.",
+     "check": "WEB-OK",
+     "check_fp": "9aa061c445"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "Delegation chain always; principal binding separate",
+   "answer": "Partly. Every governed action names a delegation, and the chain shows who issued authority down to the agent. The principal the agent acts for is expressed in a separate Principal Binding signed by that principal and scoped to named audiences, which verifiers rate as self-asserted, principal-attested or externally verified. The authority issuer and the principal can be different parties. The draft states that no artifact yet links a principal binding to the accepted delegation root, so that association is left to profiles and may remain 'not established'.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Yellow: the principal is defined and signed, but linking it to the authority actually used is left to profiles and is an open question, so the service may not learn reliably whom the agent acts for (Visa TAP is yellow for an optional consumer object).",
+   "claims": [
+    {
+     "text": "The passport does not identify the principal.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.3. Principal Binding",
+     "quote": "A passport does not identify the person or organization on whose behalf an agent acts.",
+     "check": "WEB-OK",
+     "check_fp": "c6efacde5f"
+    },
+    {
+     "text": "Principal binding is scoped.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.3. Principal Binding",
+     "quote": "The record is therefore scoped rather than a global assertion that the agent represents the principal for every purpose.",
+     "check": "WEB-OK",
+     "check_fp": "6c3e512671"
+    },
+    {
+     "text": "Issuer and principal can differ.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.1. Actors",
+     "quote": "The issuer and the principal can be different parties.",
+     "check": "WEB-OK",
+     "check_fp": "d3c8ae6f95"
+    },
+    {
+     "text": "No artifact links the principal to the accepted root.",
+     "type": "fact",
+     "source": "spec",
+     "section": "19.2.10. Associating a Principal with an Accepted Authority",
+     "quote": "This revision defines no artifact for the step from a principal to a first authority.",
+     "check": "WEB-OK",
+     "check_fp": "0b255d84b6"
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Agent-signed action intent plus delegation chain",
+   "answer": "Yes. For every governed action the agent signs an action-intent record with its own Ed25519 key. The record binds an action_ref, which commits to the agent ID, the action type, the exact target, a payload hash, the scopes needed, the issue time and a random nonce, plus the delegation it relies on. This is proof of possession tied to one specific action. The gateway answers with a signed, single-use approval that it consumes at dispatch. The transport carrying these records is not specified, except for the MCP and OAuth bindings.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: a signed, action-bound credential accompanies every governed action and the gateway verifies it (same colour as the calibration examples, with stronger binding than a bearer token).",
+   "claims": [
+    {
+     "text": "The agent signs the action intent, binding action_ref and delegation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.3.1. Action Intent",
+     "quote": "The agent signature binds the action_ref and selected delegation_ref before policy evaluation.",
+     "check": "WEB-OK",
+     "check_fp": "17800f0118"
+    },
+    {
+     "text": "Issuer and subject of the intent must be the acting agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.3.1. Action Intent",
+     "quote": "issuer and subject_agent MUST be the acting agent",
+     "check": "WEB-OK",
+     "check_fp": "773488ee34"
+    },
+    {
+     "text": "What action_ref commits to.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.1. Action Reference Computation",
+     "quote": "The reference commits to who is acting, what operation is requested, where it will occur, the exact payload, the authority scopes needed, when the intent was issued, and a replay- resistant nonce.",
+     "check": "WEB-OK",
+     "check_fp": "9aa061c445"
+    },
+    {
+     "text": "Approval is single-use and bound to the action.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.3.2. Policy Decision",
+     "quote": "A permit or narrow policy-decision record is a bounded, single-use approval for its action_ref.",
+     "check": "WEB-OK",
+     "check_fp": "0d512c30a0"
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Expiry enforced; no maximum set",
+   "answer": "Partly. Passports, principal bindings and delegations carry explicit validity windows, and gateway approvals carry a valid_until that must be checked again when the approval is consumed. Verifiers MUST enforce any expiry on consumable artifacts. But the draft sets no maximum duration for any of them, so lifetimes are whatever the issuer signs. Replay of an action is limited by the nonce and by single-use consumption, not by a short lifetime.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Yellow: verifiers must enforce expiry, but no specific maximum is given (green needs a short maximum, as in Visa TAP).",
+   "claims": [
+    {
+     "text": "Passport validity interval.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.1. Agent Passport",
+     "quote": "the validity interval is issued_at <= now < expires_at",
+     "check": "WEB-OK",
+     "check_fp": "3c51b90f1f"
+    },
+    {
+     "text": "Verifiers must enforce expiry of consumable artifacts.",
+     "type": "fact",
+     "source": "spec",
+     "section": "15. Security Considerations",
+     "quote": "verifiers MUST enforce the expiry, and issuance against an expired or unparseable challenge MUST fail closed.",
+     "check": "WEB-OK",
+     "check_fp": "c214e8ef3c"
+    },
+    {
+     "text": "Approval re-validated at consumption.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5.3. Two-Phase Execution",
+     "quote": "An approval that has expired, has already been consumed, or fails re-validation MUST NOT admit execution.",
+     "check": "WEB-OK",
+     "check_fp": "471bc98ab3"
+    },
+    {
+     "text": "Searched -04 for a maximum lifetime or duration limit for passports, bindings, delegations or approvals. None is stated.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Yes, signatures, chain and revocation checked",
+   "answer": "Yes. A verifier checks each record in a fixed order: closed schema, recomputed identifiers, signer key resolved at the record's signing time (not at verification time), signatures, the action binding, and the whole delegation chain from root to leaf, including attenuation, current validity and revocation for every member. No prior relationship with the agent is needed, and unknown or stale revocation status makes the result indeterminate rather than valid. Whether a root is accepted is the verifier's trust policy.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: genuine, current and unaltered are all checked against resolvable keys without prior setup (same as the calibration examples).",
+   "claims": [
+    {
+     "text": "Receipt verification steps.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.6. Receipt Verification",
+     "quote": "verify delegation_ref against the selected authority chain, and verify that chain",
+     "check": "WEB-OK",
+     "check_fp": "6130bcbc47"
+    },
+    {
+     "text": "Chain verification includes current validity and revocation.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.3. Chain Verification",
+     "quote": "the seven facet comparisons in Section 4.2; current validity; and revocation state for every member.",
+     "check": "WEB-OK",
+     "check_fp": "f52926d111"
+    },
+    {
+     "text": "Historical key selection.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.4. Key Rotation and Historical Verification",
+     "quote": "A resolver MUST select the key version authorized at the artifact's issued_at; selecting the key that is current at verification time is insufficient.",
+     "check": "WEB-OK",
+     "check_fp": "c72970d2f8"
+    },
+    {
+     "text": "Indeterminate must not be collapsed into valid.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.3. Chain Verification",
+     "quote": "A caller MUST NOT collapse indeterminate or unsupported into valid.",
+     "check": "WEB-OK",
+     "check_fp": "724fb9dbfb"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "Yes, per-agent key signs each action",
+   "answer": "Yes, the agent. Each action intent is signed with the acting agent's own key, and the verifier checks that the action input's agent_id equals the record's subject_agent and that the signer's key was authorised for that DID at signing time. This authenticates the individual agent per action, not just its provider. Users and principals are not authenticated at the gateway. Their binding signatures are verified, but who they are is left to the verifier's trust policy. The draft notes that a compromised agent can still produce valid signatures.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: the gateway verifies, on each governed action, a signature from the individual agent's own key (the calibration examples are red because they verify only a provider key or a token).",
+   "claims": [
+    {
+     "text": "Agent identifier must match subject_agent.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.6. Receipt Verification",
+     "quote": "Where it holds one, the object's agent_id of Section 5.1 and the record's subject_agent of Section 7.1 MUST be equal",
+     "check": "WEB-OK",
+     "check_fp": "4416a8145e"
+    },
+    {
+     "text": "Signer authority resolved at issued_at.",
+     "type": "fact",
+     "source": "spec",
+     "section": "7.6. Receipt Verification",
+     "quote": "resolve signer authority at issued_at",
+     "check": "WEB-OK",
+     "check_fp": "a44dca4e1d"
+    },
+    {
+     "text": "Compromised-but-signing agents are not addressed.",
+     "type": "fact",
+     "source": "spec",
+     "section": "15. Security Considerations",
+     "quote": "Signature verification can succeed because the signing key remains available to the attacker.",
+     "check": "WEB-OK",
+     "check_fp": "8c4c75a484"
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "Seven-facet delegation, narrowed at each hop",
+   "answer": "Yes. Every delegation carries seven required facets: scope grants (colon-separated, with terminal wildcards), spend (per-action and cumulative limits in a declared unit), depth, time window, reputation ceiling, required values and a reversibility ceiling. Each child must be no wider than its parent. The gateway's deterministic gate checks scope, signature, revocation, authority path and spend for each action, can narrow it, and atomically reserves spend against every bounded ancestor. Scope names are deployment-defined.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: fine-grained, enforceable permissions are carried in the protocol (same colour as MCP Authorization's scopes).",
+   "claims": [
+    {
+     "text": "Seven required facets.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1. Faceted Authority Attenuation",
+     "quote": "authority contains exactly seven required facets: scope, spend, depth, time, reputation, values, and reversibility.",
+     "check": "WEB-OK",
+     "check_fp": "6af26a6713"
+    },
+    {
+     "text": "Children covered by parents.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.2. Component Orders",
+     "quote": "Every child grant MUST be covered by a parent grant.",
+     "check": "WEB-OK",
+     "check_fp": "f80eecd38a"
+    },
+    {
+     "text": "Deterministic gate checks.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5. Policy Chain",
+     "quote": "The policy engine splits into a deterministic gate (scope, signature, revocation, authority path, spend)",
+     "check": "WEB-OK",
+     "check_fp": "c33c7803c2"
+    },
+    {
+     "text": "Spend reserved against every bounded ancestor.",
+     "type": "fact",
+     "source": "spec",
+     "section": "5. Policy Chain",
+     "quote": "Before dispatch, the boundary MUST atomically reserve the proposed amount against every bounded ancestor in the selected root-to-leaf chain.",
+     "check": "WEB-OK",
+     "check_fp": "333166ecfd"
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "Delegation signing only; human approver not specified",
+   "answer": "Partly. Authority starts when an issuer, often the principal, signs a delegation to the agent, which is an approval step before the agent can act. But the issuer may be an organisation or system key. The per-action 'approval' is a gateway-issued policy decision, and the draft explicitly does not require the approver to be a human distinct from the agent. A worked example shows a deployment adding a human certification step through its own profile.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Yellow: a signed grant by the issuer precedes access, but it need not be a person and per-action human approval is left to profiles (MCP's per-token user consent is green).",
+   "claims": [
+    {
+     "text": "Human approver not specified.",
+     "type": "fact",
+     "source": "spec",
+     "section": "9.11.4. A Cross-Org Action Needing Separate Human Approval and One-Time Admission",
+     "quote": "It does not specify that the approver be a human distinct from the executing agent",
+     "check": "WEB-OK",
+     "check_fp": "a06f7a9de8"
+    },
+    {
+     "text": "The issuer signs a delegation that creates authority.",
+     "type": "fact",
+     "source": "spec",
+     "section": "2.1. Actors",
+     "quote": "The party that signs a delegation, creating or narrowing authority for the party below it.",
+     "check": "WEB-OK",
+     "check_fp": "309e0a12da"
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Signed principal and root; acceptance is verifier policy",
+   "answer": "Partly. The principal and the root issuer vouch by signing the binding and the root delegation, and verifiers grade principal claims (self-asserted, principal-attested, externally verified). But a self-issued root is not trusted automatically, and which roots to accept is entirely the verifier's trust policy. No authority, registry or onboarding process is defined. The draft also defines tiers for attested signals (observed, infrastructure-, provider-attested, self-declared) as terminology only.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "none",
+   "rating_reason": "Yellow: signed vouching records exist, but no party is designated to vouch and root acceptance is left to each verifier (between TAP's green and Web Bot Auth's red).",
+   "claims": [
+    {
+     "text": "Root acceptance is verifier policy.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.1. Faceted Authority Attenuation",
+     "quote": "A valid self-issued root is not trusted automatically; acceptance of a root is verifier policy.",
+     "check": "WEB-OK",
+     "check_fp": "bf02ed49e1"
+    },
+    {
+     "text": "Principal claim levels.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.3. Principal Binding",
+     "quote": "A verifier reports externally_verified_principal only when its own trust policy has also verified the principal identity.",
+     "check": "WEB-OK",
+     "check_fp": "31dfa36cfa"
+    },
+    {
+     "text": "Attested-signal weighting is deployment policy.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.6. Attestation Provenance and Composition",
+     "quote": "How a deployment weighs, combines, or scores composed attestations is deployment policy and is not specified by this document.",
+     "check": "WEB-OK",
+     "check_fp": "894e67a4b6"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Per-delegation, cascading, rechecked at dispatch",
+   "answer": "Yes. Any delegation can be revoked, irreversibly, by its issuer. The gateway must recheck revocation at the moment it consumes an approval to dispatch, not only when it decided. Once a verifier has established a revocation, it must reject every chain containing the revoked delegation, so descendants fall with it. An unknown, stale or unrecognised revocation state is not treated as active. Granularity ranges from one delegation (one agent's grant) to a whole subtree, and principal bindings can be revoked separately. Where revocation status comes from, and how fresh it must be, is left to profiles.",
+   "rating": "green",
+   "coverage": "required",
+   "requirement": "MUST",
+   "rating_reason": "Green: revocation is defined, an unknown status is treated as not active, and the gateway must recheck it at each dispatch (all three calibration examples are red because they define none); how status is distributed is left to profiles.",
+   "claims": [
+    {
+     "text": "Issuer may revoke; irreversible; recheck at consumption.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.5. Revocation and Cascade",
+     "quote": "The enforcement gateway MUST recheck revocation status at the moment the approval is consumed to admit dispatch, not only at the moment the policy decision is issued.",
+     "check": "WEB-OK",
+     "check_fp": "6c5ec29bd8"
+    },
+    {
+     "text": "Chains containing a revoked delegation are invalid.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.5. Revocation and Cascade",
+     "quote": "From that point the verifier MUST NOT accept as valid any chain that contains the revoked delegation.",
+     "check": "WEB-OK",
+     "check_fp": "e73b74c95f"
+    },
+    {
+     "text": "Unrecognised revocation outcome is not active.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.3. Chain Verification",
+     "quote": "A revocation-resolution outcome that a verifier does not recognize MUST NOT be treated as active.",
+     "check": "WEB-OK",
+     "check_fp": "bf3f6ac0c5"
+    },
+    {
+     "text": "Revocation does not reach all verifiers at once.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.5. Revocation and Cascade",
+     "quote": "This document does not state that a revocation takes effect for every verifier at the same instant.",
+     "check": "WEB-OK",
+     "check_fp": "7a2e91c432"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "None",
+   "answer": "No. Passports, bindings and delegations carry DIDs and keys but no contact or escalation field. A principal binding has a status_uri for checking the binding's status, not for reaching anyone. Whatever a DID document publishes is outside APS.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched -04 for contact, abuse, security or escalation fields. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    },
+    {
+     "text": "Principal binding members include status_uri.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.3. Principal Binding",
+     "quote": "The record contains binding_id, agent_id, principal_id, verification_method, audiences, authority_profiles, status_uri, issued_at, expires_at, nonce, and signature.",
+     "check": "WEB-OK",
+     "check_fp": "9cfc925020"
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "None; reliance and notice left open",
+   "answer": "No. A delegation's reputation facet caps authority by a 'resolved subject score', but where that score comes from is not defined. Nor is there any way for services to report or share signals about an agent. How a revocation reaches outside counterparties, and what notice they are owed, is listed as an open question.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no mechanism for services to share signals about an agent.",
+   "claims": [
+    {
+     "text": "Reputation score source is not defined; runtime uses it.",
+     "type": "fact",
+     "source": "spec",
+     "section": "4.2. Component Orders",
+     "quote": "Runtime authorization uses the lesser of the resolved subject score and the signed ceiling.",
+     "check": "WEB-OK",
+     "check_fp": "b63ad80f43"
+    },
+    {
+     "text": "Notice to relying parties is unresolved.",
+     "type": "fact",
+     "source": "spec",
+     "section": "19.2.9. Notice and Relying Parties",
+     "quote": "What a relying party that acted on stale but authentic evidence is entitled to, and what evidence of notice a principal needs to show, is not defined here.",
+     "check": "WEB-OK",
+     "check_fp": "84c97aef7d"
+    },
+    {
+     "text": "Searched -04 for reputation sources, reports, shared signals or feeds between verifiers. None is defined.",
+     "type": "silent",
+     "source": "spec",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No",
+   "answer": "No. The passport carries self-asserted capabilities and a display name, but no model field. Attribution of contributing sources such as models is explicitly not specified, and infrastructure attestations about the execution environment are terminology plus reference-implementation shapes, with no defined wire format.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no model identity is defined.",
+   "claims": [
+    {
+     "text": "Passport self_asserted content: capabilities and display name.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.1. Agent Passport",
+     "quote": "The self_asserted object contains a required, UTF-8-byte-sorted unique capabilities array and an optional display_name.",
+     "check": "WEB-OK",
+     "check_fp": "94e07cfe51"
+    },
+    {
+     "text": "Contribution attribution (data, models, tools) not specified.",
+     "type": "fact",
+     "source": "spec",
+     "section": "18. Attribution Axes and Scope",
+     "quote": "This document does not specify a contribution-attribution model.",
+     "check": "WEB-OK",
+     "check_fp": "53af9f5033"
+    },
+    {
+     "text": "No general attested-signal wire format.",
+     "type": "fact",
+     "source": "spec",
+     "section": "3.6. Attestation Provenance and Composition",
+     "quote": "it does not define a general attested-signal wire format",
+     "check": "WEB-OK",
+     "check_fp": "7c01ea34f8"
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "A gateway that implements APS can check, for each action, the agent's own signature, the full narrowing delegation chain and seven kinds of limits, including cumulative spend, before it calls the target itself. Protection holds only for calls that go through that gateway.",
+  "incident_response": "An issuer can irreversibly revoke a single delegation or a whole subtree, and gateways must recheck before every dispatch and treat unknown status as not active. How revocation status is distributed, and how outside counterparties are told, is left to profiles and open questions.",
+  "accountability": "Signed intent, decision and result receipts tie each action to an agent key, a delegation chain and the gateway's decision. The principal behind the authority can be named and signed, but linking it to the chain used is not yet defined."
+ },
+ "notes": [
+  "The specification uses RFC 2119 keywords.",
+  "Requirements are split into APS Core and opt-in Candidate features, and most lifecycle and decision-to-effect material is Candidate. Ratings rest on Core sections (passport, principal binding, delegation, chain verification, revocation rechecks, policy chain, receipts) unless an answer says otherwise.",
+  "The analysis takes the enforcement gateway (APS's 'enforcement boundary') as the receiving service. The draft gives the target system itself no interface and no obligation, and its protections hold only when all privileged calls go through the gateway (the 'mediation assumption').",
+  "The -04 text is 271 pages. It was read in the browser from the ietf.org archive .txt because neither ietf.org nor datatracker could be reached from the analysis workspace, and the author's repository holds only -00 to -02. Every quote was checked by exact matching against the full -04 text in the browser.",
+  "Name collision: the earlier AGNTCY Identity draft used 'Agent Passport' for its credential, and other products use the phrase. This analysis covers only draft-pidlisnyi-aps-04."
+ ],
+ "open_questions": [
+  "How does a gateway obtain revocation status (sources and freshness bounds are profile-defined), and is there a default profile?",
+  "How should a verifier associate a principal binding with the accepted root of a delegation chain (Section 19.2.10)?",
+  "Who is expected to operate the enforcement gateway: the agent's organisation, the target service, or a third party? The draft does not say.",
+  "Where does the 'resolved subject score' for the reputation facet come from?"
+ ]
+}</script></body></html>

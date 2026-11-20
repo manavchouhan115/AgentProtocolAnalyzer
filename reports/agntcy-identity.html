@@ -1,0 +1,1003 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AGNTCY Identity: protocol analysis</title><style>
+:root{--bg:#ffffff;--fg:#1d2127;--muted:#5d6470;--line:#d5d9df;--soft:#f5f6f8;--head:#1f3a5f;--headfg:#ffffff;
+--group:#e3eaf4;--green:#cfe8c4;--yellow:#fbecb3;--red:#f6c9c4;--link:#1a5bb8;--accent:#1f3a5f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;
+--line:#343a42;--soft:#1c2026;--head:#2a4a75;--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;
+--link:#8db8f5;--accent:#8db8f5}}
+:root[data-theme="dark"]{--bg:#14171b;--fg:#e5e7ea;--muted:#a2a9b3;--line:#343a42;--soft:#1c2026;--head:#2a4a75;
+--group:#212b38;--green:#284a2b;--yellow:#55481a;--red:#5a2a27;--link:#8db8f5;--accent:#8db8f5}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:8px}
+.kicker{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}h1 small{display:block;font-size:17px;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:21px;margin:40px 0 12px;padding-top:4px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}.chip{font-size:12.5px;padding:2px 9px;border-radius:12px;
+border:1px solid var(--line);background:var(--soft)}.chip b{font-weight:600}
+.review{display:inline-block;font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:12px;margin-top:10px}
+.review.draft{background:var(--yellow)}.review.reviewed{background:var(--green)}
+nav{font-size:14px;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 14px}nav a{color:var(--link);text-decoration:none}
+a{color:var(--link)}p{margin:0 0 12px;max-width:760px}
+ol.steps{padding-left:22px;max-width:780px}ol.steps li{margin:6px 0;padding-left:4px}
+.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+th{background:var(--head);color:var(--headfg);font-weight:600}
+tr.group td{background:var(--group);font-weight:700;font-size:14px;letter-spacing:.02em}
+td.prop{width:27%;font-weight:600}td.prop .q{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:3px}
+td.green{background:var(--green)}td.yellow{background:var(--yellow)}td.red{background:var(--red)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:10px;margin-bottom:5px;
+border:1px solid currentColor;opacity:.85}
+.meta{font-size:13px;color:var(--fg);opacity:.8;margin-top:7px}
+details{margin-top:8px}summary{cursor:pointer;font-size:13px;color:var(--fg);opacity:.85}
+.claim{font-size:13px;margin:8px 0 0}.claim blockquote{margin:4px 0 0;padding:6px 9px;background:var(--soft);
+border-left:3px solid var(--line);color:var(--fg)}.claim .chk{font-size:11.5px;opacity:.75}.claim .bad{color:#b3261e;opacity:1;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;margin:6px 0}.legend span{padding:2px 9px;border-radius:3px}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.goal{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--soft)}
+.goal h3{margin:0 0 4px;font-size:16px}.goal .def{font-size:13px;color:var(--muted);margin-bottom:6px}
+ul.plain{padding-left:20px;max-width:820px}ul.plain li{margin:4px 0}
+.about{font-size:14px;color:var(--muted);border-top:1px solid var(--line);margin-top:44px;padding-top:16px}
+.about p{max-width:none}
+@media (max-width:640px){h1{font-size:25px}td.prop{width:auto}th,td{padding:7px 8px}table{font-size:14px}}
+@media print{nav,details summary{display:none}details{display:block}details>*{display:block}}
+</style></head><body><main><header><p class="kicker">Protocol analysis</p><h1>AGNTCY Identity<small>AGNTCY Identity specification (Agent IDs, ResolverMetadata and Agent/MCP Server Badges)</small></h1><ul class="facts"><li><b>Specification:</b> identity-spec main @ bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab (API and data models v1alpha1)</li><li><b>Date:</b> 2026-09-28</li><li><b>Maintainer:</b> AGNTCY project (Linux Foundation; originally contributed by Cisco/Outshift), repository github.com/agntcy/identity-spec</li><li><b>Analysed:</b> 2026-11-20</li><li><b>Version note:</b> The site shows no version number. The latest repository tag is v0.0.3 (April 2025); the analysis uses main at the commit above, whose last documentation change is dated 2026-09-23.</li></ul><div class=chips><span class="chip"><b>Category:</b> Credentials trust</span><span class="chip"><b>Also:</b> Discovery registry</span><span class="chip"><b>Mechanism:</b> Verifiable credential, DID, Signed metadata</span><span class="chip"><b>Venue:</b> Foundation</span><span class="chip"><b>Maturity:</b> Draft</span><span class="chip"><b>Openness:</b> Open specification</span></div><span class="review draft">Draft: not yet reviewed by a person</span><nav><a href="#summary">Summary</a><a href="#how">How it works</a><a href="#glance">At a glance</a><a href="#goals">Against the goals</a><a href="#analysis">Full analysis</a><a href="#sources">Sources</a><a href="#about">About this analysis</a></nav></header><h2 id="summary">Summary</h2><p>AGNTCY Identity is a specification for giving AI agents, MCP servers and multi-agent systems a universally unique ID backed by a signed credential, so others can check who published them and that their definition has not been altered. It is aimed at the &#x27;Internet of Agents&#x27;, where one agent discovers and composes others from different organisations. It is maintained in the AGNTCY project, an open-source collective under the Linux Foundation started by Cisco. The spec is published as a documentation site and Git repository with v1alpha1 APIs and no versioned release. Cisco&#x27;s Outshift runs a hosted Identity Service built on it.</p><p>An organisation brings an existing ID for its agent (e.g. an Okta application ID or an A2A Agent Card) or gets a DID from an AGNTCY Identity Node. It signs an &#x27;Agent Badge&#x27;, a W3C Verifiable Credential wrapping the agent&#x27;s OASF or A2A definition, and publishes the badge and a ResolverMetadata record with its public keys to an Identity Node. A party that wants to use the agent resolves the ID, fetches the badge and verifies the signature, typically at discovery time before connecting. Badges can be revoked at the node. The spec does not define how an agent proves, on a request, that it is the agent named in a badge. It also leaves out user delegation, scoped permissions, contact details and model identity.</p><h2 id="how">How it works</h2><ol class="steps"><li>An agent creator (an organisation or sub-organisation) creates a key pair in a wallet or vault, and registers its issuer details with an Identity Node, optionally proving ownership of its domain or IdP identity.</li><li>The creator gives the agent an ID: either one it already has (e.g. an Okta app ID, a Duo or Entra ID client ID, or an A2A well-known URL) or a did:agntcy DID generated by the Identity Node, which also publishes a ResolverMetadata record with the verification keys.</li><li>The creator puts the ID into the agent&#x27;s definition (an OASF record or A2A Agent Card), signs a Verifiable Credential over it (an Agent Badge with a Data Integrity proof or JOSE envelope), and publishes the badge to the Identity Node.</li><li>A consumer (a person, a client, or another agent) discovers the agent, e.g. through the AGNTCY directory, and extracts its ID.</li><li>The consumer resolves the ID at the Identity Node to get the badges and ResolverMetadata, picks the badge matching the definition, and verifies its proof with the issuer&#x27;s public key. The node can also report whether the badge was revoked.</li><li>The consumer decides whether to trust and connect to the agent. Authenticating the connection itself is left to other mechanisms (e.g. OAuth via the IdP).</li></ol><h2 id="glance">At a glance</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>AGNTCY Identity</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary</td><td class="">Signed badges binding agent IDs to issuers and definitions</td></tr><tr><td class="prop">Use cases</td><td class="">Pre-connection verification in multi-agent systems</td></tr><tr><td class="prop">Parties involved</td><td class="">Creator/issuer, Identity Node, consumer, Resolver, IdP</td></tr><tr><td class="prop">Status and adoption</td><td class="yellow">Alpha spec; hosted service by Cisco Outshift</td></tr><tr><td class="prop">Building blocks</td><td class="">W3C VC 2.0, DIDs, JOSE/JWK, OASF, A2A</td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier</td><td class="yellow">Per-agent ID (IdP app ID, A2A URL or DID)</td></tr><tr><td class="prop">Agent instance identifier</td><td class="red">No</td></tr><tr><td class="prop">Acting for (authority)</td><td class="red">No</td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type</td><td class="red">Badge VC exists, but not sent on requests</td></tr><tr><td class="prop">Credential lifetime</td><td class="red">Unspecified</td></tr><tr><td class="prop">Validity (credential validation)</td><td class="yellow">Badge proof checked via resolved keys</td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user</td><td class="red">No; verifies the issuer&#x27;s signature</td></tr><tr><td class="prop">Scoped authorization</td><td class="red">No; TBAC lives in the separate Identity Service</td></tr><tr><td class="prop">Human approval</td><td class="red">None</td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)</td><td class="yellow">Issuing organisation; node trust model unfinished</td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation</td><td class="yellow">Badge revocation at the Identity Node</td></tr><tr><td class="prop">Contact and escalation</td><td class="red">None</td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling</td><td class="red">None</td></tr><tr><td class="prop">Model identity</td><td class="red">No field defined</td></tr></tbody></table></div><h2 id="goals">Against the three goals</h2><div class="goals"><div class="goal"><h3>Access control</h3><div class="def">Goal: the agent can only reach the resources and perform the actions it is allowed to.</div>A consumer can check, before connecting, that an agent&#x27;s definition was signed by a named organisation and has not been changed. The spec gives services nothing to tie a live request to that agent or to limit what it may do.</div><div class="goal"><h3>Incident response</h3><div class="def">Goal: if an agent causes harm, its access can be limited or stopped.</div>The issuer can irreversibly revoke a badge (one agent version) at the Identity Node, and verifiers that check the node will see it. Services that verified earlier are not notified, and services cannot report an agent.</div><div class="goal"><h3>Accountability</h3><div class="def">Goal: an action can be traced back to the parties responsible for it.</div>A verified badge traces the agent&#x27;s definition to an issuing organisation, optionally with verified domain ownership. It does not identify a user, an instance or the model.</div></div><h2>Not addressed</h2><ul class="plain"><li><b>Agent instance identifier:</b> No (not addressed by the specification)</li><li><b>Acting for (authority):</b> No (not addressed by the specification)</li><li><b>Credential type:</b> Badge VC exists, but not sent on requests (not addressed by the specification)</li><li><b>Credential lifetime:</b> Unspecified (not addressed by the specification)</li><li><b>Authentication of the agent or user:</b> No; verifies the issuer&#x27;s signature (not addressed by the specification)</li><li><b>Scoped authorization:</b> No; TBAC lives in the separate Identity Service (handled outside the protocol)</li><li><b>Human approval:</b> None (not addressed by the specification)</li><li><b>Contact and escalation:</b> None (not addressed by the specification)</li><li><b>Cross-party signalling:</b> None (not addressed by the specification)</li><li><b>Model identity:</b> No field defined (not addressed by the specification)</li></ul><h2 id="analysis">Full analysis</h2><div class="legend"><span style="background:var(--green)">Addressed</span><span style="background:var(--yellow)">Partly addressed</span><span style="background:var(--red)">Not addressed (may be out of scope by design)</span></div><div class="wrap"><table><thead><tr><th>Property</th><th>AGNTCY Identity</th></tr></thead><tbody><tr class="group"><td colspan="2">What is it?</td></tr><tr><td class="prop">Summary<span class="q">In one sentence, what does the protocol do, for whom, and what does the receiving service get from it?</span></td><td class="">A Linux Foundation AGNTCY specification where an organisation gives its agent or MCP server a unique ID and publishes signed Verifiable Credentials (&#x27;badges&#x27;) about it at an Identity Node, so others can verify its issuer and definition before connecting.<details><summary>Evidence (2)</summary><div class="claim">Focus: present and verify identifiers. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a>, 3.2 Standards (IMPORTANT note). <span class="chk">(quote verified against the source)</span><blockquote>“at this stage the main focus of the AGNTCY is to provide a common and trustworthy mechanism to present identifiers and to verify them.”</blockquote></div><div class="claim">Each ID is linked to badges. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a>, 4. Agent Identity Structure. <span class="chk">(quote verified against the source)</span><blockquote>“an Agent subject is tied to a unique identifier linked to one or more Verifiable Credentials (VCs)”</blockquote></div></details></td></tr><tr><td class="prop">Use cases<span class="q">Where is it used and between whom? At which layer (HTTP header, token, message body)? Who can verify it (the service itself, a CDN, a gateway)?</span></td><td class="">Trust between agents, MCP servers and multi-agent systems from different organisations, mainly when a consumer discovers and selects an agent or MCP server and wants to check its provenance before connecting. The information travels as published metadata documents (badges and ResolverMetadata), fetched from Identity Nodes or well-known URLs, not in request headers. Verification is done by whoever consumes the agent, e.g. a client, another agent, or the Identity Node&#x27;s Verify API.<details><summary>Evidence (3)</summary><div class="claim">Applies to agents, MCP servers and MASs. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a>, 1. Introduction. <span class="chk">(quote verified against the source)</span><blockquote>“Model Context Protocol (MCP) Servers”</blockquote></div><div class="claim">Pre-connection credential validation is a stated use. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/intro">AGNTCY Identity spec: Verifiable Credentials Definitions (docs/vc/intro.md)</a>, Why it matters?. <span class="chk">(quote verified against the source)</span><blockquote>“Pre-connection credential validation”</blockquote></div><div class="claim">Badges are served from a well-known URL at a node. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/agent-badge">AGNTCY Identity spec: Agent Badge Examples (docs/vc/agent-badge.md)</a>, Agent Badges accessible through a &quot;well-known&quot; endpoint. <span class="chk">(quote verified against the source)</span><blockquote>“https://api.NODE/ID/.well-known/vcs.json”</blockquote></div></details></td></tr><tr><td class="prop">Parties involved<span class="q">Which parties does the spec define, and what does each do? Use the spec&#x27;s own names and its &quot;Roles&quot;, &quot;Participants&quot; or &quot;Terminology&quot; section.</span></td><td class="">The spec has no formal roles section; its flows use these parties. Agent Creator: the organisation or sub-organisation that creates the agent, holds the signing keys and issues badges (the issuer). Identity Node: stores ResolverMetadata and badges and acts as a &#x27;trust anchor&#x27;. Agent Consumer: discovers the agent and verifies its badge. Resolver or Identity CLI: resolves the ID and checks the proof. Wallet: holds the creator&#x27;s keys. Identity Provider (e.g. Okta, Duo, PingOne, Entra ID): can supply the ID and keys. Directory: the AGNTCY discovery service that holds OASF records.<details><summary>Evidence (4)</summary><div class="claim">Organisations and sub-organisations create agents and hold keys. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/architecture/issuing">AGNTCY Identity spec: Generating Agent Badges (docs/specs/architecture/issuing.md)</a>, Generating Agent Badges. <span class="chk">(quote verified against the source)</span><blockquote>“Each organization or sub-organization may create public and private key pairs”</blockquote></div><div class="claim">Identity Nodes as trust anchors. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/architecture/issuing">AGNTCY Identity spec: Generating Agent Badges (docs/specs/architecture/issuing.md)</a>, Generating Agent Badges. <span class="chk">(quote verified against the source)</span><blockquote>“The ResolverMetadata along with the Verifiable Agent Badge can be stored in Identity Nodes (INs) that can operate as trust anchors.”</blockquote></div><div class="claim">Consumer and Resolver in the verification process. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/architecture/verification">AGNTCY Identity spec: Verifying Agent Badges (docs/specs/architecture/verification.md)</a>, Verifying Agent Badges. <span class="chk">(quote verified against the source)</span><blockquote>“The Resolver extracts the Agent ID from the Agent definition in step (7a)”</blockquote></div><div class="claim">Agent Creator, Agent Consumer, Wallet and Identity Node appear in the flows. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/flows/agntcy_advanced">AGNTCY Identity spec: Detailed Flows (docs/specs/flows/agntcy_advanced.md)</a>, Verify an Agent Locally. <span class="chk">(quote verified against the source)</span><blockquote>“Agent Consumer-&gt;&gt;Directory CLI: Discover and download the agent OASF”</blockquote></div></details></td></tr><tr><td class="prop">Status and adoption<span class="q">What is the formal status (RFC, current dated revision, working-group draft, individual draft, vendor specification)? Latest version and date? Who maintains it? Which named products send or verify it?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Draft. The spec is a living documentation site with v1alpha1 APIs and no versioned release. Its last repository tag, v0.0.3, is from April 2025, and some sections say more detail will come in later updates. The AGNTCY Identity Service, an open-source implementation in the same project, points to a hosted SaaS run by Outshift (Cisco&#x27;s incubator). That README is a primary source from the deployer.<div class="meta">Why this rating: Still alpha and not released as a stable version, even though a named hosted deployment exists.</div><details><summary>Evidence (3)</summary><div class="claim">APIs are v1alpha1. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/node/v1alpha1/vc_service.proto">AGNTCY Identity Protodocs: agntcy.identity.node.v1alpha1 vc_service.proto</a>, agntcy.identity.node.v1alpha1. <span class="chk">(quote verified against the source)</span><blockquote>“agntcy.identity.node.v1alpha1”</blockquote></div><div class="claim">More detail promised in later updates. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/architecture/issuing">AGNTCY Identity spec: Generating Agent Badges (docs/specs/architecture/issuing.md)</a>, Generating Agent Badges. <span class="chk">(quote verified against the source)</span><blockquote>“In subsequent updates to this documentation, the AGNTCY shall provide more detailed recommendations about the INs”</blockquote></div><div class="claim">Hosted SaaS Identity Service. <i>Source states</i> <a href="https://github.com/agntcy/identity-service">AGNTCY Identity Service README (implementation built on the spec)</a>, Table of Contents. <span class="chk">(quote verified against the source)</span><blockquote>“Sign up for our hosted SaaS Identity Service to try our features.”</blockquote></div></details></td></tr><tr><td class="prop">Building blocks<span class="q">Which standards does it build on (with RFC numbers)? Note non-standard dependencies (vendor programmes) and deprecated parts.</span></td><td class="">W3C Verifiable Credentials 2.0 for badges (with Data Integrity proofs or a JOSE envelope), W3C DIDs 1.1 and DID Documents for did:agntcy IDs, JSON Web Keys and key sets (RFC 7517) published by IdPs or nodes, and OASF records or A2A Agent Cards as badge content. MCP Server Badges can carry OAuth protected resource metadata (RFC 9728). Post-quantum ML-DSA keys are listed as optional key types. The spec says it is not limited to DID and VC standards.<details><summary>Evidence (3)</summary><div class="claim">DIDs and VCs supported. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a>, 3.2 Standards. <span class="chk">(quote verified against the source)</span><blockquote>“AGNTCY supports the use of W3C Decentralized Identifiers (DIDs) and associated standards, including:”</blockquote></div><div class="claim">JOSE envelopes supported. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/agent-badge">AGNTCY Identity spec: Agent Badge Examples (docs/vc/agent-badge.md)</a>, A2A Agent Badge. <span class="chk">(quote verified against the source)</span><blockquote>“Multiple envelopes are supported in the AGNTCY, including JSON Object Signing and Encryption (JOSE).”</blockquote></div><div class="claim">RFC 9728 metadata in MCP tool descriptions. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/mcp.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 mcp.proto</a>, McpTool. <span class="chk">(quote verified against the source)</span><blockquote>“This complies with RFC 9728.”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Who is being identified?</td></tr><tr><td class="prop">Identifier<span class="q">What does the agent identifier look like, and what does it actually name (client application, agent provider, the provider&#x27;s key or URL, a domain, the individual agent)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. Each agent &#x27;subject&#x27; has an ID meant to be universally unique. It can be an IdP application or client ID (e.g. OKTA-APP_ID), an A2A well-known Agent Card URL, or a did:agntcy DID generated by an Identity Node. The ID names the agent as a published piece of software. Different versions get different badges under the same ID, and one ID is shared by every running copy of that agent.<div class="meta">Required by the specification · requirement level: MUST*</div><div class="meta">Why this rating: The ID names the agent as a product or definition, shared by all running copies (like MCP&#x27;s client_id), not the individual running agent.</div><details><summary>Evidence (4)</summary><div class="claim">Each agent subject has a universally unique ID. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a>, 4. Agent Identity Structure. <span class="chk">(quote verified against the source)</span><blockquote>“Each Agent subject has a universally unique identifier named ID”</blockquote></div><div class="claim">Example: an Okta application ID. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/id/examples">AGNTCY Identity spec: ID Examples (docs/id/examples.md)</a>, 1.a) Okta Example of an Agent ID. <span class="chk">(quote verified against the source)</span><blockquote>“where ID represents a universally unique identifier associated to an Agent subject (e.g., an Okta Application ID in this case).”</blockquote></div><div class="claim">DID form. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/id/examples">AGNTCY Identity spec: ID Examples (docs/id/examples.md)</a>, 4) Decentralized Identifiers (DIDs) Example. <span class="chk">(quote verified against the source)</span><blockquote>“did:agntcy:{ID}”</blockquote></div><div class="claim">Versions get different badges, same ID. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/intro">AGNTCY Identity spec: Verifiable Credentials Definitions (docs/vc/intro.md)</a>, Key Verifiable Credentials (VCs). <span class="chk">(quote verified against the source)</span><blockquote>“different software versions and/or patched releases of an Agent will have different Agent Badges.”</blockquote></div></details></td></tr><tr><td class="prop">Agent instance identifier<span class="q">Can the service tell which specific agent instance sent the request, not just which application or provider?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. IDs and badges describe an agent subject and its definitions (versions, artefacts, locators). The spec mentions discovering &#x27;running Agents&#x27; as future Identity Node work, but defines no identifier for a running instance.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No per-instance identifier (same as all three calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Searched the spec docs and protos for instance, session or runtime identifiers. None is defined. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a>, Whole specification.</div><div class="claim">Running agents mentioned only as future node work. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/architecture/issuing">AGNTCY Identity spec: Generating Agent Badges (docs/specs/architecture/issuing.md)</a>, Generating Agent Badges. <span class="chk">(quote verified against the source)</span><blockquote>“Link and automate the dynamic and trustworthy discovery of running Agents and MCP Servers to their corresponding AuthN and delegated AuthZ methods”</blockquote></div></details></td></tr><tr><td class="prop">Acting for (authority)<span class="q">Does the service learn whom the agent is acting for (user, consumer, organisation)? Is this required, optional, or only possible through another party?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Badges state who issued the agent&#x27;s definition (the organisation), not on whose behalf the agent is acting. The spec mentions VCs for &#x27;authorization assertions&#x27; in MFA processes and delegated authorization as future work, but defines no user or delegation claim.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: Whom the agent acts for is not defined (same as MCP Authorization and Web Bot Auth).</div><details><summary>Evidence (2)</summary><div class="claim">Authorization assertions are named only as a kind of claim a VC could carry. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/intro">AGNTCY Identity spec: Verifiable Credentials Definitions (docs/vc/intro.md)</a>, Definitions. <span class="chk">(quote verified against the source)</span><blockquote>“Authorization assertions used in processes such as Multi-Factor Authentication (MFA)”</blockquote></div><div class="claim">Searched the docs, BadgeClaims, VerifiableCredential and VerifiablePresentation models for user, principal, delegation or on-behalf-of fields. None is defined. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/vc.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 vc.proto</a>, agntcy.identity.core.v1alpha1.</div></details></td></tr><tr class="group"><td colspan="2">Credential and validity</td></tr><tr><td class="prop">Credential type<span class="q">What credential does the service receive on each request (bearer token, HTTP Message Signature, mTLS certificate, verifiable credential)? What exactly is signed or bound (host, path, time, nonce, body)? Is it proof of possession?</span></td><td class="red"><span class="badge">Not addressed</span><br>No credential on requests. The spec&#x27;s credential is an Agent Badge: a W3C Verifiable Credential whose subject is the agent&#x27;s ID and definition, signed by the issuing organisation with a Data Integrity proof or JOSE envelope. Badges are published at an Identity Node and fetched by whoever wants to check the agent. The agent does not send them with its requests. A Verifiable Presentation model exists in the data model, but no flow uses it. A public badge also does not prove the presenter is the agent, because anyone can fetch and replay it.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No credential is presented on the agent&#x27;s requests and the badge is not bound to the presenter; yellow was arguable because a verifiable badge exists, so the lower colour was chosen (tie rule).</div><details><summary>Evidence (4)</summary><div class="claim">Badge structure: VC with Data Integrity proof. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/agent-badge">AGNTCY Identity spec: Agent Badge Examples (docs/vc/agent-badge.md)</a>, OASF Agent Badge. <span class="chk">(quote verified against the source)</span><blockquote>“The VC below also includes a data integrity proof as an embedded proof within an envelope.”</blockquote></div><div class="claim">Badges are fetched by the consumer from the node. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/flows/agntcy_advanced">AGNTCY Identity spec: Detailed Flows (docs/specs/flows/agntcy_advanced.md)</a>, Verify an Agent Locally. <span class="chk">(quote verified against the source)</span><blockquote>“Agent Consumer-&gt;&gt;Identity CLI: Resolve the Agent ID to get the Agent Badges”</blockquote></div><div class="claim">A VerifiablePresentation model exists. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/vc.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 vc.proto</a>, VerifiablePresentation. <span class="chk">(quote verified against the source)</span><blockquote>“DataModel represents the W3C Verifiable Presentation Data Model defined [here]”</blockquote></div><div class="claim">Searched the docs and flows for presenting a badge or presentation on a request, nonce, challenge or holder binding. None is defined. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/docs/specs/flows/agntcy_advanced">AGNTCY Identity spec: Detailed Flows (docs/specs/flows/agntcy_advanced.md)</a>, Whole document.</div></details></td></tr><tr><td class="prop">Credential lifetime<span class="q">How long is the credential valid? Is the limit a MUST, a SHOULD or unspecified? Is the verifier told to reject longer ones?</span></td><td class="red"><span class="badge">Not addressed</span><br>Unspecified. Badge examples carry only a validFrom date, and the data model has an optional expiration date field, but the spec gives no maximum lifetime and no rule for verifiers.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No lifetime guidance at all.</div><details><summary>Evidence (3)</summary><div class="claim">Examples carry validFrom only. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/agent-badge">AGNTCY Identity spec: Agent Badge Examples (docs/vc/agent-badge.md)</a>, OASF Agent Badge. <span class="chk">(quote verified against the source)</span><blockquote>“validFrom: date(),”</blockquote></div><div class="claim">An expiration field exists in the model. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/vc.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 vc.proto</a>, VerifiableCredential. <span class="chk">(quote verified against the source)</span><blockquote>“https://www.w3.org/TR/vc-data-model/#expiration”</blockquote></div><div class="claim">Searched the docs for lifetime, expiry or freshness guidance. None is given. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a>, Whole specification.</div></details></td></tr><tr><td class="prop">Validity (credential validation)<span class="q">Can the service check that the credential is genuine, current and unaltered, without a prior relationship with the agent? What does it check, and against what?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. A verifier resolves the agent ID to its ResolverMetadata (from an Identity Node, or keys discovered from the IdP&#x27;s OIDC/JWKS endpoints) and checks the badge&#x27;s proof with the issuer&#x27;s public key. No prior relationship with the agent is needed. The node&#x27;s Verify API can also report that a badge was revoked. What is validated is the published badge, not a request from the agent, and no expiry check is specified.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: The badge can be checked for authenticity and revocation without prior setup, but no expiry check is specified and the check applies to a published document rather than the agent&#x27;s request (the calibration examples are green because they validate the request credential including its time window).</div><details><summary>Evidence (5)</summary><div class="claim">Proof verified with the ResolverMetadata public key. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/flows/agntcy_advanced">AGNTCY Identity spec: Detailed Flows (docs/specs/flows/agntcy_advanced.md)</a>, Verify an Agent Locally. <span class="chk">(quote verified against the source)</span><blockquote>“Verify the Agent Badge Data Integrity proof&lt;br/&gt;using the ResolverMetadata public key”</blockquote></div><div class="claim">Badge proof verification uses the assertionMethod. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/agent-badge">AGNTCY Identity spec: Agent Badge Examples (docs/vc/agent-badge.md)</a>, A2A Agent Badge. <span class="chk">(quote verified against the source)</span><blockquote>“The proof in an Agent Badge can be verified using the assertionMethod defined in the ResolverMetadata object”</blockquote></div><div class="claim">IdP keys are discovered via OIDC well-known metadata. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/id/examples">AGNTCY Identity spec: ID Examples (docs/id/examples.md)</a>, 1) IdP Examples. <span class="chk">(quote verified against the source)</span><blockquote>“is the starting point from which the JWKs are discovered through the IdP&#x27;s OIDC/OAuth well-known metadata.”</blockquote></div><div class="claim">Revoked status is a verification error. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/errors.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 errors.proto</a>, ErrorReason. <span class="chk">(quote verified against the source)</span><blockquote>“The Verifiable Credential is revoked”</blockquote></div><div class="claim">ResolverMetadata carries the keys needed to establish trust in an ID. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/id/definitions">AGNTCY Identity spec: ID Definitions (docs/id/definitions.md)</a>, Key Identifiers. <span class="chk">(quote verified against the source)</span><blockquote>“containing cryptographic material and assertion methods enabling to automatically resolve and establish trust with the associated ID”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Authentication and authorization</td></tr><tr><td class="prop">Authentication of the agent or user<span class="q">Does the receiving service itself authenticate the party making the request (the individual agent or the user)? Who exactly is authenticated, and by whom?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Verifying a badge shows that the issuing organisation signed the agent&#x27;s definition, not that the party now talking to the service is that agent. ResolverMetadata keys are described as usable to &#x27;authenticate or authorize interactions&#x27;, and the spec presents badges as enabling authentication and MFA. But no flow defines an agent proving possession of a key on a request, and the issuer&#x27;s key, not a per-agent key, signs badges. User authentication is left to IdPs.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: The verifier checks an organisation-level signature on a published document, not proof from the agent or a user (same as Web Bot Auth and Visa TAP).</div><details><summary>Evidence (3)</summary><div class="claim">Badges are signed with the organisation&#x27;s private key. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/architecture/issuing">AGNTCY Identity spec: Generating Agent Badges (docs/specs/architecture/issuing.md)</a>, Generating Agent Badges. <span class="chk">(quote verified against the source)</span><blockquote>“A PrvKey owned and managed by an organization or sub-organization is required to create a ProofValue of the Agent Definition.”</blockquote></div><div class="claim">Verification methods are described as usable for authentication. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/id.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 id.proto</a>, ResolverMetadata. <span class="chk">(quote verified against the source)</span><blockquote>“VerificationMethod is a list of cryptographic public keys, which can be used”</blockquote></div><div class="claim">Searched the flows and APIs for a challenge-response, proof of possession or request-signing step by the agent. None is defined. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/docs/specs/flows/agntcy_advanced">AGNTCY Identity spec: Detailed Flows (docs/specs/flows/agntcy_advanced.md)</a>, Whole document.</div></details></td></tr><tr><td class="prop">Scoped authorization<span class="q">Does the protocol tell the service what the agent is allowed to do (scopes, per-action limits)? How fine-grained is it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Badges describe what an agent or MCP server is, e.g. an MCP Server Badge can list its tools with their OAuth protected-resource metadata. They do not grant the agent permissions. Delegated authorization is listed as future Identity Node work. The separate AGNTCY Identity Service adds task-based access control (TBAC) policies, but that is a product outside this spec.<div class="meta">Handled outside the protocol</div><div class="meta">Why this rating: No scoped permissions in the spec; policy control exists only in a separate product (as with Visa TAP&#x27;s limits in VIC, which are not counted).</div><details><summary>Evidence (3)</summary><div class="claim">MCP tool metadata includes OAuth resource metadata (describes the server, not agent permissions). <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/mcp.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 mcp.proto</a>, McpTool. <span class="chk">(quote verified against the source)</span><blockquote>“Oauth2 Protected Resource metadata.”</blockquote></div><div class="claim">TBAC is a feature of the separate Identity Service. <i>Source states</i> <a href="https://github.com/agntcy/identity-service">AGNTCY Identity Service README (implementation built on the spec)</a>, README. <span class="chk">(quote verified against the source)</span><blockquote>“Define TBAC (Task-Based Access Control) policies to govern access and permissions.”</blockquote></div><div class="claim">Searched the spec docs and protos for scopes, permissions or entitlements granted to an agent. None is defined. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/vc.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 vc.proto</a>, agntcy.identity.core.v1alpha1.</div></details></td></tr><tr><td class="prop">Human approval<span class="q">Does the protocol include a step where a person approves the agent&#x27;s access or action? Can the service ask for it?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The only interactive step is the agent creator completing a verification link to publish its public key. No step lets a person approve an agent&#x27;s access or action, though the spec mentions negotiation &#x27;with or without human input&#x27; as something badges could support.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No approval step is defined.</div><details><summary>Evidence (2)</summary><div class="claim">Machine-to-machine negotiation with or without human input is only listed as a benefit. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/intro">AGNTCY Identity spec: Verifiable Credentials Definitions (docs/vc/intro.md)</a>, Why it matters?. <span class="chk">(quote verified against the source)</span><blockquote>“Machine-to-machine negotiation (with or without human input)”</blockquote></div><div class="claim">Searched the flows for consent or approval steps. Only the creator&#x27;s key-publishing verification exists. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/docs/specs/flows/agntcy_advanced">AGNTCY Identity spec: Detailed Flows (docs/specs/flows/agntcy_advanced.md)</a>, Whole document.</div></details></td></tr><tr class="group"><td colspan="2">Trust</td></tr><tr><td class="prop">Trust (who vouches for the agent)<span class="q">Once the credential is valid, why should the service rely on the party behind it? Who vouches for the agent (a central authority, the authorization server and the user&#x27;s consent, a registry, nobody)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The issuing organisation vouches for its own agent by signing the badge. When it registers as an issuer, it can optionally prove ownership of its domain or IdP identity, and the node then marks it as verified. Identity Nodes are called &#x27;trust anchors&#x27;, but the spec says no central authority is needed and that more detailed guidance on nodes&#x27; trust role is still to come. So a verifier learns which organisation stands behind the badge, not that any independent party approved it.<div class="meta">Optional in the specification</div><div class="meta">Why this rating: The issuer is named and its domain ownership can optionally be verified, but no independent party vouches and the node trust model is unfinished (between TAP&#x27;s green and Web Bot Auth&#x27;s red).</div><details><summary>Evidence (3)</summary><div class="claim">Issuer verified flag after proof of common-name ownership. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/issuer.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 issuer.proto</a>, Issuer. <span class="chk">(quote verified against the source)</span><blockquote>“This will be set to true when issuer provides a valid proof of ownership”</blockquote></div><div class="claim">No central authority required. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a>, 2. Identity Requirements. <span class="chk">(quote verified against the source)</span><blockquote>“Open: No centralized authority is required for assigning identities”</blockquote></div><div class="claim">Node trust role still to be detailed. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/architecture/issuing">AGNTCY Identity spec: Generating Agent Badges (docs/specs/architecture/issuing.md)</a>, Generating Agent Badges. <span class="chk">(quote verified against the source)</span><blockquote>“In subsequent updates to this documentation, the AGNTCY shall provide more detailed recommendations about the INs”</blockquote></div></details></td></tr><tr class="group"><td colspan="2">Response and accountability</td></tr><tr><td class="prop">Revocation<span class="q">Does the protocol define a way to revoke an agent&#x27;s access? Who can revoke what, how fast does it take effect at the service, and at what granularity (one instance, one user, a whole provider)?</span></td><td class="yellow"><span class="badge">Partly addressed</span><br>Partly. The Identity Node API has an irreversible Revoke call, which needs proof of the issuer&#x27;s ownership, and the data model includes a W3C credentialStatus entry with a revocation purpose. Verification through the node can then return a &#x27;revoked&#x27; error. Revocation is per badge, i.e. per agent definition or version, and is done by the issuer. The spec does not say when verifiers must re-check status. Because badges are typically verified before connecting, a consumer that already trusted the agent is not notified.<div class="meta">Part of the normal flow</div><div class="meta">Why this rating: Revocation is defined, but nothing requires verifiers to re-check it, so it does not reliably reach every party that verified earlier (the calibration examples are red because they define none).</div><details><summary>Evidence (4)</summary><div class="claim">Revoke API, irreversible. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/node/v1alpha1/vc_service.proto">AGNTCY Identity Protodocs: agntcy.identity.node.v1alpha1 vc_service.proto</a>, VcService Revoke. <span class="chk">(quote verified against the source)</span><blockquote>“Revoke a Verifiable Credential. THIS ACTION IS NOT REVERSIBLE.”</blockquote></div><div class="claim">Revocation status purpose. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/vc.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 vc.proto</a>, CredentialStatusPurpose. <span class="chk">(quote verified against the source)</span><blockquote>“Used to cancel the validity of a verifiable credential.”</blockquote></div><div class="claim">Revoke requires proof of ownership of the issuer&#x27;s ResolverMetadata. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/node/v1alpha1/vc_service.proto">AGNTCY Identity Protodocs: agntcy.identity.node.v1alpha1 vc_service.proto</a>, RevokeRequest. <span class="chk">(quote verified against the source)</span><blockquote>“Required Proof of ownership of the Issuer&#x27;s ResolverMetadata”</blockquote></div><div class="claim">Verification can return a revoked error. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/errors.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 errors.proto</a>, ErrorReason. <span class="chk">(quote verified against the source)</span><blockquote>“The Verifiable Credential is revoked”</blockquote></div></details></td></tr><tr><td class="prop">Contact and escalation<span class="q">Can the service contact whoever is responsible for the agent (agent provider, user, model provider) if something goes wrong? Is a contact field required, optional or absent?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. The issuer record names the organisation, sub-organisation and common name (a domain), and ResolverMetadata gives a service endpoint for the node that published it. Neither is a contact or escalation channel. Contact details might appear in the OASF or A2A content inside a badge, but this spec does not define them.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No contact field is defined (same as all three calibration examples).</div><details><summary>Evidence (3)</summary><div class="claim">Issuer fields: organisation and common name. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/issuer.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 issuer.proto</a>, Issuer. <span class="chk">(quote verified against the source)</span><blockquote>“The organization of the issuer”</blockquote></div><div class="claim">Service endpoint points to the publishing node. <i>Source states</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/id.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 id.proto</a>, Service. <span class="chk">(quote verified against the source)</span><blockquote>“Service is used in ResolverMetadata to express ways of communicating with”</blockquote></div><div class="claim">Searched the docs and protos for contact, abuse, security or support fields. None is defined. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/issuer.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 issuer.proto</a>, Whole document.</div></details></td></tr><tr class="group"><td colspan="2">Monitoring and provenance</td></tr><tr><td class="prop">Cross-party signalling<span class="q">Can one service warn others about a misbehaving agent (shared signals, reputation, abuse reports)?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. Only the issuer can revoke its badges. There is no way for a consumer or service to report an agent or share an opinion about it. Verification results are logged locally by the Resolver.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No signalling between services.</div><details><summary>Evidence (2)</summary><div class="claim">The Resolver logs results locally. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/specs/architecture/verification">AGNTCY Identity spec: Verifying Agent Badges (docs/specs/architecture/verification.md)</a>, Verifying Agent Badges. <span class="chk">(quote verified against the source)</span><blockquote>“It outputs the verification result and logs it.”</blockquote></div><div class="claim">Searched the docs and Node APIs for report, reputation or shared-signal operations. None is defined. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/node/v1alpha1/vc_service.proto">AGNTCY Identity Protodocs: agntcy.identity.node.v1alpha1 vc_service.proto</a>, Whole document.</div></details></td></tr><tr><td class="prop">Model identity<span class="q">Does the service learn which AI model (and version) is behind the agent? Is it verifiable or self-asserted?</span></td><td class="red"><span class="badge">Not addressed</span><br>No. A badge wraps the agent&#x27;s OASF record or A2A Agent Card as signed by the issuer, so whatever those describe is self-asserted by the provider. This spec defines no field for the AI model or its version. Badges do give provenance and version lineage of the agent software itself.<div class="meta">Not addressed by the specification</div><div class="meta">Why this rating: No model identity is defined by this spec (same as the calibration examples).</div><details><summary>Evidence (2)</summary><div class="claim">Badges give provenance and update lineage of the agent. <i>Source states</i> <a href="https://spec.identity.agntcy.org/docs/vc/intro">AGNTCY Identity spec: Verifiable Credentials Definitions (docs/vc/intro.md)</a>, Why it matters?. <span class="chk">(quote verified against the source)</span><blockquote>“Entity provenance and update lineage (especially critical for secure versioning)”</blockquote></div><div class="claim">Searched BadgeClaims and the docs for model, LLM or model-version fields. None is defined; the badge content is the OASF or A2A definition. <i>Not found in</i> <a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/vc.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 vc.proto</a>, BadgeClaims.</div></details></td></tr></tbody></table></div><h2 id="sources">Sources</h2><ul class="plain"><li><a href="https://spec.identity.agntcy.org/docs/intro">AGNTCY Identity spec: Introduction (docs/intro.md)</a> (commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/docs/id/definitions">AGNTCY Identity spec: ID Definitions (docs/id/definitions.md)</a> (commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/docs/id/examples">AGNTCY Identity spec: ID Examples (docs/id/examples.md)</a> (commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/docs/vc/intro">AGNTCY Identity spec: Verifiable Credentials Definitions (docs/vc/intro.md)</a> (commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/docs/vc/agent-badge">AGNTCY Identity spec: Agent Badge Examples (docs/vc/agent-badge.md)</a> (commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/docs/specs/architecture/issuing">AGNTCY Identity spec: Generating Agent Badges (docs/specs/architecture/issuing.md)</a> (commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/docs/specs/architecture/verification">AGNTCY Identity spec: Verifying Agent Badges (docs/specs/architecture/verification.md)</a> (commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/docs/specs/flows/agntcy_advanced">AGNTCY Identity spec: Detailed Flows (docs/specs/flows/agntcy_advanced.md)</a> (commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/vc.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 vc.proto</a> (v1alpha1, commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/node/v1alpha1/vc_service.proto">AGNTCY Identity Protodocs: agntcy.identity.node.v1alpha1 vc_service.proto</a> (v1alpha1, commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/id.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 id.proto</a> (v1alpha1, commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/issuer.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 issuer.proto</a> (v1alpha1, commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/errors.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 errors.proto</a> (v1alpha1, commit bdbf145, 2026-09-28)</li><li><a href="https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/mcp.proto">AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 mcp.proto</a> (v1alpha1, commit bdbf145, 2026-09-28)</li><li><a href="https://github.com/agntcy/identity-service">AGNTCY Identity Service README (implementation built on the spec)</a> (commit b31e92a, 2026-11-20)</li></ul><h2>Notes</h2><ul class="plain"><li>The specification does not use RFC 2119 keywords. MUST* in the identifier row reflects the descriptive statement that each agent subject has a universally unique ID (lowercase-style requirement).</li><li>The spec is a documentation site plus generated API docs (protobuf, JSON Schema, OpenAPI). Several parts are explicitly incomplete, e.g. the role of Identity Nodes, and the commented-out &#x27;Agent Passport&#x27; text in the introduction is an earlier name for the badge.</li><li>The architecture page describes the Resolver as &#x27;decrypting&#x27; the ProofValue. Data Integrity proofs are signatures that are verified, not decrypted. The flows describe verification correctly.</li><li>The AGNTCY Identity Service (agntcy/identity-service) and the agntcy/identity implementation add features such as TBAC policies. They are implementations and products, not part of this spec, and were not counted.</li><li>No page on the site contained instructions aimed at AI tools.</li></ul><h2>Open questions</h2><ul class="plain"><li>How is an agent expected to prove at runtime that it is the subject of a badge (e.g. a Verifiable Presentation signed with a key in the ResolverMetadata verificationMethod)? The data model allows it, but no flow defines it.</li><li>What trust policy should a verifier apply to Identity Nodes and unverified issuers? The spec defers this to future updates.</li><li>Should verifiers re-check revocation status before each connection or on a schedule?</li><li>Is an expiry expected on badges? Examples carry only validFrom.</li></ul><section class="about" id="about"><h2>About this analysis</h2><p>The protocol is assessed from the side of the service that receives an AI agent's request (e.g. a website, an API or a merchant), against three goals: access control, incident response and accountability. Each property is rated by what the protocol's own specification defines; features that other standards or parties could add are described but not counted. "Not addressed" does not mean the protocol is flawed: many protocols leave things out on purpose.</p><p>Every statement is backed by evidence from the sources (47 of 47 quotes verified word for word against the source). Ratings use rubric v2.1, analysed on 2026-11-20. This report was generated with the protocol-analyzer skill and should be reviewed by a person before it is relied on.</p></section></main><script type="application/json" id="protocol-analysis-data">{
+ "schema_version": "2.1",
+ "rubric_version": "2.1",
+ "analysed_on": "2026-11-20",
+ "protocol": {
+  "name": "AGNTCY Identity",
+  "full_name": "AGNTCY Identity specification (Agent IDs, ResolverMetadata and Agent/MCP Server Badges)",
+  "spec_version": "identity-spec main @ bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab (API and data models v1alpha1)",
+  "spec_date": "2026-09-28",
+  "maintainer": "AGNTCY project (Linux Foundation; originally contributed by Cisco/Outshift), repository github.com/agntcy/identity-spec",
+  "newer_version_note": "The site shows no version number. The latest repository tag is v0.0.3 (April 2025); the analysis uses main at the commit above, whose last documentation change is dated 2026-09-23."
+ },
+ "profile": {
+  "id": "agntcy-identity",
+  "category": "credentials-trust",
+  "secondary_categories": [
+   "discovery-registry"
+  ],
+  "mechanisms": [
+   "verifiable-credential",
+   "did",
+   "signed-metadata"
+  ],
+  "venue": "foundation",
+  "maturity": "draft",
+  "openness": "open-specification",
+  "layers": [
+   "metadata-document"
+  ],
+  "building_blocks": [
+   "W3C VC Data Model 2.0",
+   "W3C DID 1.1",
+   "Data Integrity proofs",
+   "JOSE",
+   "RFC 7517",
+   "RFC 9728",
+   "OASF",
+   "A2A Agent Card"
+  ],
+  "website": "https://spec.identity.agntcy.org/",
+  "first_published": ""
+ },
+ "review": {
+  "status": "draft",
+  "reviewed_by": "",
+  "reviewed_on": ""
+ },
+ "summary": [
+  "AGNTCY Identity is a specification for giving AI agents, MCP servers and multi-agent systems a universally unique ID backed by a signed credential, so others can check who published them and that their definition has not been altered. It is aimed at the 'Internet of Agents', where one agent discovers and composes others from different organisations. It is maintained in the AGNTCY project, an open-source collective under the Linux Foundation started by Cisco. The spec is published as a documentation site and Git repository with v1alpha1 APIs and no versioned release. Cisco's Outshift runs a hosted Identity Service built on it.",
+  "An organisation brings an existing ID for its agent (e.g. an Okta application ID or an A2A Agent Card) or gets a DID from an AGNTCY Identity Node. It signs an 'Agent Badge', a W3C Verifiable Credential wrapping the agent's OASF or A2A definition, and publishes the badge and a ResolverMetadata record with its public keys to an Identity Node. A party that wants to use the agent resolves the ID, fetches the badge and verifies the signature, typically at discovery time before connecting. Badges can be revoked at the node. The spec does not define how an agent proves, on a request, that it is the agent named in a badge. It also leaves out user delegation, scoped permissions, contact details and model identity."
+ ],
+ "how_it_works": [
+  "An agent creator (an organisation or sub-organisation) creates a key pair in a wallet or vault, and registers its issuer details with an Identity Node, optionally proving ownership of its domain or IdP identity.",
+  "The creator gives the agent an ID: either one it already has (e.g. an Okta app ID, a Duo or Entra ID client ID, or an A2A well-known URL) or a did:agntcy DID generated by the Identity Node, which also publishes a ResolverMetadata record with the verification keys.",
+  "The creator puts the ID into the agent's definition (an OASF record or A2A Agent Card), signs a Verifiable Credential over it (an Agent Badge with a Data Integrity proof or JOSE envelope), and publishes the badge to the Identity Node.",
+  "A consumer (a person, a client, or another agent) discovers the agent, e.g. through the AGNTCY directory, and extracts its ID.",
+  "The consumer resolves the ID at the Identity Node to get the badges and ResolverMetadata, picks the badge matching the definition, and verifies its proof with the issuer's public key. The node can also report whether the badge was revoked.",
+  "The consumer decides whether to trust and connect to the agent. Authenticating the connection itself is left to other mechanisms (e.g. OAuth via the IdP)."
+ ],
+ "sources": [
+  {
+   "id": "intro",
+   "title": "AGNTCY Identity spec: Introduction (docs/intro.md)",
+   "url": "https://spec.identity.agntcy.org/docs/intro",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/docs/intro.md",
+   "version": "commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "ids",
+   "title": "AGNTCY Identity spec: ID Definitions (docs/id/definitions.md)",
+   "url": "https://spec.identity.agntcy.org/docs/id/definitions",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/docs/id/definitions.md",
+   "version": "commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "idex",
+   "title": "AGNTCY Identity spec: ID Examples (docs/id/examples.md)",
+   "url": "https://spec.identity.agntcy.org/docs/id/examples",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/docs/id/examples.md",
+   "version": "commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "vcintro",
+   "title": "AGNTCY Identity spec: Verifiable Credentials Definitions (docs/vc/intro.md)",
+   "url": "https://spec.identity.agntcy.org/docs/vc/intro",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/docs/vc/intro.md",
+   "version": "commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "badge",
+   "title": "AGNTCY Identity spec: Agent Badge Examples (docs/vc/agent-badge.md)",
+   "url": "https://spec.identity.agntcy.org/docs/vc/agent-badge",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/docs/vc/agent-badge.md",
+   "version": "commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "issuing",
+   "title": "AGNTCY Identity spec: Generating Agent Badges (docs/specs/architecture/issuing.md)",
+   "url": "https://spec.identity.agntcy.org/docs/specs/architecture/issuing",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/docs/specs/architecture/issuing.md",
+   "version": "commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "verification",
+   "title": "AGNTCY Identity spec: Verifying Agent Badges (docs/specs/architecture/verification.md)",
+   "url": "https://spec.identity.agntcy.org/docs/specs/architecture/verification",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/docs/specs/architecture/verification.md",
+   "version": "commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "flows",
+   "title": "AGNTCY Identity spec: Detailed Flows (docs/specs/flows/agntcy_advanced.md)",
+   "url": "https://spec.identity.agntcy.org/docs/specs/flows/agntcy_advanced",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/docs/specs/flows/agntcy_advanced.md",
+   "version": "commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "vcproto",
+   "title": "AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 vc.proto",
+   "url": "https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/vc.proto",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/protodocs/agntcy/identity/core/v1alpha1/vc.proto.mdx",
+   "version": "v1alpha1, commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "vcsvc",
+   "title": "AGNTCY Identity Protodocs: agntcy.identity.node.v1alpha1 vc_service.proto",
+   "url": "https://spec.identity.agntcy.org/protodocs/agntcy/identity/node/v1alpha1/vc_service.proto",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/protodocs/agntcy/identity/node/v1alpha1/vc_service.proto.mdx",
+   "version": "v1alpha1, commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "idproto",
+   "title": "AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 id.proto",
+   "url": "https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/id.proto",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/protodocs/agntcy/identity/core/v1alpha1/id.proto.mdx",
+   "version": "v1alpha1, commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "issuerproto",
+   "title": "AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 issuer.proto",
+   "url": "https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/issuer.proto",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/protodocs/agntcy/identity/core/v1alpha1/issuer.proto.mdx",
+   "version": "v1alpha1, commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "errors",
+   "title": "AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 errors.proto",
+   "url": "https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/errors.proto",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/protodocs/agntcy/identity/core/v1alpha1/errors.proto.mdx",
+   "version": "v1alpha1, commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "mcpproto",
+   "title": "AGNTCY Identity Protodocs: agntcy.identity.core.v1alpha1 mcp.proto",
+   "url": "https://spec.identity.agntcy.org/protodocs/agntcy/identity/core/v1alpha1/mcp.proto",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-spec/bdbf1457581fc5ea73dbdbbfe962c337ec0ad1ab/docs-src/protodocs/agntcy/identity/core/v1alpha1/mcp.proto.mdx",
+   "version": "v1alpha1, commit bdbf145",
+   "date": "2026-09-28",
+   "kind": "primary"
+  },
+  {
+   "id": "service_readme",
+   "title": "AGNTCY Identity Service README (implementation built on the spec)",
+   "url": "https://github.com/agntcy/identity-service",
+   "fetch_url": "https://raw.githubusercontent.com/agntcy/identity-service/b31e92aaebfc122a3d011065e1360cdc2b006d3a/README.md",
+   "version": "commit b31e92a",
+   "date": "2026-11-20",
+   "kind": "primary"
+  }
+ ],
+ "rows": [
+  {
+   "id": "summary",
+   "group": "What is it?",
+   "property": "Summary",
+   "short": "Signed badges binding agent IDs to issuers and definitions",
+   "answer": "A Linux Foundation AGNTCY specification where an organisation gives its agent or MCP server a unique ID and publishes signed Verifiable Credentials ('badges') about it at an Identity Node, so others can verify its issuer and definition before connecting.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Focus: present and verify identifiers.",
+     "type": "fact",
+     "source": "intro",
+     "section": "3.2 Standards (IMPORTANT note)",
+     "quote": "at this stage the main focus of the AGNTCY is to provide a common and trustworthy mechanism to present identifiers and to verify them.",
+     "check": "OK",
+     "check_fp": "a9f3bede7f"
+    },
+    {
+     "text": "Each ID is linked to badges.",
+     "type": "fact",
+     "source": "intro",
+     "section": "4. Agent Identity Structure",
+     "quote": "an Agent subject is tied to a unique identifier linked to one or more Verifiable Credentials (VCs)",
+     "check": "OK",
+     "check_fp": "e3b218c27a"
+    }
+   ]
+  },
+  {
+   "id": "use_cases",
+   "group": "What is it?",
+   "property": "Use cases",
+   "short": "Pre-connection verification in multi-agent systems",
+   "answer": "Trust between agents, MCP servers and multi-agent systems from different organisations, mainly when a consumer discovers and selects an agent or MCP server and wants to check its provenance before connecting. The information travels as published metadata documents (badges and ResolverMetadata), fetched from Identity Nodes or well-known URLs, not in request headers. Verification is done by whoever consumes the agent, e.g. a client, another agent, or the Identity Node's Verify API.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Applies to agents, MCP servers and MASs.",
+     "type": "fact",
+     "source": "intro",
+     "section": "1. Introduction",
+     "quote": "Model Context Protocol (MCP) Servers",
+     "check": "OK",
+     "check_fp": "51af6eb9c5"
+    },
+    {
+     "text": "Pre-connection credential validation is a stated use.",
+     "type": "fact",
+     "source": "vcintro",
+     "section": "Why it matters?",
+     "quote": "Pre-connection credential validation",
+     "check": "OK",
+     "check_fp": "6aa1561a0a"
+    },
+    {
+     "text": "Badges are served from a well-known URL at a node.",
+     "type": "fact",
+     "source": "badge",
+     "section": "Agent Badges accessible through a \"well-known\" endpoint",
+     "quote": "https://api.NODE/ID/.well-known/vcs.json",
+     "check": "OK",
+     "check_fp": "6c42cfd43c"
+    }
+   ]
+  },
+  {
+   "id": "actors",
+   "group": "What is it?",
+   "property": "Parties involved",
+   "short": "Creator/issuer, Identity Node, consumer, Resolver, IdP",
+   "answer": "The spec has no formal roles section; its flows use these parties. Agent Creator: the organisation or sub-organisation that creates the agent, holds the signing keys and issues badges (the issuer). Identity Node: stores ResolverMetadata and badges and acts as a 'trust anchor'. Agent Consumer: discovers the agent and verifies its badge. Resolver or Identity CLI: resolves the ID and checks the proof. Wallet: holds the creator's keys. Identity Provider (e.g. Okta, Duo, PingOne, Entra ID): can supply the ID and keys. Directory: the AGNTCY discovery service that holds OASF records.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "Organisations and sub-organisations create agents and hold keys.",
+     "type": "fact",
+     "source": "issuing",
+     "section": "Generating Agent Badges",
+     "quote": "Each organization or sub-organization may create public and private key pairs",
+     "check": "OK",
+     "check_fp": "a5a13f1d7c"
+    },
+    {
+     "text": "Identity Nodes as trust anchors.",
+     "type": "fact",
+     "source": "issuing",
+     "section": "Generating Agent Badges",
+     "quote": "The ResolverMetadata along with the Verifiable Agent Badge can be stored in Identity Nodes (INs) that can operate as trust anchors.",
+     "check": "OK",
+     "check_fp": "3010ddf25e"
+    },
+    {
+     "text": "Consumer and Resolver in the verification process.",
+     "type": "fact",
+     "source": "verification",
+     "section": "Verifying Agent Badges",
+     "quote": "The Resolver extracts the Agent ID from the Agent definition in step (7a)",
+     "check": "OK",
+     "check_fp": "5769780fab"
+    },
+    {
+     "text": "Agent Creator, Agent Consumer, Wallet and Identity Node appear in the flows.",
+     "type": "fact",
+     "source": "flows",
+     "section": "Verify an Agent Locally",
+     "quote": "Agent Consumer->>Directory CLI: Discover and download the agent OASF",
+     "check": "OK",
+     "check_fp": "281dec4d00"
+    }
+   ]
+  },
+  {
+   "id": "status_adoption",
+   "group": "What is it?",
+   "property": "Status and adoption",
+   "short": "Alpha spec; hosted service by Cisco Outshift",
+   "answer": "Draft. The spec is a living documentation site with v1alpha1 APIs and no versioned release. Its last repository tag, v0.0.3, is from April 2025, and some sections say more detail will come in later updates. The AGNTCY Identity Service, an open-source implementation in the same project, points to a hosted SaaS run by Outshift (Cisco's incubator). That README is a primary source from the deployer.",
+   "rating": "yellow",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "Yellow: still alpha and not released as a stable version, even though a named hosted deployment exists.",
+   "claims": [
+    {
+     "text": "APIs are v1alpha1.",
+     "type": "fact",
+     "source": "vcsvc",
+     "section": "agntcy.identity.node.v1alpha1",
+     "quote": "agntcy.identity.node.v1alpha1",
+     "check": "OK",
+     "check_fp": "2092f2db6e"
+    },
+    {
+     "text": "More detail promised in later updates.",
+     "type": "fact",
+     "source": "issuing",
+     "section": "Generating Agent Badges",
+     "quote": "In subsequent updates to this documentation, the AGNTCY shall provide more detailed recommendations about the INs",
+     "check": "OK",
+     "check_fp": "2044bc2c73"
+    },
+    {
+     "text": "Hosted SaaS Identity Service.",
+     "type": "fact",
+     "source": "service_readme",
+     "section": "Table of Contents",
+     "quote": "Sign up for our hosted SaaS Identity Service to try our features.",
+     "check": "OK",
+     "check_fp": "93d8c4b735"
+    }
+   ]
+  },
+  {
+   "id": "building_blocks",
+   "group": "What is it?",
+   "property": "Building blocks",
+   "short": "W3C VC 2.0, DIDs, JOSE/JWK, OASF, A2A",
+   "answer": "W3C Verifiable Credentials 2.0 for badges (with Data Integrity proofs or a JOSE envelope), W3C DIDs 1.1 and DID Documents for did:agntcy IDs, JSON Web Keys and key sets (RFC 7517) published by IdPs or nodes, and OASF records or A2A Agent Cards as badge content. MCP Server Badges can carry OAuth protected resource metadata (RFC 9728). Post-quantum ML-DSA keys are listed as optional key types. The spec says it is not limited to DID and VC standards.",
+   "rating": "n/a",
+   "coverage": "n/a",
+   "requirement": "none",
+   "rating_reason": "",
+   "claims": [
+    {
+     "text": "DIDs and VCs supported.",
+     "type": "fact",
+     "source": "intro",
+     "section": "3.2 Standards",
+     "quote": "AGNTCY supports the use of W3C Decentralized Identifiers (DIDs) and associated standards, including:",
+     "check": "OK",
+     "check_fp": "786a8f3369"
+    },
+    {
+     "text": "JOSE envelopes supported.",
+     "type": "fact",
+     "source": "badge",
+     "section": "A2A Agent Badge",
+     "quote": "Multiple envelopes are supported in the AGNTCY, including JSON Object Signing and Encryption (JOSE).",
+     "check": "OK",
+     "check_fp": "ffc614cfe8"
+    },
+    {
+     "text": "RFC 9728 metadata in MCP tool descriptions.",
+     "type": "fact",
+     "source": "mcpproto",
+     "section": "McpTool",
+     "quote": "This complies with RFC 9728.",
+     "check": "OK",
+     "check_fp": "c103999c31"
+    }
+   ]
+  },
+  {
+   "id": "identifier",
+   "group": "Who is being identified?",
+   "property": "Identifier",
+   "short": "Per-agent ID (IdP app ID, A2A URL or DID)",
+   "answer": "Partly. Each agent 'subject' has an ID meant to be universally unique. It can be an IdP application or client ID (e.g. OKTA-APP_ID), an A2A well-known Agent Card URL, or a did:agntcy DID generated by an Identity Node. The ID names the agent as a published piece of software. Different versions get different badges under the same ID, and one ID is shared by every running copy of that agent.",
+   "rating": "yellow",
+   "coverage": "required",
+   "requirement": "MUST*",
+   "rating_reason": "Yellow: the ID names the agent as a product or definition, shared by all running copies (like MCP's client_id), not the individual running agent.",
+   "claims": [
+    {
+     "text": "Each agent subject has a universally unique ID.",
+     "type": "fact",
+     "source": "intro",
+     "section": "4. Agent Identity Structure",
+     "quote": "Each Agent subject has a universally unique identifier named ID",
+     "check": "OK",
+     "check_fp": "152b100b69"
+    },
+    {
+     "text": "Example: an Okta application ID.",
+     "type": "fact",
+     "source": "idex",
+     "section": "1.a) Okta Example of an Agent ID",
+     "quote": "where ID represents a universally unique identifier associated to an Agent subject (e.g., an Okta Application ID in this case).",
+     "check": "OK",
+     "check_fp": "618999f894"
+    },
+    {
+     "text": "DID form.",
+     "type": "fact",
+     "source": "idex",
+     "section": "4) Decentralized Identifiers (DIDs) Example",
+     "quote": "did:agntcy:{ID}",
+     "check": "OK",
+     "check_fp": "f9f239de60"
+    },
+    {
+     "text": "Versions get different badges, same ID.",
+     "type": "fact",
+     "source": "vcintro",
+     "section": "Key Verifiable Credentials (VCs)",
+     "quote": "different software versions and/or patched releases of an Agent will have different Agent Badges.",
+     "check": "OK",
+     "check_fp": "0b8d7ee764"
+    }
+   ]
+  },
+  {
+   "id": "instance_identifier",
+   "group": "Who is being identified?",
+   "property": "Agent instance identifier",
+   "short": "No",
+   "answer": "No. IDs and badges describe an agent subject and its definitions (versions, artefacts, locators). The spec mentions discovering 'running Agents' as future Identity Node work, but defines no identifier for a running instance.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no per-instance identifier (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Searched the spec docs and protos for instance, session or runtime identifiers. None is defined.",
+     "type": "silent",
+     "source": "intro",
+     "section": "Whole specification",
+     "quote": ""
+    },
+    {
+     "text": "Running agents mentioned only as future node work.",
+     "type": "fact",
+     "source": "issuing",
+     "section": "Generating Agent Badges",
+     "quote": "Link and automate the dynamic and trustworthy discovery of running Agents and MCP Servers to their corresponding AuthN and delegated AuthZ methods",
+     "check": "OK",
+     "check_fp": "e9a29f85e2"
+    }
+   ]
+  },
+  {
+   "id": "acting_for",
+   "group": "Who is being identified?",
+   "property": "Acting for (authority)",
+   "short": "No",
+   "answer": "No. Badges state who issued the agent's definition (the organisation), not on whose behalf the agent is acting. The spec mentions VCs for 'authorization assertions' in MFA processes and delegated authorization as future work, but defines no user or delegation claim.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: whom the agent acts for is not defined (same as MCP Authorization and Web Bot Auth).",
+   "claims": [
+    {
+     "text": "Authorization assertions are named only as a kind of claim a VC could carry.",
+     "type": "fact",
+     "source": "vcintro",
+     "section": "Definitions",
+     "quote": "Authorization assertions used in processes such as Multi-Factor Authentication (MFA)",
+     "check": "OK",
+     "check_fp": "df7d375b21"
+    },
+    {
+     "text": "Searched the docs, BadgeClaims, VerifiableCredential and VerifiablePresentation models for user, principal, delegation or on-behalf-of fields. None is defined.",
+     "type": "silent",
+     "source": "vcproto",
+     "section": "agntcy.identity.core.v1alpha1",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_type",
+   "group": "Credential and validity",
+   "property": "Credential type",
+   "short": "Badge VC exists, but not sent on requests",
+   "answer": "No credential on requests. The spec's credential is an Agent Badge: a W3C Verifiable Credential whose subject is the agent's ID and definition, signed by the issuing organisation with a Data Integrity proof or JOSE envelope. Badges are published at an Identity Node and fetched by whoever wants to check the agent. The agent does not send them with its requests. A Verifiable Presentation model exists in the data model, but no flow uses it. A public badge also does not prove the presenter is the agent, because anyone can fetch and replay it.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no credential is presented on the agent's requests and the badge is not bound to the presenter; yellow was arguable because a verifiable badge exists, so the lower colour was chosen (tie rule).",
+   "claims": [
+    {
+     "text": "Badge structure: VC with Data Integrity proof.",
+     "type": "fact",
+     "source": "badge",
+     "section": "OASF Agent Badge",
+     "quote": "The VC below also includes a data integrity proof as an embedded proof within an envelope.",
+     "check": "OK",
+     "check_fp": "7810c54e56"
+    },
+    {
+     "text": "Badges are fetched by the consumer from the node.",
+     "type": "fact",
+     "source": "flows",
+     "section": "Verify an Agent Locally",
+     "quote": "Agent Consumer->>Identity CLI: Resolve the Agent ID to get the Agent Badges",
+     "check": "OK",
+     "check_fp": "79c323a0ed"
+    },
+    {
+     "text": "A VerifiablePresentation model exists.",
+     "type": "fact",
+     "source": "vcproto",
+     "section": "VerifiablePresentation",
+     "quote": "DataModel represents the W3C Verifiable Presentation Data Model defined [here]",
+     "check": "OK",
+     "check_fp": "f9eaf6f22e"
+    },
+    {
+     "text": "Searched the docs and flows for presenting a badge or presentation on a request, nonce, challenge or holder binding. None is defined.",
+     "type": "silent",
+     "source": "flows",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "credential_lifetime",
+   "group": "Credential and validity",
+   "property": "Credential lifetime",
+   "short": "Unspecified",
+   "answer": "Unspecified. Badge examples carry only a validFrom date, and the data model has an optional expiration date field, but the spec gives no maximum lifetime and no rule for verifiers.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no lifetime guidance at all.",
+   "claims": [
+    {
+     "text": "Examples carry validFrom only.",
+     "type": "fact",
+     "source": "badge",
+     "section": "OASF Agent Badge",
+     "quote": "validFrom: date(),",
+     "check": "OK",
+     "check_fp": "bc07b25b43"
+    },
+    {
+     "text": "An expiration field exists in the model.",
+     "type": "fact",
+     "source": "vcproto",
+     "section": "VerifiableCredential",
+     "quote": "https://www.w3.org/TR/vc-data-model/#expiration",
+     "check": "OK",
+     "check_fp": "db23cae6fc"
+    },
+    {
+     "text": "Searched the docs for lifetime, expiry or freshness guidance. None is given.",
+     "type": "silent",
+     "source": "intro",
+     "section": "Whole specification",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "validity",
+   "group": "Credential and validity",
+   "property": "Validity (credential validation)",
+   "short": "Badge proof checked via resolved keys",
+   "answer": "Partly. A verifier resolves the agent ID to its ResolverMetadata (from an Identity Node, or keys discovered from the IdP's OIDC/JWKS endpoints) and checks the badge's proof with the issuer's public key. No prior relationship with the agent is needed. The node's Verify API can also report that a badge was revoked. What is validated is the published badge, not a request from the agent, and no expiry check is specified.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Yellow: the badge can be checked for authenticity and revocation without prior setup, but no expiry check is specified and the check applies to a published document rather than the agent's request (the calibration examples are green because they validate the request credential including its time window).",
+   "claims": [
+    {
+     "text": "Proof verified with the ResolverMetadata public key.",
+     "type": "fact",
+     "source": "flows",
+     "section": "Verify an Agent Locally",
+     "quote": "Verify the Agent Badge Data Integrity proof<br/>using the ResolverMetadata public key",
+     "check": "OK",
+     "check_fp": "89c6f9e3be"
+    },
+    {
+     "text": "Badge proof verification uses the assertionMethod.",
+     "type": "fact",
+     "source": "badge",
+     "section": "A2A Agent Badge",
+     "quote": "The proof in an Agent Badge can be verified using the assertionMethod defined in the ResolverMetadata object",
+     "check": "OK",
+     "check_fp": "0ae12d8fd7"
+    },
+    {
+     "text": "IdP keys are discovered via OIDC well-known metadata.",
+     "type": "fact",
+     "source": "idex",
+     "section": "1) IdP Examples",
+     "quote": "is the starting point from which the JWKs are discovered through the IdP's OIDC/OAuth well-known metadata.",
+     "check": "OK",
+     "check_fp": "dd7cb3f277"
+    },
+    {
+     "text": "Revoked status is a verification error.",
+     "type": "fact",
+     "source": "errors",
+     "section": "ErrorReason",
+     "quote": "The Verifiable Credential is revoked",
+     "check": "OK",
+     "check_fp": "92639b3385"
+    },
+    {
+     "text": "ResolverMetadata carries the keys needed to establish trust in an ID.",
+     "type": "fact",
+     "source": "ids",
+     "section": "Key Identifiers",
+     "quote": "containing cryptographic material and assertion methods enabling to automatically resolve and establish trust with the associated ID",
+     "check": "OK",
+     "check_fp": "ff71433ed5"
+    }
+   ]
+  },
+  {
+   "id": "authentication",
+   "group": "Authentication and authorization",
+   "property": "Authentication of the agent or user",
+   "short": "No; verifies the issuer's signature",
+   "answer": "No. Verifying a badge shows that the issuing organisation signed the agent's definition, not that the party now talking to the service is that agent. ResolverMetadata keys are described as usable to 'authenticate or authorize interactions', and the spec presents badges as enabling authentication and MFA. But no flow defines an agent proving possession of a key on a request, and the issuer's key, not a per-agent key, signs badges. User authentication is left to IdPs.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: the verifier checks an organisation-level signature on a published document, not proof from the agent or a user (same as Web Bot Auth and Visa TAP).",
+   "claims": [
+    {
+     "text": "Badges are signed with the organisation's private key.",
+     "type": "fact",
+     "source": "issuing",
+     "section": "Generating Agent Badges",
+     "quote": "A PrvKey owned and managed by an organization or sub-organization is required to create a ProofValue of the Agent Definition.",
+     "check": "OK",
+     "check_fp": "520b3e178f"
+    },
+    {
+     "text": "Verification methods are described as usable for authentication.",
+     "type": "fact",
+     "source": "idproto",
+     "section": "ResolverMetadata",
+     "quote": "VerificationMethod is a list of cryptographic public keys, which can be used",
+     "check": "OK",
+     "check_fp": "720a5b237e"
+    },
+    {
+     "text": "Searched the flows and APIs for a challenge-response, proof of possession or request-signing step by the agent. None is defined.",
+     "type": "silent",
+     "source": "flows",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "authorization",
+   "group": "Authentication and authorization",
+   "property": "Scoped authorization",
+   "short": "No; TBAC lives in the separate Identity Service",
+   "answer": "No. Badges describe what an agent or MCP server is, e.g. an MCP Server Badge can list its tools with their OAuth protected-resource metadata. They do not grant the agent permissions. Delegated authorization is listed as future Identity Node work. The separate AGNTCY Identity Service adds task-based access control (TBAC) policies, but that is a product outside this spec.",
+   "rating": "red",
+   "coverage": "outside",
+   "requirement": "none",
+   "rating_reason": "Red: no scoped permissions in the spec; policy control exists only in a separate product (as with Visa TAP's limits in VIC, which are not counted).",
+   "claims": [
+    {
+     "text": "MCP tool metadata includes OAuth resource metadata (describes the server, not agent permissions).",
+     "type": "fact",
+     "source": "mcpproto",
+     "section": "McpTool",
+     "quote": "Oauth2 Protected Resource metadata.",
+     "check": "OK",
+     "check_fp": "a960bbe249"
+    },
+    {
+     "text": "TBAC is a feature of the separate Identity Service.",
+     "type": "fact",
+     "source": "service_readme",
+     "section": "README",
+     "quote": "Define TBAC (Task-Based Access Control) policies to govern access and permissions.",
+     "check": "OK",
+     "check_fp": "2995692b91"
+    },
+    {
+     "text": "Searched the spec docs and protos for scopes, permissions or entitlements granted to an agent. None is defined.",
+     "type": "silent",
+     "source": "vcproto",
+     "section": "agntcy.identity.core.v1alpha1",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "human_approval",
+   "group": "Authentication and authorization",
+   "property": "Human approval",
+   "short": "None",
+   "answer": "No. The only interactive step is the agent creator completing a verification link to publish its public key. No step lets a person approve an agent's access or action, though the spec mentions negotiation 'with or without human input' as something badges could support.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no approval step is defined.",
+   "claims": [
+    {
+     "text": "Machine-to-machine negotiation with or without human input is only listed as a benefit.",
+     "type": "fact",
+     "source": "vcintro",
+     "section": "Why it matters?",
+     "quote": "Machine-to-machine negotiation (with or without human input)",
+     "check": "OK",
+     "check_fp": "388ee24685"
+    },
+    {
+     "text": "Searched the flows for consent or approval steps. Only the creator's key-publishing verification exists.",
+     "type": "silent",
+     "source": "flows",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "trust",
+   "group": "Trust",
+   "property": "Trust (who vouches for the agent)",
+   "short": "Issuing organisation; node trust model unfinished",
+   "answer": "Partly. The issuing organisation vouches for its own agent by signing the badge. When it registers as an issuer, it can optionally prove ownership of its domain or IdP identity, and the node then marks it as verified. Identity Nodes are called 'trust anchors', but the spec says no central authority is needed and that more detailed guidance on nodes' trust role is still to come. So a verifier learns which organisation stands behind the badge, not that any independent party approved it.",
+   "rating": "yellow",
+   "coverage": "optional",
+   "requirement": "none",
+   "rating_reason": "Yellow: the issuer is named and its domain ownership can optionally be verified, but no independent party vouches and the node trust model is unfinished (between TAP's green and Web Bot Auth's red).",
+   "claims": [
+    {
+     "text": "Issuer verified flag after proof of common-name ownership.",
+     "type": "fact",
+     "source": "issuerproto",
+     "section": "Issuer",
+     "quote": "This will be set to true when issuer provides a valid proof of ownership",
+     "check": "OK",
+     "check_fp": "9ddf035b3a"
+    },
+    {
+     "text": "No central authority required.",
+     "type": "fact",
+     "source": "intro",
+     "section": "2. Identity Requirements",
+     "quote": "Open: No centralized authority is required for assigning identities",
+     "check": "OK",
+     "check_fp": "c78e566601"
+    },
+    {
+     "text": "Node trust role still to be detailed.",
+     "type": "fact",
+     "source": "issuing",
+     "section": "Generating Agent Badges",
+     "quote": "In subsequent updates to this documentation, the AGNTCY shall provide more detailed recommendations about the INs",
+     "check": "OK",
+     "check_fp": "2044bc2c73"
+    }
+   ]
+  },
+  {
+   "id": "revocation",
+   "group": "Response and accountability",
+   "property": "Revocation",
+   "short": "Badge revocation at the Identity Node",
+   "answer": "Partly. The Identity Node API has an irreversible Revoke call, which needs proof of the issuer's ownership, and the data model includes a W3C credentialStatus entry with a revocation purpose. Verification through the node can then return a 'revoked' error. Revocation is per badge, i.e. per agent definition or version, and is done by the issuer. The spec does not say when verifiers must re-check status. Because badges are typically verified before connecting, a consumer that already trusted the agent is not notified.",
+   "rating": "yellow",
+   "coverage": "default",
+   "requirement": "none",
+   "rating_reason": "Yellow: revocation is defined, but nothing requires verifiers to re-check it, so it does not reliably reach every party that verified earlier (the calibration examples are red because they define none).",
+   "claims": [
+    {
+     "text": "Revoke API, irreversible.",
+     "type": "fact",
+     "source": "vcsvc",
+     "section": "VcService Revoke",
+     "quote": "Revoke a Verifiable Credential. THIS ACTION IS NOT REVERSIBLE.",
+     "check": "OK",
+     "check_fp": "b16801c4b6"
+    },
+    {
+     "text": "Revocation status purpose.",
+     "type": "fact",
+     "source": "vcproto",
+     "section": "CredentialStatusPurpose",
+     "quote": "Used to cancel the validity of a verifiable credential.",
+     "check": "OK",
+     "check_fp": "cb37c635ce"
+    },
+    {
+     "text": "Revoke requires proof of ownership of the issuer's ResolverMetadata.",
+     "type": "fact",
+     "source": "vcsvc",
+     "section": "RevokeRequest",
+     "quote": "Required Proof of ownership of the Issuer's ResolverMetadata",
+     "check": "OK",
+     "check_fp": "0725a2eba5"
+    },
+    {
+     "text": "Verification can return a revoked error.",
+     "type": "fact",
+     "source": "errors",
+     "section": "ErrorReason",
+     "quote": "The Verifiable Credential is revoked",
+     "check": "OK",
+     "check_fp": "92639b3385"
+    }
+   ]
+  },
+  {
+   "id": "contact_escalation",
+   "group": "Response and accountability",
+   "property": "Contact and escalation",
+   "short": "None",
+   "answer": "No. The issuer record names the organisation, sub-organisation and common name (a domain), and ResolverMetadata gives a service endpoint for the node that published it. Neither is a contact or escalation channel. Contact details might appear in the OASF or A2A content inside a badge, but this spec does not define them.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no contact field is defined (same as all three calibration examples).",
+   "claims": [
+    {
+     "text": "Issuer fields: organisation and common name.",
+     "type": "fact",
+     "source": "issuerproto",
+     "section": "Issuer",
+     "quote": "The organization of the issuer",
+     "check": "OK",
+     "check_fp": "f8d8394a57"
+    },
+    {
+     "text": "Service endpoint points to the publishing node.",
+     "type": "fact",
+     "source": "idproto",
+     "section": "Service",
+     "quote": "Service is used in ResolverMetadata to express ways of communicating with",
+     "check": "OK",
+     "check_fp": "e40030d1b8"
+    },
+    {
+     "text": "Searched the docs and protos for contact, abuse, security or support fields. None is defined.",
+     "type": "silent",
+     "source": "issuerproto",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "cross_party_signalling",
+   "group": "Monitoring and provenance",
+   "property": "Cross-party signalling",
+   "short": "None",
+   "answer": "No. Only the issuer can revoke its badges. There is no way for a consumer or service to report an agent or share an opinion about it. Verification results are logged locally by the Resolver.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no signalling between services.",
+   "claims": [
+    {
+     "text": "The Resolver logs results locally.",
+     "type": "fact",
+     "source": "verification",
+     "section": "Verifying Agent Badges",
+     "quote": "It outputs the verification result and logs it.",
+     "check": "OK",
+     "check_fp": "953673bec0"
+    },
+    {
+     "text": "Searched the docs and Node APIs for report, reputation or shared-signal operations. None is defined.",
+     "type": "silent",
+     "source": "vcsvc",
+     "section": "Whole document",
+     "quote": ""
+    }
+   ]
+  },
+  {
+   "id": "model_identity",
+   "group": "Monitoring and provenance",
+   "property": "Model identity",
+   "short": "No field defined",
+   "answer": "No. A badge wraps the agent's OASF record or A2A Agent Card as signed by the issuer, so whatever those describe is self-asserted by the provider. This spec defines no field for the AI model or its version. Badges do give provenance and version lineage of the agent software itself.",
+   "rating": "red",
+   "coverage": "none",
+   "requirement": "none",
+   "rating_reason": "Red: no model identity is defined by this spec (same as the calibration examples).",
+   "claims": [
+    {
+     "text": "Badges give provenance and update lineage of the agent.",
+     "type": "fact",
+     "source": "vcintro",
+     "section": "Why it matters?",
+     "quote": "Entity provenance and update lineage (especially critical for secure versioning)",
+     "check": "OK",
+     "check_fp": "57f495cf38"
+    },
+    {
+     "text": "Searched BadgeClaims and the docs for model, LLM or model-version fields. None is defined; the badge content is the OASF or A2A definition.",
+     "type": "silent",
+     "source": "vcproto",
+     "section": "BadgeClaims",
+     "quote": ""
+    }
+   ]
+  }
+ ],
+ "goals_reading": {
+  "access_control": "A consumer can check, before connecting, that an agent's definition was signed by a named organisation and has not been changed. The spec gives services nothing to tie a live request to that agent or to limit what it may do.",
+  "incident_response": "The issuer can irreversibly revoke a badge (one agent version) at the Identity Node, and verifiers that check the node will see it. Services that verified earlier are not notified, and services cannot report an agent.",
+  "accountability": "A verified badge traces the agent's definition to an issuing organisation, optionally with verified domain ownership. It does not identify a user, an instance or the model."
+ },
+ "notes": [
+  "The specification does not use RFC 2119 keywords. MUST* in the identifier row reflects the descriptive statement that each agent subject has a universally unique ID (lowercase-style requirement).",
+  "The spec is a documentation site plus generated API docs (protobuf, JSON Schema, OpenAPI). Several parts are explicitly incomplete, e.g. the role of Identity Nodes, and the commented-out 'Agent Passport' text in the introduction is an earlier name for the badge.",
+  "The architecture page describes the Resolver as 'decrypting' the ProofValue. Data Integrity proofs are signatures that are verified, not decrypted. The flows describe verification correctly.",
+  "The AGNTCY Identity Service (agntcy/identity-service) and the agntcy/identity implementation add features such as TBAC policies. They are implementations and products, not part of this spec, and were not counted.",
+  "No page on the site contained instructions aimed at AI tools."
+ ],
+ "open_questions": [
+  "How is an agent expected to prove at runtime that it is the subject of a badge (e.g. a Verifiable Presentation signed with a key in the ResolverMetadata verificationMethod)? The data model allows it, but no flow defines it.",
+  "What trust policy should a verifier apply to Identity Nodes and unverified issuers? The spec defers this to future updates.",
+  "Should verifiers re-check revocation status before each connection or on a schedule?",
+  "Is an expiry expected on badges? Examples carry only validFrom."
+ ]
+}</script></body></html>
