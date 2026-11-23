@@ -172,21 +172,37 @@ def vocab():
             for field, values in skill_lint.profile_vocab().items()}
 
 
-def build(strict=True):
-    """Build data/protocols.json from reports/. Returns (dataset, errors, warnings)."""
-    errors, warns, entries = [], [], []
-    try:
-        reports = load_reports()
-    except ReportError as ex:
-        return None, [str(ex)], []
+def build(strict=True, skip_invalid=False):
+    """Build data/protocols.json from reports/. Returns (dataset, errors, warnings).
+
+    skip_invalid: leave out any report with errors (listed in the dataset under "skipped")
+    instead of failing, so one bad upload cannot block a deploy. Used by the Netlify build.
+    """
+    errors, warns, entries, skipped = [], [], [], []
+    if skip_invalid:
+        reports = []
+        for path in sorted(REPORTS.glob("*.html")):
+            try:
+                reports.append((path, extract(path.read_text(encoding="utf-8"), path.name)))
+            except ReportError as ex:
+                errors.append(str(ex))
+                skipped.append({"file": path.name, "errors": [str(ex)]})
+    else:
+        try:
+            reports = load_reports()
+        except ReportError as ex:
+            return None, [str(ex)], []
     seen = {}
     for path, data in reports:
         e, w = validate(data, path.name)
-        errors += e
-        warns += w
         k = key(data)
         if k in seen:
-            errors.append(f"{path.name}: same protocol and version as {seen[k]} ({k[0]} {k[1]})")
+            e.append(f"{path.name}: same protocol and version as {seen[k]} ({k[0]} {k[1]})")
+        errors += e
+        warns += w
+        if e and skip_invalid:
+            skipped.append({"file": path.name, "id": k[0], "spec_version": k[1], "errors": e})
+            continue
         seen[k] = path.name
         entries.append({"file": path.name, "data": data})
     # mark the latest version of each protocol as current
@@ -200,7 +216,7 @@ def build(strict=True):
             d = dict(ent["data"])
             d["_meta"] = {"file": ent["file"], "current": i == len(group) - 1, "versions": len(group)}
             protocols.append(d)
-    if errors and strict:
+    if errors and strict and not skip_invalid:
         return None, errors, warns
     dataset = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -209,6 +225,7 @@ def build(strict=True):
         "goals": [{"id": k, "label": lab, "definition": d} for k, lab, d in skill_render.GOALS],
         "vocab": vocab(),
         "protocols": protocols,
+        "skipped": skipped,
     }
     return dataset, errors, warns
 

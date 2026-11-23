@@ -1,7 +1,11 @@
 # Netlify: rebuild the dataset from reports/, then publish only the site and its data.
 [build]
-  command = "python3 scripts/build_data.py && rm -rf dist && mkdir dist && cp -r site data reports dist/"
+  command = "python3 scripts/build_data.py --skip-invalid && rm -rf dist && mkdir dist && cp -r site data reports dist/"
   publish = "dist"
+
+[functions]
+  # Upload API for the Add a report page (see netlify/functions/reports.mjs)
+  directory = "netlify/functions"
 
 [build.environment]
   PYTHON_VERSION = "3.11"

@@ -29,7 +29,9 @@ export async function checkServer() {
   if (state.server !== null) return state.server;
   try {
     const r = await fetch("/api/status", { cache: "no-store" });
-    state.server = r.ok && (await r.json()).upload === true;
+    const info = r.ok ? await r.json() : {};
+    state.serverInfo = info;                       // { upload, auth: "password"?, deploys? }
+    state.server = info.upload === true;
   } catch (e) {
     state.server = false;
   }

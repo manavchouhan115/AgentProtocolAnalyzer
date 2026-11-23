@@ -112,6 +112,16 @@ needs no hard-coded rubric.
 - Class names are shared across views; check for collisions (e.g. `.prop` is the
   protocol-page property row, the matrix header uses `.mprop`).
 
+## Uploads on Netlify
+- `netlify/functions/reports.mjs` serves `/api/status` and `/api/reports` on Netlify with the
+  same contract as `scripts/serve.py` (modes none / replace / keep-both, same file names as
+  `datalib.add`), plus an upload password (`X-Upload-Key` header, `UPLOAD_PASSWORD` env var).
+- It does structural checks against the published dataset's rubric and vocabularies, then
+  commits to GitHub in one commit (git data API; `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`).
+- The Netlify build runs `build_data.py --skip-invalid`: reports failing the full linter are
+  left out and listed in the dataset under `skipped`. The Add page polls the dataset after an
+  upload and shows either the new protocol or the skip reasons.
+
 ## Skill download link
 The public download link for the skill is `SKILL_URL` in `site/assets/core.js` (also in
 the footer of `site/index.html`). It is shown on the overview, Add a report and About pages.

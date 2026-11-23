@@ -12,9 +12,17 @@ export async function renderAdd(el) {
   </div>`;
   const body = el.querySelector("#add-body");
   const server = await checkServer();
+  const info = state.serverInfo || {};
+  const needsKey = info.auth === "password";
+  const KEY = "pe-upload-key";
+  const getKey = () => { try { return sessionStorage.getItem(KEY) || ""; } catch (e) { return ""; } };
+  const setKey = (v) => { try { v ? sessionStorage.setItem(KEY, v) : sessionStorage.removeItem(KEY); } catch (e) { /* private mode */ } };
 
   body.innerHTML = `
     ${server ? "" : `<div class="notice" style="margin-bottom:18px"><b>Uploading is not available on this copy of the site.</b> You can still check a report here. To add reports, run the site from the project folder with <code>python scripts/serve.py</code>, or add the file with <code>python scripts/add_report.py report.html</code>.</div>`}
+    ${server && needsKey ? `<label class="key-field">Upload password
+      <input class="input" type="password" id="key" autocomplete="current-password" value="${esc(getKey())}" placeholder="Ask the site's maintainers for it">
+    </label>` : ""}
     <label class="drop" id="drop" tabindex="0">
       <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
       <b>Drop a report here, or select a file</b>
@@ -27,6 +35,8 @@ export async function renderAdd(el) {
   const drop = body.querySelector("#drop");
   const file = body.querySelector("#file");
   const result = body.querySelector("#result");
+  const keyInput = body.querySelector("#key");
+  if (keyInput) keyInput.addEventListener("change", () => setKey(keyInput.value.trim()));
   drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); file.click(); } });
   ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
   ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
@@ -65,10 +75,17 @@ export async function renderAdd(el) {
     if (send) { send.disabled = true; send.textContent = "Adding"; }
     let res;
     try {
-      const r = await fetch(`/api/reports${mode ? "?mode=" + mode : ""}`, { method: "POST", headers: { "Content-Type": "text/html; charset=utf-8", "X-Filename": filename }, body: text });
-      res = await r.json();
+      if (needsKey && !(keyInput?.value || "").trim()) {
+        res = { status: "error", message: "Enter the upload password first." };
+      } else {
+        const headers = { "Content-Type": "text/html; charset=utf-8", "X-Filename": filename };
+        if (needsKey) { headers["X-Upload-Key"] = keyInput.value.trim(); setKey(keyInput.value.trim()); }
+        const r = await fetch(`/api/reports${mode ? "?mode=" + mode : ""}`, { method: "POST", headers, body: text });
+        res = await r.json();
+        if (r.status === 401) { setKey(""); keyInput?.focus(); }
+      }
     } catch (e) {
-      res = { status: "error", message: "The local server did not respond. Check that scripts/serve.py is still running." };
+      res = { status: "error", message: info.deploys ? "The upload service did not respond. Try again in a minute." : "The local server did not respond. Check that scripts/serve.py is still running." };
     }
     if (res.status === "exists") return askDuplicate(res, text, filename, data);
     if (res.status !== "added") {
@@ -76,13 +93,48 @@ export async function renderAdd(el) {
       if (send) { send.disabled = false; send.textContent = "Add to the explorer"; }
       return;
     }
-    await loadData();
     const verb = res.replaced ? "Replaced" : "Added";
+    if (res.deploying) return waitForDeploy(res, data, verb);
+    await loadData();
     toast(`${verb} ${data.protocol?.name}`);
     result.innerHTML = `<div class="notice ok" style="margin-top:18px">${verb} <b>${esc(data.protocol?.name)}</b> (${esc(res.spec_version)}).
       <a href="#/p/${esc(res.id)}">View it</a> or add another report.</div>`;
     const n = state.current.length;
     document.getElementById("foot-data").textContent = `${n} protocol${n === 1 ? "" : "s"}, dataset built ${(state.data.generated_at || "").slice(0, 10)}`;
+  }
+
+  // On the hosted site the upload becomes a commit, and the site rebuilds itself.
+  // Poll the published dataset until the report shows up, or the build leaves it out.
+  async function waitForDeploy(res, data, verb) {
+    const nm = esc(data.protocol?.name);
+    result.innerHTML = `<div class="notice ok" style="margin-top:18px" aria-live="polite">
+      <b>${verb === "Replaced" ? "Replacing" : "Adding"} ${nm}.</b> The report was saved and the site is rebuilding. It usually appears in one or two minutes.
+      <span class="muted" id="wait-status">Checking</span></div>`;
+    const status = result.querySelector("#wait-status");
+    const started = Date.now();
+    for (let i = 0; Date.now() - started < 5 * 60 * 1000; i++) {
+      await new Promise((r) => setTimeout(r, 12000));
+      if (!result.isConnected) return;               // the visitor left the page
+      let ds;
+      try { ds = await (await fetch(`../data/protocols.json?t=${Date.now()}`, { cache: "no-store" })).json(); } catch (e) { continue; }
+      const hit = (ds.protocols || []).find((p) => p.profile?.id === res.id && p.protocol?.spec_version === res.spec_version && p._meta?.file === res.file);
+      const left = (ds.skipped || []).find((s) => s.file === res.file);
+      if (hit) {
+        await loadData();
+        toast(`${verb} ${data.protocol?.name}`);
+        result.innerHTML = `<div class="notice ok" style="margin-top:18px">${verb} <b>${nm}</b> (${esc(res.spec_version)}). <a href="#/p/${esc(res.id)}">View it</a> or add another report.</div>`;
+        const n = state.current.length;
+        document.getElementById("foot-data").textContent = `${n} protocol${n === 1 ? "" : "s"}, dataset built ${(state.data.generated_at || "").slice(0, 10)}`;
+        return;
+      }
+      if (left) {
+        result.innerHTML = `<div class="notice error" style="margin-top:18px"><b>${nm} was saved but left out of the site</b>, because the full check found errors:
+          <ul>${left.errors.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>Fix the analysis with the skill and upload it again, choosing Replace.</div>`;
+        return;
+      }
+      status.textContent = `Still rebuilding (${Math.round((Date.now() - started) / 1000)} s)`;
+    }
+    status.textContent = "This is taking longer than usual. Reload the page in a few minutes to see it.";
   }
 
   function askDuplicate(res, text, filename, data) {
