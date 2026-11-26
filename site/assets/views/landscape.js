@@ -113,7 +113,7 @@ function stripPlot(ps, st, val, width) {
   const left = narrow ? 104 : 168, right = 18, top = 8, axisH = 34;
   const x0 = left, x1 = width - right;
   const sx = (v) => x0 + ((x1 - x0) * v) / 100;
-  const showLabels = ps.length <= 24;
+  const showLabels = ps.length <= 100;   // lanes keep names from overlapping, so label every dot
 
   // groups in a meaningful order
   const vals = (p) => st.rows === "mechanisms" ? (p.profile?.mechanisms || []) : [p.profile?.[st.rows]];
@@ -166,7 +166,7 @@ function goalMap(ps, st, width) {
   const H = m.t + plotH + m.b;
   const sx = (v) => m.l + (plotW * v) / 100;
   const sy = (v) => m.t + plotH - (plotH * v) / 100;
-  const showLabels = ps.length <= 30;
+  const showLabels = ps.length <= 100;   // names that do not fit are skipped; the tooltip still names them
 
   // points; protocols at the same spot are fanned out around it
   const pts = ps.map((p) => ({ p, vx: goalScore(p, st.gx), vy: goalScore(p, st.gy), text: name(p) }));
@@ -184,15 +184,26 @@ function goalMap(ps, st, width) {
   let labels = "";
   if (showLabels) {
     for (const pt of [...pts].sort((a, b) => a.x - b.x)) {
-      const lw = textW(pt.text), lh = 16;
-      const cands = [
-        { b: [pt.x + R + 4, pt.y - lh / 2, pt.x + R + 4 + lw, pt.y + lh / 2], x: pt.x + R + 5, y: pt.y + 4, a: "start" },
-        { b: [pt.x - R - 4 - lw, pt.y - lh / 2, pt.x - R - 4, pt.y + lh / 2], x: pt.x - R - 5, y: pt.y + 4, a: "end" },
-        { b: [pt.x - lw / 2, pt.y - R - 4 - lh, pt.x + lw / 2, pt.y - R - 4], x: pt.x, y: pt.y - R - 8, a: "middle" },
-        { b: [pt.x - lw / 2, pt.y + R + 4, pt.x + lw / 2, pt.y + R + 4 + lh], x: pt.x, y: pt.y + R + 16, a: "middle" },
-      ];
-      const c = cands.find((c) => inside(c.b) && !overlaps(c.b));
-      if (c) { placed.push(c.b); pt.label = `<text x="${c.x}" y="${c.y}" text-anchor="${c.a}" class="dot-label">${esc(pt.text)}</text>`; }
+      // try the full name first, then without its bracketed part, e.g. "ID-JAG (Cross App Access)" -> "ID-JAG"
+      const names = [...new Set([pt.text, pt.text.replace(/\s*\(.*\)\s*$/, "")])];
+      let c = null;
+      for (const nm of names) {
+        const lw = textW(nm), lh = 16;
+        const cands = [
+          { b: [pt.x + R + 4, pt.y - lh / 2, pt.x + R + 4 + lw, pt.y + lh / 2], x: pt.x + R + 5, y: pt.y + 4, a: "start" },
+          { b: [pt.x - R - 4 - lw, pt.y - lh / 2, pt.x - R - 4, pt.y + lh / 2], x: pt.x - R - 5, y: pt.y + 4, a: "end" },
+          { b: [pt.x - lw / 2, pt.y - R - 4 - lh, pt.x + lw / 2, pt.y - R - 4], x: pt.x, y: pt.y - R - 8, a: "middle" },
+          { b: [pt.x - lw / 2, pt.y + R + 4, pt.x + lw / 2, pt.y + R + 4 + lh], x: pt.x, y: pt.y + R + 16, a: "middle" },
+          // diagonals, for dots that sit close together
+          { b: [pt.x + R, pt.y - R - lh, pt.x + R + lw, pt.y - R], x: pt.x + R + 1, y: pt.y - R - 4, a: "start" },
+          { b: [pt.x + R, pt.y + R, pt.x + R + lw, pt.y + R + lh], x: pt.x + R + 1, y: pt.y + R + 12, a: "start" },
+          { b: [pt.x - R - lw, pt.y - R - lh, pt.x - R, pt.y - R], x: pt.x - R - 1, y: pt.y - R - 4, a: "end" },
+          { b: [pt.x - R - lw, pt.y + R, pt.x - R, pt.y + R + lh], x: pt.x - R - 1, y: pt.y + R + 12, a: "end" },
+        ];
+        c = cands.find((k) => inside(k.b) && !overlaps(k.b));
+        if (c) { c.text = nm; break; }
+      }
+      if (c) { placed.push(c.b); pt.label = `<text x="${c.x}" y="${c.y}" text-anchor="${c.a}" class="dot-label">${esc(c.text)}</text>`; }
     }
   }
   const ticks = [0, 25, 50, 75, 100].map((v) => `
